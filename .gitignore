@@ -1,0 +1,44 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtualenvs
+.venv/
+venv/
+ENV/
+.env/
+.envrc
+.env.*
+*.env
+
+# Packaging
+build/
+dist/
+eggs/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.spec
+*.manifest
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flask instance
+instance/
