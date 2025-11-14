@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Empresa - Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; overflow-x: hidden; }
+        
+        .layout { display: flex; min-height: 100vh; }
+        
+        #sidebar { width: 250px; background: #dc2626; color: white; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-title { font-size: 1.375rem; font-weight: 700; display: flex; align-items: center; gap: 0.625rem; }
+        .sidebar-user { font-size: 0.875rem; color: rgba(255,255,255,0.9); margin-top: 0.625rem; }
+        .sidebar-badge { display: inline-block; background: rgba(0,0,0,0.3); padding: 0.25rem 0.625rem; border-radius: 0.375rem; font-size: 0.75rem; margin-top: 0.375rem; }
+        .sidebar-nav { padding: 1.25rem; }
+        .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 0.5rem; color: white; text-decoration: none; transition: all 0.2s; margin-bottom: 0.375rem; font-size: 0.9375rem; }
+        .sidebar-link:hover { background: rgba(255,255,255,0.1); color: white; transform: translateX(4px); }
+        .sidebar-link.active { background: rgba(255,255,255,0.2); font-weight: 600; }
+        .sidebar-link i { font-size: 1.125rem; }
+        
+        #content { flex: 1; }
+        
+        .page-header { background: white; padding: 1.5rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .page-title { font-size: 1.75rem; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 0.625rem; }
+        .page-title i { color: #dc2626; }
+        
+        .main-content { padding: 2rem; }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 2rem; }
+        .card-header { padding: 1.25rem 1.75rem; border-bottom: 1px solid #e5e7eb; }
+        .card-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; }
+        .card-body { padding: 1.75rem; }
+        
+        .btn { padding: 0.625rem 1.25rem; border-radius: 0.5rem; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; }
+        .btn-primary { background: #dc2626; color: white; box-shadow: 0 1px 3px rgba(220,38,38,0.3); }
+        .btn-primary:hover { background: #b91c1c; box-shadow: 0 4px 12px rgba(220,38,38,0.4); transform: translateY(-1px); }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        
+        .img-preview { max-width: 200px; max-height: 200px; margin-top: 0.5rem; border-radius: 0.5rem; border: 2px solid #e5e7eb; }
+        
+        .alert { padding: 1rem 1.25rem; border-radius: 0.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+        .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title"><i class="bi bi-shop"></i>Dashboard</div>
+                <div class="sidebar-user" id="userName">Cargando...</div>
+                <span class="sidebar-badge">Empresa</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="sidebar-link"><i class="bi bi-house-door"></i>Inicio</a>
+                <a href="/dashboard/empresa" class="sidebar-link active"><i class="bi bi-building"></i>Mi Empresa</a>
+                <a href="/dashboard/sucursales" class="sidebar-link"><i class="bi bi-shop"></i>Sucursales</a>
+                <a href="/dashboard/productos" class="sidebar-link"><i class="bi bi-box-seam"></i>Productos</a>
+                <a href="/" class="sidebar-link" style="margin-top:2.5rem;opacity:0.85"><i class="bi bi-house"></i>Volver al Inicio</a>
+            </nav>
+        </aside>
+        
+        <main id="content">
+            <header class="page-header">
+                <h1 class="page-title"><i class="bi bi-building"></i>Gestión de Mi Empresa</h1>
+            </header>
+            
+            <div class="main-content">
+                <div id="alertContainer"></div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Datos de la Empresa</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formEmpresa" enctype="multipart/form-data">
+                            <input type="hidden" id="id_empresa">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">RUC *</label>
+                                    <input type="text" class="form-control" id="ruc" maxlength="11" pattern="[0-9]{11}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Teléfono *</label>
+                                    <input type="text" class="form-control" id="telefono" maxlength="15" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Razón Social *</label>
+                                    <input type="text" class="form-control" id="razon_social" maxlength="200" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Nombre Comercial *</label>
+                                    <input type="text" class="form-control" id="nombre_comercial" maxlength="150" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Email *</label>
+                                <input type="email" class="form-control" id="email" maxlength="100" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Sitio Web</label>
+                                <input type="url" class="form-control" id="sitio_web" maxlength="200" placeholder="https://ejemplo.com">
+                                <small class="text-muted">Opcional</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Descripción</label>
+                                <textarea class="form-control" id="descripcion" rows="3" maxlength="500"></textarea>
+                                <small class="text-muted">Máximo 500 caracteres - Opcional</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">Departamento *</label>
+                                    <select id="departamento" class="form-select" required>
+                                        <option value="">Seleccionar...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">Provincia *</label>
+                                    <select id="provincia" class="form-select" disabled required>
+                                        <option value="">Seleccionar...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">Distrito *</label>
+                                    <select id="id_dist" class="form-select" disabled required>
+                                        <option value="">Seleccionar...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Dirección *</label>
+                                <input type="text" class="form-control" id="direccion" maxlength="200" required>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Logo de la Empresa</label>
+                                    <input type="file" class="form-control" id="img_logo" accept="image/*" onchange="previewImage(event, 'previewLogo')">
+                                    <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP (máx. 5MB)</small>
+                                    <div id="previewLogo"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Banner de la Empresa</label>
+                                    <input type="file" class="form-control" id="img_banner" accept="image/*" onchange="previewImage(event, 'previewBanner')">
+                                    <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP (máx. 5MB)</small>
+                                    <div id="previewBanner"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i>Guardar Cambios
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="location.href='/dashboard'">
+                                    <i class="bi bi-x-circle"></i>Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/config.js"></script>
+    
+    <script>
+        const API = window.CONFIG?.API_URL || 'http://127.0.0.1:3007';
+        let idEmpresa;
+
+        function mostrarAlerta(mensaje, tipo = 'success') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo}`;
+            alert.innerHTML = `<i class="bi bi-${tipo === 'success' ? 'check-circle' : 'x-circle'}-fill"></i>${mensaje}`;
+            container.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        function previewImage(event, containerId) {
+            const container = document.getElementById(containerId);
+            const file = event.target.files[0];
+            
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    mostrarAlerta('La imagen no debe superar los 5MB', 'error');
+                    event.target.value = '';
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    container.innerHTML = `<img src="${e.target.result}" class="img-preview" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                container.innerHTML = '';
+            }
+        }
+
+        (async function init() {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            document.getElementById('userName').textContent = user.nomusuario;
+            idEmpresa = user.id_empresa;
+
+            if (!idEmpresa) {
+                mostrarAlerta('No tienes una empresa asociada', 'error');
+                setTimeout(() => window.location.href = '/dashboard', 2000);
+                return;
+            }
+
+            await cargarDepartamentos();
+            await cargarEmpresa();
+        })();
+
+        async function cargarDepartamentos() {
+            const res = await fetch(`${API}/departamentos/listar`);
+            const data = await res.json();
+            if (data.status) {
+                const select = document.getElementById('departamento');
+                data.data.forEach(dep => {
+                    const option = document.createElement('option');
+                    option.value = dep.id_dep;
+                    option.textContent = dep.nombre;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        document.getElementById('departamento').addEventListener('change', async (e) => {
+            const idDep = e.target.value;
+            const selectProv = document.getElementById('provincia');
+            const selectDist = document.getElementById('id_dist');
+            
+            selectProv.innerHTML = '<option value="">Cargando...</option>';
+            selectProv.disabled = true;
+            selectDist.innerHTML = '<option value="">Seleccionar...</option>';
+            selectDist.disabled = true;
+            
+            if (!idDep) return;
+            
+            const res = await fetch(`${API}/provincias/listar/${idDep}`);
+            const data = await res.json();
+            
+            if (data.status) {
+                selectProv.innerHTML = '<option value="">Seleccionar...</option>';
+                data.data.forEach(prov => {
+                    const option = document.createElement('option');
+                    option.value = prov.id_prov;
+                    option.textContent = prov.nombre;
+                    selectProv.appendChild(option);
+                });
+                selectProv.disabled = false;
+            }
+        });
+
+        document.getElementById('provincia').addEventListener('change', async (e) => {
+            const idProv = e.target.value;
+            const selectDist = document.getElementById('id_dist');
+            
+            selectDist.innerHTML = '<option value="">Cargando...</option>';
+            selectDist.disabled = true;
+            
+            if (!idProv) return;
+            
+            const res = await fetch(`${API}/distritos/listar/${idProv}`);
+            const data = await res.json();
+            
+            if (data.status) {
+                selectDist.innerHTML = '<option value="">Seleccionar...</option>';
+                data.data.forEach(dist => {
+                    const option = document.createElement('option');
+                    option.value = dist.id_dist;
+                    option.textContent = dist.nombre;
+                    selectDist.appendChild(option);
+                });
+                selectDist.disabled = false;
+            }
+        });
+
+        async function cargarEmpresa() {
+            try {
+                const res = await fetch(`${API}/empresas/obtener-por-usuario/${idEmpresa}`);
+                const data = await res.json();
+                
+                if (data.status && data.data) {
+                    const e = data.data;
+                    
+                    document.getElementById('id_empresa').value = e.id_empresa;
+                    document.getElementById('ruc').value = e.ruc || '';
+                    document.getElementById('razon_social').value = e.razon_social || '';
+                    document.getElementById('nombre_comercial').value = e.nombre_comercial || '';
+                    document.getElementById('telefono').value = e.telefono || '';
+                    document.getElementById('email').value = e.email || '';
+                    document.getElementById('sitio_web').value = e.sitio_web || '';
+                    document.getElementById('descripcion').value = e.descripcion || '';
+                    document.getElementById('direccion').value = e.direccion || '';
+                    
+                    // Cargar ubicación...
+                    if (e.id_dep) {
+                        document.getElementById('departamento').value = e.id_dep;
+                        await document.getElementById('departamento').dispatchEvent(new Event('change'));
+                        
+                        setTimeout(async () => {
+                            if (e.id_prov) {
+                                document.getElementById('provincia').value = e.id_prov;
+                                await document.getElementById('provincia').dispatchEvent(new Event('change'));
+                                
+                                setTimeout(() => {
+                                    if (e.id_dist) {
+                                        document.getElementById('id_dist').value = e.id_dist;
+                                    }
+                                }, 500);
+                            }
+                        }, 500);
+                    }
+                    
+                    // ✅ RUTAS CORRECTAS CON SUBCARPETAS
+                    if (e.img_logo) {
+                        const containerLogo = document.getElementById('previewLogo');
+                        containerLogo.innerHTML = `<img src="${API}/uploads/fotos/empresas/logos/${e.img_logo}" class="img-preview" alt="Logo actual">`;
+                    }
+                    
+                    if (e.img_banner) {
+                        const containerBanner = document.getElementById('previewBanner');
+                        containerBanner.innerHTML = `<img src="${API}/uploads/fotos/empresas/banners/${e.img_banner}" class="img-preview" alt="Banner actual">`;
+                    }
+                }
+            } catch (e) {
+                console.error('Error al cargar empresa:', e);
+                mostrarAlerta('Error al cargar los datos', 'error');
+            }
+        }
+
+        document.getElementById('formEmpresa').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('ruc', document.getElementById('ruc').value.trim());
+            formData.append('razon_social', document.getElementById('razon_social').value.trim());
+            formData.append('nombre_comercial', document.getElementById('nombre_comercial').value.trim());
+            formData.append('telefono', document.getElementById('telefono').value.trim());
+            formData.append('email', document.getElementById('email').value.trim());
+            formData.append('sitio_web', document.getElementById('sitio_web').value.trim());
+            formData.append('descripcion', document.getElementById('descripcion').value.trim());
+            formData.append('id_dist', document.getElementById('id_dist').value);
+            formData.append('direccion', document.getElementById('direccion').value.trim());
+            
+            // Agregar logo si existe
+            const logoInput = document.getElementById('img_logo');
+            if (logoInput.files[0]) {
+                formData.append('img_logo', logoInput.files[0]);
+            }
+            
+            // Agregar banner si existe
+            const bannerInput = document.getElementById('img_banner');
+            if (bannerInput.files[0]) {
+                formData.append('img_banner', bannerInput.files[0]);
+            }
+            
+            try {
+                const res = await fetch(`${API}/empresas/modificar/${idEmpresa}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+                
+                const data = await res.json();
+                
+                if (data.status) {
+                    mostrarAlerta('✅ Empresa actualizada correctamente', 'success');
+                    setTimeout(() => window.location.href = '/dashboard', 2000);
+                } else {
+                    mostrarAlerta('❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('❌ Error al guardar los cambios', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

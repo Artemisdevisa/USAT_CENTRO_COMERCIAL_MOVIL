@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Sucursales - Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; overflow-x: hidden; }
+        
+        .layout { display: flex; min-height: 100vh; }
+        
+        #sidebar { width: 250px; background: #dc2626; color: white; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-title { font-size: 1.375rem; font-weight: 700; display: flex; align-items: center; gap: 0.625rem; }
+        .sidebar-user { font-size: 0.875rem; color: rgba(255,255,255,0.9); margin-top: 0.625rem; }
+        .sidebar-badge { display: inline-block; background: rgba(0,0,0,0.3); padding: 0.25rem 0.625rem; border-radius: 0.375rem; font-size: 0.75rem; margin-top: 0.375rem; }
+        .sidebar-nav { padding: 1.25rem; }
+        .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 0.5rem; color: white; text-decoration: none; transition: all 0.2s; margin-bottom: 0.375rem; font-size: 0.9375rem; }
+        .sidebar-link:hover { background: rgba(255,255,255,0.1); color: white; transform: translateX(4px); }
+        .sidebar-link.active { background: rgba(255,255,255,0.2); font-weight: 600; }
+        .sidebar-link i { font-size: 1.125rem; }
+        
+        #content { flex: 1; }
+        
+        .page-header { background: white; padding: 1.5rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 1.75rem; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 0.625rem; }
+        .page-title i { color: #dc2626; }
+        
+        .main-content { padding: 2rem; }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        .card-header { padding: 1.25rem 1.75rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; }
+        
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f9fafb; }
+        th { padding: 1rem 1.5rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.025em; }
+        td { padding: 1.125rem 1.5rem; border-top: 1px solid #f3f4f6; font-size: 0.9375rem; }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: #fef2f2; }
+        
+        .btn { padding: 0.625rem 1.25rem; border-radius: 0.5rem; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; }
+        .btn-primary { background: #dc2626; color: white; box-shadow: 0 1px 3px rgba(220,38,38,0.3); }
+        .btn-primary:hover { background: #b91c1c; box-shadow: 0 4px 12px rgba(220,38,38,0.4); transform: translateY(-1px); }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-icon { padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-edit { background: #3b82f6; color: white; margin-right: 0.5rem; }
+        .btn-edit:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(59,130,246,0.3); }
+        .btn-warning { background: #f59e0b; color: white; margin-right: 0.5rem; }
+        .btn-warning:hover { background: #d97706; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(245,158,11,0.3); }
+        .btn-success { background: #10b981; color: white; margin-right: 0.5rem; }
+        .btn-success:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(16,185,129,0.3); }
+        .btn-delete { background: #dc2626; color: white; }
+        .btn-delete:hover { background: #b91c1c; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(220,38,38,0.3); }
+        
+        .badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
+        .badge-green { background: #d1fae5; color: #065f46; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge i { font-size: 0.875rem; }
+        
+        .sucursal-img { width: 60px; height: 60px; object-fit: cover; border-radius: 0.5rem; border: 2px solid #e5e7eb; }
+        .img-preview { max-width: 150px; max-height: 150px; margin-top: 0.5rem; border-radius: 0.5rem; border: 2px solid #e5e7eb; }
+        
+        .alert { padding: 1rem 1.25rem; border-radius: 0.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+        .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title"><i class="bi bi-shop"></i>Dashboard</div>
+                <div class="sidebar-user" id="empresaNombre">Cargando...</div>
+                <span class="sidebar-badge">Empresa</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="sidebar-link"><i class="bi bi-house-door"></i>Inicio</a>
+                <a href="/dashboard/empresa" class="sidebar-link"><i class="bi bi-building"></i>Mi Empresa</a>
+                <a href="/dashboard/sucursales" class="sidebar-link active"><i class="bi bi-shop"></i>Sucursales</a>
+                <a href="/dashboard/productos" class="sidebar-link"><i class="bi bi-box-seam"></i>Productos</a>
+                <a href="/" class="sidebar-link" style="margin-top:2.5rem;opacity:0.85"><i class="bi bi-house"></i>Volver al Inicio</a>
+            </nav>
+        </aside>
+        
+        <main id="content">
+            <header class="page-header">
+                <h1 class="page-title"><i class="bi bi-shop"></i>Mis Sucursales</h1>
+                <button class="btn btn-primary" onclick="abrirModal()"><i class="bi bi-plus-circle"></i>Nueva Sucursal</button>
+            </header>
+            
+            <div class="main-content">
+                <div id="alertContainer"></div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Lista de Sucursales</h5>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>LOGO</th>
+                                    <th>NOMBRE</th>
+                                    <th>DIRECCIÓN</th>
+                                    <th>TELÉFONO</th>
+                                    <th>DISTRITO</th>
+                                    <th style="text-align:center">ESTADO</th>
+                                    <th style="text-align:center">ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="modalTitle">Nueva Sucursal</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formSucursal" enctype="multipart/form-data">
+                        <input type="hidden" id="id_sucursal">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Nombre de la Sucursal *</label>
+                                <input type="text" class="form-control" id="nombre" maxlength="150" required>
+                                <small class="text-muted">Máximo 150 caracteres</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Teléfono *</label>
+                                <input type="text" class="form-control" id="telefono" maxlength="9" pattern="[0-9]{9}" placeholder="987654321" required>
+                                <small class="text-muted">9 dígitos</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Dirección *</label>
+                            <input type="text" class="form-control" id="direccion" maxlength="200" placeholder="Ej: Av. José Balta 123" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Departamento *</label>
+                                <select id="departamento" class="form-select" required>
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Provincia *</label>
+                                <select id="provincia" class="form-select" disabled required>
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Distrito *</label>
+                                <select id="id_dist" class="form-select" disabled required>
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Logo de la Sucursal</label>
+                                <input type="file" class="form-control" id="img_logo" accept="image/*" onchange="previewImage(event, 'previewLogo')">
+                                <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP (máx. 5MB)</small>
+                                <div id="previewLogo"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Banner de la Sucursal</label>
+                                <input type="file" class="form-control" id="img_banner" accept="image/*" onchange="previewImage(event, 'previewBanner')">
+                                <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP (máx. 5MB)</small>
+                                <div id="previewBanner"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i>Cancelar</button>
+                    <button class="btn btn-primary" onclick="guardar()"><i class="bi bi-save"></i>Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        if (typeof window.CONFIG === 'undefined') {
+            const detectarApiUrl = () => {
+                const hostname = window.location.hostname;
+                if (hostname === 'localhost' || hostname === '127.0.0.1') return 'http://127.0.0.1:3007';
+                if (hostname.startsWith('192.168.') || hostname.startsWith('10.')) return `${window.location.protocol}//${hostname}:3007`;
+                return 'https://api.tudominio.com';
+            };
+            window.CONFIG = { API_URL: detectarApiUrl() };
+        }
+    </script>
+    
+    <script>
+        const API = window.CONFIG.API_URL;
+        let modalInstance;
+        let idEmpresa;
+
+        function mostrarAlerta(mensaje, tipo = 'success') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo}`;
+            alert.innerHTML = `<i class="bi bi-${tipo === 'success' ? 'check-circle' : 'x-circle'}-fill"></i>${mensaje}`;
+            container.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        function previewImage(event, containerId) {
+            const container = document.getElementById(containerId);
+            const file = event.target.files[0];
+            
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    mostrarAlerta('La imagen no debe superar los 5MB', 'error');
+                    event.target.value = '';
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    container.innerHTML = `<img src="${e.target.result}" class="img-preview" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                container.innerHTML = '';
+            }
+        }
+
+        (async function init() {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            idEmpresa = user.id_empresa;
+
+            if (!idEmpresa) {
+                mostrarAlerta('No tienes una empresa asociada', 'error');
+                setTimeout(() => window.location.href = '/dashboard', 2000);
+                return;
+            }
+
+            const res = await fetch(`${API}/empresas/obtener-por-usuario/${idEmpresa}`);
+            const data = await res.json();
+            
+            if (data.status && data.data) {
+                document.getElementById('empresaNombre').textContent = data.data.nombre_comercial;
+            }
+
+            modalInstance = new bootstrap.Modal(document.getElementById('modal'));
+            await cargarDepartamentos();
+            await cargar();
+        })();
+
+        async function cargarDepartamentos() {
+            const res = await fetch(`${API}/departamentos/listar`);
+            const data = await res.json();
+            if (data.status) {
+                const select = document.getElementById('departamento');
+                data.data.forEach(dep => {
+                    const option = document.createElement('option');
+                    option.value = dep.id_dep;
+                    option.textContent = dep.nombre;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        document.getElementById('departamento').addEventListener('change', async (e) => {
+            const idDep = e.target.value;
+            const selectProv = document.getElementById('provincia');
+            const selectDist = document.getElementById('id_dist');
+            
+            selectProv.innerHTML = '<option value="">Cargando...</option>';
+            selectProv.disabled = true;
+            selectDist.innerHTML = '<option value="">Seleccionar...</option>';
+            selectDist.disabled = true;
+            
+            if (!idDep) return;
+            
+            const res = await fetch(`${API}/provincias/listar/${idDep}`);
+            const data = await res.json();
+            
+            if (data.status) {
+                selectProv.innerHTML = '<option value="">Seleccionar...</option>';
+                data.data.forEach(prov => {
+                    const option = document.createElement('option');
+                    option.value = prov.id_prov;
+                    option.textContent = prov.nombre;
+                    selectProv.appendChild(option);
+                });
+                selectProv.disabled = false;
+            }
+        });
+
+        document.getElementById('provincia').addEventListener('change', async (e) => {
+            const idProv = e.target.value;
+            const selectDist = document.getElementById('id_dist');
+            
+            selectDist.innerHTML = '<option value="">Cargando...</option>';
+            selectDist.disabled = true;
+            
+            if (!idProv) return;
+            
+            const res = await fetch(`${API}/distritos/listar/${idProv}`);
+            const data = await res.json();
+            
+            if (data.status) {
+                selectDist.innerHTML = '<option value="">Seleccionar...</option>';
+                data.data.forEach(dist => {
+                    const option = document.createElement('option');
+                    option.value = dist.id_dist;
+                    option.textContent = dist.nombre;
+                    selectDist.appendChild(option);
+                });
+                selectDist.disabled = false;
+            }
+        });
+
+        async function cargar() {
+            try {
+                const res = await fetch(`${API}/sucursales/listar-por-empresa/${idEmpresa}`);
+                const data = await res.json();
+                
+                if (data.status) {
+                    renderizar(data.data);
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('Error al cargar sucursales', 'error');
+            }
+        }
+
+        function renderizar(data) {
+            const tbody = document.getElementById('tabla');
+            
+            if (!data || !data.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay sucursales registradas</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(s => {
+                const logoImg = s.img_logo 
+                    ? `<img src="${API}/uploads/fotos/sucursales/logos/${s.img_logo}" class="sucursal-img" alt="Logo" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Logo'">`
+                    : `<img src="https://via.placeholder.com/60x60?text=Sin+Logo" class="sucursal-img" alt="Sin logo">`;
+                
+                const estadoBadge = s.estado 
+                    ? '<span class="badge badge-green"><i class="bi bi-check-circle"></i>Activo</span>'
+                    : '<span class="badge badge-red"><i class="bi bi-x-circle"></i>Inactivo</span>';
+                
+                const estadoBtn = s.estado
+                    ? `<button class="btn-icon btn-warning" onclick="cambiarEstado(${s.id_sucursal})" title="Desactivar"><i class="bi bi-toggle-on"></i></button>`
+                    : `<button class="btn-icon btn-success" onclick="cambiarEstado(${s.id_sucursal})" title="Activar"><i class="bi bi-toggle-off"></i></button>`;
+                
+                return `
+                    <tr style="${!s.estado ? 'opacity: 0.6; background: #fef2f2;' : ''}">
+                        <td>${logoImg}</td>
+                        <td class="fw-bold">${s.nombre}</td>
+                        <td>${s.direccion}</td>
+                        <td>${s.telefono}</td>
+                        <td>${s.distrito || 'N/A'}</td>
+                        <td style="text-align:center">${estadoBadge}</td>
+                        <td style="text-align:center">
+                            ${estadoBtn}
+                            <button class="btn-icon btn-edit" onclick="editar(${s.id_sucursal})" title="Editar"><i class="bi bi-pencil"></i></button>
+                            <button class="btn-icon btn-delete" onclick="eliminar(${s.id_sucursal})" title="Eliminar permanentemente"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function abrirModal() {
+            document.getElementById('modalTitle').textContent = 'Nueva Sucursal';
+            document.getElementById('formSucursal').reset();
+            document.getElementById('id_sucursal').value = '';
+            document.getElementById('provincia').disabled = true;
+            document.getElementById('id_dist').disabled = true;
+            document.getElementById('previewLogo').innerHTML = '';
+            document.getElementById('previewBanner').innerHTML = '';
+            modalInstance.show();
+        }
+
+        async function editar(id) {
+            try {
+                const res = await fetch(`${API}/sucursales/obtener/${id}`);
+                const data = await res.json();
+                
+                if (data.status && data.data) {
+                    const s = data.data;
+                    
+                    document.getElementById('modalTitle').textContent = 'Editar Sucursal';
+                    document.getElementById('id_sucursal').value = s.id_sucursal;
+                    document.getElementById('nombre').value = s.nombre;
+                    document.getElementById('telefono').value = s.telefono;
+                    document.getElementById('direccion').value = s.direccion;
+                    
+                    // Cargar ubicación
+                    if (s.id_dep) {
+                        document.getElementById('departamento').value = s.id_dep;
+                        await document.getElementById('departamento').dispatchEvent(new Event('change'));
+                        
+                        setTimeout(async () => {
+                            if (s.id_prov) {
+                                document.getElementById('provincia').value = s.id_prov;
+                                await document.getElementById('provincia').dispatchEvent(new Event('change'));
+                                
+                                setTimeout(() => {
+                                    if (s.id_dist) {
+                                        document.getElementById('id_dist').value = s.id_dist;
+                                    }
+                                }, 500);
+                            }
+                        }, 500);
+                    }
+                    
+                    // Mostrar imágenes actuales
+                    if (s.img_logo) {
+                        document.getElementById('previewLogo').innerHTML = 
+                            `<img src="${API}/uploads/fotos/sucursales/logos/${s.img_logo}" class="img-preview" alt="Logo actual">`;
+                    }
+                    if (s.img_banner) {
+                        document.getElementById('previewBanner').innerHTML = 
+                            `<img src="${API}/uploads/fotos/sucursales/banners/${s.img_banner}" class="img-preview" alt="Banner actual">`;
+                    }
+                    
+                    modalInstance.show();
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('Error al cargar sucursal', 'error');
+            }
+        }
+
+        async function guardar() {
+            const id = document.getElementById('id_sucursal').value;
+            const nombre = document.getElementById('nombre').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            const direccion = document.getElementById('direccion').value.trim();
+            const id_dist = document.getElementById('id_dist').value;
+            
+            if (!nombre || !telefono || !direccion || !id_dist) {
+                mostrarAlerta('Todos los campos obligatorios deben ser completados', 'error');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('id_empresa', idEmpresa);
+                formData.append('nombre', nombre);
+                formData.append('telefono', telefono);
+                formData.append('direccion', direccion);
+                formData.append('id_dist', id_dist);
+                
+                // Agregar imágenes si existen
+                const logoFile = document.getElementById('img_logo').files[0];
+                const bannerFile = document.getElementById('img_banner').files[0];
+                
+                if (logoFile) formData.append('img_logo', logoFile);
+                if (bannerFile) formData.append('img_banner', bannerFile);
+                
+                const url = id ? `${API}/sucursales/modificar/${id}` : `${API}/sucursales/crear`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const res = await fetch(url, {
+                    method: method,
+                    body: formData
+                });
+                
+                const data = await res.json();
+                
+                if (data.status) {
+                    mostrarAlerta(id ? '✅ Sucursal modificada correctamente' : '✅ Sucursal creada correctamente', 'success');
+                    modalInstance.hide();
+                    await cargar();
+                } else {
+                    mostrarAlerta('❌ ' + data.message, 'error');
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('❌ Error al guardar la sucursal', 'error');
+            }
+        }
+
+        async function cambiarEstado(id) {
+            if (!confirm('¿Cambiar el estado de esta sucursal?')) return;
+            
+            try {
+                const res = await fetch(`${API}/sucursales/cambiar-estado/${id}`, { method: 'PATCH' });
+                const data = await res.json();
+                
+                if (data.status) {
+                    mostrarAlerta('✅ Estado cambiado correctamente', 'success');
+                    await cargar();
+                } else {
+                    mostrarAlerta('❌ ' + data.message, 'error');
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('❌ Error al cambiar el estado', 'error');
+            }
+        }
+
+        async function eliminar(id) {
+            if (!confirm('⚠️ ¿Eliminar permanentemente esta sucursal? Esta acción NO se puede deshacer.')) return;
+            
+            try {
+                const res = await fetch(`${API}/sucursales/eliminar-fisico/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                
+                if (data.status) {
+                    mostrarAlerta('✅ Sucursal eliminada correctamente', 'success');
+                    await cargar();
+                } else {
+                    mostrarAlerta('❌ ' + data.message, 'error');
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('❌ Error al eliminar la sucursal', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

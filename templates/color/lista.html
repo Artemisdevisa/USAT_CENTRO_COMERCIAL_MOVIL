@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mantenimiento de Colores - Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; overflow-x: hidden; }
+        
+        /* Layout */
+        .layout { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        #sidebar { width: 250px; background: #dc2626; color: white; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-title { font-size: 1.375rem; font-weight: 700; display: flex; align-items: center; gap: 0.625rem; }
+        .sidebar-user { font-size: 0.875rem; color: rgba(255,255,255,0.9); margin-top: 0.625rem; }
+        .sidebar-badge { display: inline-block; background: rgba(0,0,0,0.3); padding: 0.25rem 0.625rem; border-radius: 0.375rem; font-size: 0.75rem; margin-top: 0.375rem; }
+        .sidebar-nav { padding: 1.25rem; }
+        .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 0.5rem; color: white; text-decoration: none; transition: all 0.2s; margin-bottom: 0.375rem; font-size: 0.9375rem; }
+        .sidebar-link:hover { background: rgba(255,255,255,0.1); color: white; transform: translateX(4px); }
+        .sidebar-link.active { background: rgba(255,255,255,0.2); font-weight: 600; }
+        .sidebar-link i { font-size: 1.125rem; }
+        
+        /* Content */
+        #content { flex: 1; }
+        
+        /* Header */
+        .page-header { background: white; padding: 1.5rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 1.75rem; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 0.625rem; }
+        .page-title i { color: #dc2626; }
+        
+        /* Main */
+        .main-content { padding: 2rem; }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        .card-header { padding: 1.25rem 1.75rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; }
+        
+        /* Table */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f9fafb; }
+        th { padding: 1rem 1.5rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.025em; }
+        td { padding: 1.125rem 1.5rem; border-top: 1px solid #f3f4f6; font-size: 0.9375rem; }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: #fef2f2; }
+        .font-bold { font-weight: 600; color: #1f2937; }
+        
+        /* Buttons */
+        .btn { padding: 0.625rem 1.25rem; border-radius: 0.5rem; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; }
+        .btn-primary { background: #dc2626; color: white; box-shadow: 0 1px 3px rgba(220,38,38,0.3); }
+        .btn-primary:hover { background: #b91c1c; box-shadow: 0 4px 12px rgba(220,38,38,0.4); transform: translateY(-1px); }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-icon { padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-edit { background: #3b82f6; color: white; margin-right: 0.5rem; }
+        .btn-edit:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(59,130,246,0.3); }
+        .btn-warning { background: #f59e0b; color: white; margin-right: 0.5rem; }
+        .btn-warning:hover { background: #d97706; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(245,158,11,0.3); }
+        .btn-success { background: #10b981; color: white; margin-right: 0.5rem; }
+        .btn-success:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(16,185,129,0.3); }
+        .btn-delete { background: #dc2626; color: white; }
+        .btn-delete:hover { background: #b91c1c; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(220,38,38,0.3); }
+        
+        /* Badge */
+        .badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-green { background: #d1fae5; color: #065f46; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-orange { background: #fed7aa; color: #c2410c; }
+        .badge-purple { background: #e9d5ff; color: #6b21a8; }
+        .badge-cyan { background: #cffafe; color: #155e75; }
+        .badge-pink { background: #fce7f3; color: #9f1239; }
+        .badge i { font-size: 0.875rem; }
+        
+        /* Input */
+        .input { padding: 0.625rem 1rem; border: 1.5px solid #d1d5db; border-radius: 0.5rem; outline: none; font-size: 0.9375rem; transition: all 0.2s; width: 280px; }
+        .input:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.1); }
+        
+        /* Toast */
+        .toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; }
+        .toast { min-width: 340px; margin-bottom: 0.875rem; padding: 1.125rem 1.375rem; border-radius: 0.625rem; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; animation: slideIn 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .toast-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-left: 4px solid #047857; }
+        .toast-error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border-left: 4px solid #b91c1c; }
+        .toast-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border-left: 4px solid #b45309; }
+        .toast i { font-size: 1.625rem; margin-right: 1rem; }
+        .toast-message { flex: 1; font-weight: 500; font-size: 0.9375rem; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+        
+        /* Confirm Modal */
+        .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.2s; backdrop-filter: blur(2px); }
+        .confirm-dialog { background: white; border-radius: 1rem; padding: 2rem; max-width: 420px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .confirm-icon { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
+        .confirm-icon i { font-size: 2.25rem; color: #dc2626; }
+        .confirm-title { font-size: 1.5rem; font-weight: 700; text-align: center; margin-bottom: 0.875rem; color: #1f2937; }
+        .confirm-message { text-align: center; color: #6b7280; margin-bottom: 1.75rem; font-size: 1rem; line-height: 1.5; }
+        .confirm-buttons { display: flex; gap: 0.875rem; }
+        .confirm-buttons .btn { flex: 1; justify-content: center; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title"><i class="bi bi-shop"></i>Dashboard</div>
+                <div class="sidebar-user" id="userName">Centro Comercial Elías Aguirre</div>
+                <span class="sidebar-badge" id="userRole">Administrador</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="sidebar-link"><i class="bi bi-house-door"></i>Inicio</a>
+                <a href="/dashboard/roles" class="sidebar-link"><i class="bi bi-person-badge"></i>Roles</a>
+                <a href="/dashboard/categorias" class="sidebar-link"><i class="bi bi-tags"></i>Categorías</a>
+                <a href="/dashboard/marcas" class="sidebar-link"><i class="bi bi-bookmark"></i>Marcas</a>
+                <a href="/dashboard/tipos" class="sidebar-link"><i class="bi bi-grid"></i>Tipos de Producto</a>
+                <a href="/dashboard/modelos" class="sidebar-link"><i class="bi bi-layers"></i>Modelos de Producto</a>
+                <a href="/dashboard/colores" class="sidebar-link active"><i class="bi bi-palette"></i>Colores</a>
+                <a href="/dashboard/productos" class="sidebar-link"><i class="bi bi-box-seam"></i>Productos</a>
+                <a href="/dashboard/temporadas" class="sidebar-link"><i class="bi bi-calendar-event"></i>Temporadas</a>
+                <a href="/dashboard/departamentos" class="sidebar-link"><i class="bi bi-geo-alt"></i>Departamentos</a>
+                <a href="#" onclick="logout()" class="sidebar-link" style="margin-top:2.5rem;opacity:0.85"><i class="bi bi-box-arrow-right"></i>Cerrar Sesión</a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main id="content">
+            <header class="page-header">
+                <h1 class="page-title"><i class="bi bi-palette"></i>Mantenimiento de Colores</h1>
+                <button class="btn btn-primary" onclick="abrirModal()"><i class="bi bi-plus-circle"></i>Nuevo Color</button>
+            </header>
+            
+            <div class="main-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Lista de Colores</h5>
+                        <input type="text" id="search" class="input" placeholder="Buscar color...">
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>NOMBRE</th>
+                                    <th style="text-align:center">PRODUCTOS</th>
+                                    <th style="text-align:center">ESTADO</th>
+                                    <th style="text-align:center">ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="modalTitle">Nuevo Color</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="id">
+                    
+                    <label class="form-label fw-semibold">Nombre del Color *</label>
+                    <input type="text" class="form-control mb-3" id="nombre" maxlength="50" placeholder="Ej: Azul, Rojo, Verde...">
+                    <small class="text-muted">Máximo 50 caracteres</small>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i>Cancelar</button>
+                    <button class="btn btn-primary" onclick="guardar()"><i class="bi bi-save"></i>Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- CARGAR CONFIG PRIMERO -->
+    <script>
+        if (typeof window.CONFIG === 'undefined') {
+            const detectarApiUrl = () => {
+                const hostname = window.location.hostname;
+                if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                    return 'http://127.0.0.1:3007';
+                }
+                if (hostname.startsWith('192.168.') || hostname.startsWith('10.')) {
+                    return `${window.location.protocol}//${hostname}:3007`;
+                }
+                return 'https://api.tudominio.com';
+            };
+            
+            window.CONFIG = {
+                API_URL: detectarApiUrl(),
+                TIMEOUT: 30000,
+                MAX_FILE_SIZE: 5 * 1024 * 1024,
+                ITEMS_PER_PAGE: 10,
+                IS_DEVELOPMENT: window.location.hostname === 'localhost' || 
+                                window.location.hostname === '127.0.0.1' ||
+                                window.location.hostname.startsWith('192.168.')
+            };
+            
+            console.log('✅ CONFIG cargado (fallback inline):', window.CONFIG.API_URL);
+        }
+    </script>
+    
+    <script>
+        const API = window.CONFIG.API_URL;
+        
+        let user = null;
+        let stats = [];
+        let modalInstance = null;
+
+        // Toast notification
+        function toast(msg, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const el = document.createElement('div');
+            el.className = `toast toast-${type}`;
+            const icon = type === 'success' ? 'bi-check-circle-fill' : type === 'error' ? 'bi-x-circle-fill' : 'bi-exclamation-triangle-fill';
+            el.innerHTML = `<i class="bi ${icon}"></i><span class="toast-message">${msg}</span>`;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.animation = 'slideOut 0.35s';
+                setTimeout(() => el.remove(), 350);
+            }, 3000);
+        }
+
+        // Confirm dialog
+        function confirmar(msg, title = '¿Estás seguro?') {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'confirm-overlay';
+                overlay.innerHTML = `
+                    <div class="confirm-dialog">
+                        <div class="confirm-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                        <div class="confirm-title">${title}</div>
+                        <div class="confirm-message">${msg}</div>
+                        <div class="confirm-buttons">
+                            <button class="btn btn-secondary" onclick="closeConfirm(false)"><i class="bi bi-x-circle"></i>Cancelar</button>
+                            <button class="btn btn-primary" onclick="closeConfirm(true)"><i class="bi bi-check-circle"></i>Confirmar</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                window.closeConfirm = (result) => {
+                    overlay.remove();
+                    delete window.closeConfirm;
+                    resolve(result);
+                };
+            });
+        }
+
+        // Initialize - SIN VALIDACIÓN DE AUTENTICACIÓN
+        (async () => {
+            console.log('✅ Módulo de colores cargado - Acceso libre');
+            console.log('🔧 Inicializando con API:', API);
+            
+            modalInstance = new bootstrap.Modal(document.getElementById('modal'));
+            
+            await cargar();
+        })();
+
+        // Load data
+        async function cargar() {
+            try {
+                console.log('📡 Cargando colores desde:', `${API}/colores/listar`);
+                
+                const [r1, r2] = await Promise.all([
+                    fetch(`${API}/colores/listar`),
+                    fetch(`${API}/colores/estadisticas`)
+                ]);
+                
+                if (!r1.ok || !r2.ok) {
+                    throw new Error(`HTTP error! status: ${r1.status}, ${r2.status}`);
+                }
+                
+                const d1 = await r1.json();
+                const d2 = await r2.json();
+                
+                console.log('✅ Colores recibidos:', d1);
+                console.log('✅ Estadísticas recibidas:', d2);
+                
+                if (!d1.status) return toast(d1.message, 'error');
+                
+                stats = d2.status ? d2.data : [];
+                renderizar(d1.data);
+            } catch (e) {
+                console.error('❌ Error al cargar colores:', e);
+                toast('Error al cargar los colores: ' + e.message, 'error');
+            }
+        }
+
+        // Render table
+        function renderizar(data) {
+            const tbody = document.getElementById('tabla');
+            
+            if (!data || !data.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay colores registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(c => {
+                const id = c.id_color;
+                const nombre = c.nombre;
+                const estado = c.estado !== undefined ? c.estado : false;
+                
+                const st = stats.find(s => s.id_color === id);
+                const productos = st ? st.total_productos : 0;
+                
+                const estadoBadge = estado 
+                    ? '<span class="badge badge-green"><i class="bi bi-check-circle"></i>Activo</span>'
+                    : '<span class="badge badge-red"><i class="bi bi-x-circle"></i>Inactivo</span>';
+                
+                const estadoBtn = estado
+                    ? `<button class="btn-icon btn-warning" onclick="cambiarEstado(${id},'${nombre}')" title="Desactivar"><i class="bi bi-toggle-on"></i></button>`
+                    : `<button class="btn-icon btn-success" onclick="cambiarEstado(${id},'${nombre}')" title="Activar"><i class="bi bi-toggle-off"></i></button>`;
+                
+                const deleteBtn = productos > 0
+                    ? `<button class="btn-icon btn-delete" style="opacity: 0.5; cursor: not-allowed;" title="No se puede eliminar: tiene ${productos} producto(s) asociado(s)"><i class="bi bi-trash"></i></button>`
+                    : `<button class="btn-icon btn-delete" onclick="eliminar(${id},'${nombre}',${productos})" title="Eliminar"><i class="bi bi-trash"></i></button>`;
+                
+                return `
+                    <tr style="${!estado ? 'opacity: 0.6; background: #fef2f2;' : ''}">
+                        <td>${id}</td>
+                        <td class="font-bold">${nombre}</td>
+                        <td style="text-align:center"><span class="badge badge-blue">${productos}</span></td>
+                        <td style="text-align:center">${estadoBadge}</td>
+                        <td style="text-align:center">
+                            ${estadoBtn}
+                            <button class="btn-icon btn-edit" onclick="editar(${id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                            ${deleteBtn}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Open modal
+        function abrirModal() {
+            document.getElementById('modalTitle').textContent = 'Nuevo Color';
+            document.getElementById('id').value = '';
+            document.getElementById('nombre').value = '';
+            modalInstance.show();
+        }
+
+        // Edit
+        async function editar(id) {
+            try {
+                const res = await fetch(`${API}/colores/obtener/${id}`);
+                const data = await res.json();
+                if (!data.status) return toast(data.message, 'error');
+                
+                document.getElementById('modalTitle').textContent = 'Editar Color';
+                document.getElementById('id').value = data.data.id_color;
+                document.getElementById('nombre').value = data.data.nombre;
+                modalInstance.show();
+            } catch (e) {
+                toast('Error al cargar el color', 'error');
+            }
+        }
+
+        // Save
+        async function guardar() {
+            const id = document.getElementById('id').value;
+            const nombre = document.getElementById('nombre').value.trim();
+            
+            if (!nombre) return toast('El nombre del color es requerido', 'warning');
+            
+            try {
+                const body = { nombre };
+                
+                const res = await fetch(`${API}/colores/${id ? `modificar/${id}` : 'crear'}`, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                
+                if (data.status) {
+                    toast(id ? '✓ Color modificado correctamente' : '✓ Color creado correctamente', 'success');
+                    modalInstance.hide();
+                    await cargar();
+                } else {
+                    toast(data.message, 'error');
+                }
+            } catch (e) {
+                toast('Error al guardar el color', 'error');
+            }
+        }
+
+        // Change State
+        async function cambiarEstado(id, nombre) {
+            const ok = await confirmar(`¿Deseas cambiar el estado de "${nombre}"?`, 'Cambiar estado');
+            if (!ok) return;
+            
+            try {
+                const res = await fetch(`${API}/colores/cambiar-estado/${id}`, { method: 'PATCH' });
+                const data = await res.json();
+                
+                if (data.status) {
+                    toast('✓ Estado cambiado correctamente', 'success');
+                    await cargar();
+                } else {
+                    toast(data.message, 'error');
+                }
+            } catch (e) {
+                toast('Error al cambiar el estado', 'error');
+            }
+        }
+
+        // Delete (Eliminación lógica - cambia estado a inactivo)
+        async function eliminar(id, nombre, productos) {
+            if (productos > 0) {
+                toast(`❌ No se puede eliminar "${nombre}" porque tiene ${productos} producto(s) asociado(s).`, 'error');
+                return;
+            }
+            
+            const ok = await confirmar(
+                `Esta acción desactivará el color "${nombre}".\n\nPodrás reactivarlo después si lo necesitas.\n\n¿Estás seguro?`, 
+                '¿Desactivar color?'
+            );
+            
+            if (!ok) return;
+            
+            try {
+                const res = await fetch(`${API}/colores/eliminar/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await res.json();
+                
+                if (data.status) {
+                    toast('✓ Color desactivado correctamente', 'success');
+                    await cargar();
+                } else {
+                    toast(`❌ ${data.message}`, 'error');
+                }
+            } catch (e) {
+                console.error('Error al eliminar:', e);
+                toast('❌ Error al desactivar el color', 'error');
+            }
+        }
+
+        // Search
+        document.getElementById('search').addEventListener('input', e => {
+            const val = e.target.value.toLowerCase();
+            document.querySelectorAll('#tabla tr').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+            });
+        });
+
+        // Logout
+        async function logout() {
+            const ok = await confirmar('Se cerrará tu sesión actual', '¿Cerrar sesión?');
+            if (ok) {
+                localStorage.clear();
+                location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>

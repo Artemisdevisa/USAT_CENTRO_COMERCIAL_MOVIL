@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Productos Color - Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; overflow-x: hidden; }
+        
+        /* Layout */
+        .layout { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        #sidebar { width: 250px; background: #dc2626; color: white; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-title { font-size: 1.375rem; font-weight: 700; display: flex; align-items: center; gap: 0.625rem; }
+        .sidebar-user { font-size: 0.875rem; color: rgba(255,255,255,0.9); margin-top: 0.625rem; }
+        .sidebar-badge { display: inline-block; background: rgba(0,0,0,0.3); padding: 0.25rem 0.625rem; border-radius: 0.375rem; font-size: 0.75rem; margin-top: 0.375rem; }
+        .sidebar-nav { padding: 1.25rem; }
+        .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 0.5rem; color: white; text-decoration: none; transition: all 0.2s; margin-bottom: 0.375rem; font-size: 0.9375rem; }
+        .sidebar-link:hover { background: rgba(255,255,255,0.1); color: white; transform: translateX(4px); }
+        .sidebar-link.active { background: rgba(255,255,255,0.2); font-weight: 600; }
+        .sidebar-link i { font-size: 1.125rem; }
+        
+        /* Content */
+        #content { flex: 1; }
+        
+        /* Header */
+        .page-header { background: white; padding: 1.5rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 1.75rem; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 0.625rem; }
+        .page-title i { color: #dc2626; }
+        
+        /* Main */
+        .main-content { padding: 2rem; }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        .card-header { padding: 1.25rem 1.75rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; }
+        
+        /* Table */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f9fafb; }
+        th { padding: 1rem 1.5rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.025em; }
+        td { padding: 1.125rem 1.5rem; border-top: 1px solid #f3f4f6; font-size: 0.9375rem; }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: #fef2f2; }
+        .font-bold { font-weight: 600; color: #1f2937; }
+        
+        /* Producto image thumbnail */
+        .prod-img { width: 60px; height: 60px; object-fit: cover; border-radius: 0.5rem; border: 2px solid #e5e7eb; }
+        
+        /* Buttons */
+        .btn { padding: 0.625rem 1.25rem; border-radius: 0.5rem; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; }
+        .btn-primary { background: #dc2626; color: white; box-shadow: 0 1px 3px rgba(220,38,38,0.3); }
+        .btn-primary:hover { background: #b91c1c; box-shadow: 0 4px 12px rgba(220,38,38,0.4); transform: translateY(-1px); }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-icon { padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-edit { background: #3b82f6; color: white; margin-right: 0.5rem; }
+        .btn-edit:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(59,130,246,0.3); }
+        .btn-toggle { background: #f59e0b; color: white; margin-right: 0.5rem; }
+        .btn-toggle:hover { background: #d97706; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(245,158,11,0.3); }
+        .btn-delete { background: #dc2626; color: white; }
+        .btn-delete:hover { background: #b91c1c; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(220,38,38,0.3); }
+        
+        /* Badge */
+        .badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
+        .badge-green { background: #d1fae5; color: #065f46; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge i { font-size: 0.875rem; }
+        
+        /* Input */
+        .input { padding: 0.625rem 1rem; border: 1.5px solid #d1d5db; border-radius: 0.5rem; outline: none; font-size: 0.9375rem; transition: all 0.2s; width: 280px; }
+        .input:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.1); }
+        
+        /* Toast */
+        .toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; }
+        .toast { min-width: 340px; margin-bottom: 0.875rem; padding: 1.125rem 1.375rem; border-radius: 0.625rem; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; animation: slideIn 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .toast-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-left: 4px solid #047857; }
+        .toast-error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border-left: 4px solid #b91c1c; }
+        .toast-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border-left: 4px solid #b45309; }
+        .toast i { font-size: 1.625rem; margin-right: 1rem; }
+        .toast-message { flex: 1; font-weight: 500; font-size: 0.9375rem; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+        
+        /* Confirm Modal */
+        .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.2s; backdrop-filter: blur(2px); }
+        .confirm-dialog { background: white; border-radius: 1rem; padding: 2rem; max-width: 420px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .confirm-icon { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
+        .confirm-icon i { font-size: 2.25rem; color: #dc2626; }
+        .confirm-title { font-size: 1.5rem; font-weight: 700; text-align: center; margin-bottom: 0.875rem; color: #1f2937; }
+        .confirm-message { text-align: center; color: #6b7280; margin-bottom: 1.75rem; font-size: 1rem; line-height: 1.5; }
+        .confirm-buttons { display: flex; gap: 0.875rem; }
+        .confirm-buttons .btn { flex: 1; justify-content: center; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        /* Form */
+        .form-label { font-weight: 600; margin-bottom: 0.5rem; display: block; color: #374151; }
+        .form-control { padding: 0.75rem 1rem; border: 1.5px solid #d1d5db; border-radius: 0.5rem; width: 100%; font-size: 0.9375rem; transition: all 0.2s; }
+        .form-control:focus { outline: none; border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.1); }
+        .form-group { margin-bottom: 1.25rem; }
+        
+        /* Preview imagen */
+        .img-preview { max-width: 200px; max-height: 200px; margin-top: 1rem; border-radius: 0.5rem; border: 2px solid #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title"><i class="bi bi-shop"></i>Dashboard</div>
+                <div class="sidebar-user">Centro Comercial Elías Aguirre</div>
+                <span class="sidebar-badge">Administrador</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="sidebar-link"><i class="bi bi-house-door"></i>Inicio</a>
+                <a href="/dashboard/productos" class="sidebar-link"><i class="bi bi-box-seam"></i>Productos Base</a>
+                <a href="/dashboard/productos-color" class="sidebar-link active"><i class="bi bi-palette"></i>Variantes (Color/Talla)</a>
+                <a href="/dashboard/categorias" class="sidebar-link"><i class="bi bi-tag"></i>Categorías</a>
+                <a href="/dashboard/marcas" class="sidebar-link"><i class="bi bi-award"></i>Marcas</a>
+                <a href="/dashboard/colores" class="sidebar-link"><i class="bi bi-droplet"></i>Colores</a>
+                <a href="#" onclick="logout()" class="sidebar-link" style="margin-top:2.5rem;opacity:0.85"><i class="bi bi-box-arrow-right"></i>Cerrar Sesión</a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main id="content">
+            <header class="page-header">
+                <h1 class="page-title"><i class="bi bi-palette"></i>Gestión de Productos Color (Variantes)</h1>
+                <button class="btn btn-primary" onclick="abrirModal()"><i class="bi bi-plus-circle"></i>Nueva Variante</button>
+            </header>
+            
+            <div class="main-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Lista de Variantes de Productos</h5>
+                        <input type="text" id="search" class="input" placeholder="Buscar por producto, color, talla...">
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>IMAGEN</th>
+                                    <th>PRODUCTO</th>
+                                    <th>MARCA</th>
+                                    <th>COLOR</th>
+                                    <th>TALLA</th>
+                                    <th style="text-align:right">PRECIO</th>
+                                    <th style="text-align:center">STOCK</th>
+                                    <th style="text-align:center">ESTADO</th>
+                                    <th style="text-align:center">ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="modalTitle">Nueva Variante</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formProductoColor" enctype="multipart/form-data">
+                        <input type="hidden" id="id_prod_color">
+                        <input type="hidden" id="url_img_actual">
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label">Producto *</label>
+                                    <select class="form-control" id="id_prod_sucursal" required>
+                                        <option value="">Seleccione un producto</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Color *</label>
+                                    <select class="form-control" id="id_color" required>
+                                        <option value="">Seleccione un color</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Talla *</label>
+                                    <input type="text" class="form-control" id="talla" maxlength="10" placeholder="S, M, L, XL, U, etc." required>
+                                    <small class="text-muted">Máximo 10 caracteres</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Precio *</label>
+                                    <input type="number" class="form-control" id="precio" step="0.01" min="0.01" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Stock *</label>
+                                    <input type="number" class="form-control" id="stock" min="0" placeholder="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Imagen del Producto</label>
+                            <input type="file" class="form-control" id="imagen" accept="image/*" onchange="previewImage(event)">
+                            <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP (máx. 5MB)</small>
+                            <div id="previewContainer" style="margin-top: 1rem;"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i>Cancelar</button>
+                    <button class="btn btn-primary" onclick="guardar()"><i class="bi bi-save"></i>Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- CARGAR CONFIG PRIMERO -->
+    <script>
+        if (typeof window.CONFIG === 'undefined') {
+            const detectarApiUrl = () => {
+                const hostname = window.location.hostname;
+                if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                    return 'http://127.0.0.1:3007';
+                }
+                if (hostname.startsWith('192.168.') || hostname.startsWith('10.')) {
+                    return `${window.location.protocol}//${hostname}:3007`;
+                }
+                return 'https://api.tudominio.com';
+            };
+            
+            window.CONFIG = {
+                API_URL: detectarApiUrl(),
+                TIMEOUT: 30000,
+                MAX_FILE_SIZE: 5 * 1024 * 1024,
+                IS_DEVELOPMENT: window.location.hostname === 'localhost' || 
+                                window.location.hostname === '127.0.0.1' ||
+                                window.location.hostname.startsWith('192.168.')
+            };
+            
+            console.log('✅ CONFIG cargado (fallback inline):', window.CONFIG.API_URL);
+        }
+    </script>
+
+    <script src="/static/js/utils.js"></script>
+    
+    <script>
+        const API = window.CONFIG.API_URL;
+        
+        let user = null;
+        let modalInstance = null;
+        let productos = [];
+        let colores = [];
+
+        // Toast notification
+        function toast(msg, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const el = document.createElement('div');
+            el.className = `toast toast-${type}`;
+            const icon = type === 'success' ? 'bi-check-circle-fill' : type === 'error' ? 'bi-x-circle-fill' : 'bi-exclamation-triangle-fill';
+            el.innerHTML = `<i class="bi ${icon}"></i><span class="toast-message">${msg}</span>`;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.animation = 'slideOut 0.35s';
+                setTimeout(() => el.remove(), 350);
+            }, 4000);
+        }
+
+        // Confirm dialog
+        function confirmar(msg, title = '¿Estás seguro?') {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'confirm-overlay';
+                overlay.innerHTML = `
+                    <div class="confirm-dialog">
+                        <div class="confirm-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                        <div class="confirm-title">${title}</div>
+                        <div class="confirm-message">${msg}</div>
+                        <div class="confirm-buttons">
+                            <button class="btn btn-secondary" onclick="closeConfirm(false)"><i class="bi bi-x-circle"></i>Cancelar</button>
+                            <button class="btn btn-primary" onclick="closeConfirm(true)"><i class="bi bi-trash"></i>Confirmar</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                window.closeConfirm = (result) => {
+                    overlay.remove();
+                    delete window.closeConfirm;
+                    resolve(result);
+                };
+            });
+        }
+
+        // Preview de imagen
+        function previewImage(event) {
+            const container = document.getElementById('previewContainer');
+            const file = event.target.files[0];
+            
+            if (file) {
+                if (file.size > window.CONFIG.MAX_FILE_SIZE) {
+                    toast('La imagen no debe superar los 5MB', 'warning');
+                    event.target.value = '';
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    container.innerHTML = `<img src="${e.target.result}" class="img-preview" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                container.innerHTML = '';
+            }
+        }
+
+        // Initialize
+        // Initialize - SIN VALIDACIÓN DE AUTENTICACIÓN
+        (async () => {
+            console.log('✅ Módulo de variantes cargado - Acceso libre');
+            console.log('🔧 Inicializando con API:', API);
+            
+            modalInstance = new bootstrap.Modal(document.getElementById('modal'));
+            
+            await cargar();
+        })();
+
+        // Load data
+        async function cargar() {
+            try {
+                console.log('📡 Cargando productos color desde:', `${API}/productos-color/listar`);
+                
+                const [r1, r2, r3] = await Promise.all([
+                    fetch(`${API}/productos-color/listar`),
+                    fetch(`${API}/productos-color/productos-activos`),
+                    fetch(`${API}/productos-color/colores-activos`)
+                ]);
+                
+                if (!r1.ok || !r2.ok || !r3.ok) {
+                    throw new Error(`HTTP error! status: ${r1.status}, ${r2.status}, ${r3.status}`);
+                }
+                
+                const d1 = await r1.json();
+                const d2 = await r2.json();
+                const d3 = await r3.json();
+                
+                console.log('✅ Productos color recibidos:', d1);
+                console.log('✅ Productos activos recibidos:', d2);
+                console.log('✅ Colores activos recibidos:', d3);
+                
+                if (!d1.status) return toast(d1.message, 'error');
+                
+                productos = d2.status ? d2.data : [];
+                colores = d3.status ? d3.data : [];
+                
+                renderizar(d1.data);
+                cargarSelectProductos();
+                cargarSelectColores();
+            } catch (e) {
+                console.error('❌ Error al cargar:', e);
+                toast('Error al cargar los datos: ' + e.message, 'error');
+            }
+        }
+
+        // Render table
+        function renderizar(data) {
+            const tbody = document.getElementById('tabla');
+            if (!data.length) return tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay variantes registradas</td></tr>';
+            
+            tbody.innerHTML = data.map(r => {
+                const estado = r.estado ? 
+                    '<span class="badge badge-green"><i class="bi bi-check-circle"></i>Activo</span>' : 
+                    '<span class="badge badge-red"><i class="bi bi-x-circle"></i>Inactivo</span>';
+                
+                const imagen = r.url_img ? 
+                    `<img src="${API}${r.url_img}" class="prod-img" alt="${r.nombre_producto}" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Img'">` : 
+                    `<img src="https://via.placeholder.com/60x60?text=Sin+Img" class="prod-img" alt="Sin imagen">`;
+                
+                const iconoEstado = r.estado ? 'bi-toggle-on' : 'bi-toggle-off';
+                const accionEstado = r.estado ? 'Desactivar' : 'Activar';
+                
+                return `
+                    <tr>
+                        <td>${r.id_prod_color}</td>
+                        <td>${imagen}</td>
+                        <td class="font-bold">${r.nombre_producto}</td>
+                        <td>${r.nombre_marca}</td>
+                        <td><span class="badge badge-blue">${r.nombre_color}</span></td>
+                        <td><strong>${r.talla}</strong></td>
+                        <td style="text-align:right"><strong>S/ ${r.precio.toFixed(2)}</strong></td>
+                        <td style="text-align:center"><span class="badge badge-blue">${r.stock}</span></td>
+                        <td style="text-align:center">${estado}</td>
+                        <td style="text-align:center">
+                            <button class="btn-icon btn-edit" onclick="editar(${r.id_prod_color})" title="Editar"><i class="bi bi-pencil"></i></button>
+                            <button class="btn-icon btn-toggle" onclick="cambiarEstado(${r.id_prod_color})" title="${accionEstado}"><i class="bi ${iconoEstado}"></i></button>
+                            <button class="btn-icon btn-delete" onclick="eliminar(${r.id_prod_color},'${r.nombre_producto} - ${r.nombre_color} - ${r.talla}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Cargar select de productos
+        function cargarSelectProductos() {
+            const select = document.getElementById('id_prod_sucursal');
+            select.innerHTML = '<option value="">Seleccione un producto</option>' + 
+                productos.map(p => `<option value="${p.id_prod_sucursal}">${p.nombre_completo}</option>`).join('');
+        }
+
+        // Cargar select de colores
+        function cargarSelectColores() {
+            const select = document.getElementById('id_color');
+            select.innerHTML = '<option value="">Seleccione un color</option>' + 
+                colores.map(c => `<option value="${c.id_color}">${c.nombre}</option>`).join('');
+        }
+
+        // Open modal
+        function abrirModal() {
+            document.getElementById('modalTitle').textContent = 'Nueva Variante';
+            document.getElementById('formProductoColor').reset();
+            document.getElementById('id_prod_color').value = '';
+            document.getElementById('url_img_actual').value = '';
+            document.getElementById('previewContainer').innerHTML = '';
+            modalInstance.show();
+        }
+
+        // Edit
+        async function editar(id) {
+            try {
+                const res = await fetch(`${API}/productos-color/obtener/${id}`);
+                const data = await res.json();
+                if (!data.status) return toast(data.message, 'error');
+                
+                const r = data.data;
+                
+                document.getElementById('modalTitle').textContent = 'Editar Variante';
+                document.getElementById('id_prod_color').value = r.id_prod_color;
+                document.getElementById('id_prod_sucursal').value = r.id_prod_sucursal;
+                document.getElementById('id_color').value = r.id_color;
+                document.getElementById('talla').value = r.talla;
+                document.getElementById('precio').value = r.precio;
+                document.getElementById('stock').value = r.stock;
+                document.getElementById('url_img_actual').value = r.url_img || '';
+                
+                // Mostrar imagen actual si existe
+                const container = document.getElementById('previewContainer');
+                if (r.url_img) {
+                    container.innerHTML = `<img src="${API}${r.url_img}" class="img-preview" alt="Imagen actual">`;
+                } else {
+                    container.innerHTML = '';
+                }
+                
+                modalInstance.show();
+            } catch (e) {
+                toast('Error al cargar la variante', 'error');
+            }
+        }
+
+        // Save
+        async function guardar() {
+            const id = document.getElementById('id_prod_color').value;
+            const id_prod_sucursal = document.getElementById('id_prod_sucursal').value;
+            const id_color = document.getElementById('id_color').value;
+            const talla = document.getElementById('talla').value.trim();
+            const precio = document.getElementById('precio').value;
+            const stock = document.getElementById('stock').value;
+            const imagen = document.getElementById('imagen').files[0];
+            const url_img_actual = document.getElementById('url_img_actual').value;
+            
+            if (!id_prod_sucursal || !id_color || !talla || !precio || !stock) {
+                return toast('Todos los campos son requeridos', 'warning');
+            }
+            
+            if (parseFloat(precio) <= 0) {
+                return toast('El precio debe ser mayor a 0', 'warning');
+            }
+            
+            if (parseInt(stock) < 0) {
+                return toast('El stock no puede ser negativo', 'warning');
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('id_prod_sucursal', id_prod_sucursal);
+                formData.append('id_color', id_color);
+                formData.append('talla', talla);
+                formData.append('precio', precio);
+                formData.append('stock', stock);
+                if (imagen) formData.append('imagen', imagen);
+                if (id) formData.append('url_img_actual', url_img_actual);
+                
+                const url = id ? `${API}/productos-color/modificar/${id}` : `${API}/productos-color/crear`;
+                const method = id ? 'POST' : 'POST';
+                
+                const res = await fetch(url, {
+                    method: method,
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (data.status) {
+                    toast(id ? '✓ Variante modificada correctamente' : '✓ Variante creada correctamente', 'success');
+                    modalInstance.hide();
+                    await cargar();
+                } else {
+                    toast(data.message, 'error');
+                }
+            } catch (e) {
+                toast('Error al guardar la variante', 'error');
+            }
+        }
+
+        // Cambiar estado (Eliminación lógica)
+        async function cambiarEstado(id) {
+            try {
+                const res = await fetch(`${API}/productos-color/cambiar-estado/${id}`, { method: 'PATCH' });
+                const data = await res.json();
+                
+                if (data.status) {
+                    toast(data.message, 'success');
+                    await cargar();
+                } else {
+                    toast(data.message, 'error');
+                }
+            } catch (e) {
+                toast('Error al cambiar el estado', 'error');
+            }
+        }
+
+        // Delete (Eliminación física)
+        async function eliminar(id, nombre) {
+            const ok = await confirmar(`Esta acción eliminará PERMANENTEMENTE la variante "${nombre}" de la base de datos. Esta acción no se puede deshacer.`, '¿Eliminar variante?');
+            if (!ok) return;
+            
+            try {
+                const res = await fetch(`${API}/productos-color/eliminar/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                
+                if (data.status) {
+                    toast('✓ Variante eliminada correctamente', 'success');
+                    await cargar();
+                } else {
+                    toast(data.message, 'error');
+                }
+            } catch (e) {
+                toast('Error al eliminar la variante', 'error');
+            }
+        }
+
+        // Search
+        document.getElementById('search').addEventListener('input', e => {
+            const val = e.target.value.toLowerCase();
+            document.querySelectorAll('#tabla tr').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+            });
+        });
+
+        // Logout
+        async function logout() {
+            const ok = await confirmar('Se cerrará tu sesión actual', '¿Cerrar sesión?');
+            if (ok) {
+                localStorage.clear();
+                location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>

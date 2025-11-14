@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Centro Comercial Elías Aguirre{% endblock %}
+
+{% block content %}
+<!-- HERO SECTION -->
+<section class="bg-gradient-to-r from-red-600 to-red-700 py-16">
+    <div class="container mx-auto px-4">
+        <div class="text-center text-white">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Bienvenido a Centro Comercial Elías Aguirre</h1>
+            <p class="text-xl md:text-2xl mb-8">Descubre las mejores ofertas y productos de calidad</p>
+            
+            <!-- Buscador -->
+            <div class="max-w-2xl mx-auto">
+                <div class="flex rounded-lg overflow-hidden shadow-lg">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Buscar productos..." 
+                        class="flex-1 px-6 py-4 text-gray-800 text-lg focus:outline-none">
+                    <button class="bg-white text-red-600 px-8 py-4 font-bold hover:bg-gray-100 transition">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- BANNER OFERTA ESPECIAL -->
+<section class="container mx-auto px-4 py-12">
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+        <div class="grid md:grid-cols-2">
+            <div class="bg-red-600 text-white p-12 flex flex-col justify-center">
+                <span class="bg-gray-900 inline-block px-4 py-1 rounded text-sm font-bold mb-4 w-fit">OFERTA ESPECIAL</span>
+                <h2 class="text-4xl font-bold mb-4">Hasta 40% OFF</h2>
+                <p class="text-xl mb-6">En productos seleccionados</p>
+                <button class="bg-white text-red-600 px-8 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition w-fit">
+                    <i class="bi bi-tag-fill"></i> Ver Ofertas
+                </button>
+            </div>
+            <div class="hidden md:block">
+                <img 
+                    src="/uploads/fotos/aguirre/logo3.png" 
+                    alt="Oferta Especial" 
+                    class="w-full h-full object-contain p-8">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CATEGORÍAS -->
+<section class="container mx-auto px-4 py-12">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold text-red-600 flex items-center space-x-2">
+            <i class="bi bi-tags-fill"></i>
+            <span>Categorías</span>
+        </h2>
+    </div>
+    
+    <div id="categorias-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Las categorías se cargarán aquí -->
+    </div>
+</section>
+
+<!-- REGISTRAR EMPRESA (VISIBLE PARA TODOS) -->
+<section class="bg-gradient-to-r from-blue-600 to-blue-700 py-16 my-12">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center text-white">
+            <div class="inline-block bg-white/20 backdrop-blur-sm rounded-full p-6 mb-6">
+                <i class="bi bi-shop text-6xl"></i>
+            </div>
+            <h2 class="text-4xl font-bold mb-4">¿Tienes una empresa?</h2>
+            <p class="text-xl mb-8 text-blue-100">Únete a nuestro centro comercial y llega a más clientes</p>
+            <button onclick="irAPostularEmpresa()" class="bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-2xl">
+                <i class="bi bi-briefcase-fill"></i> Registrar mi Empresa
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- PRODUCTOS DESTACADOS -->
+<section class="bg-gray-100 py-12">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold text-red-600 flex items-center space-x-2">
+                <i class="bi bi-star-fill"></i>
+                <span>Productos Destacados</span>
+            </h2>
+        </div>
+        
+        <div id="productos-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Los productos se cargarán aquí -->
+        </div>
+    </div>
+</section>
+
+<!-- VENTAJAS -->
+<section class="container mx-auto px-4 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+        <div class="p-6">
+            <i class="bi bi-truck text-5xl text-red-600 mb-4"></i>
+            <h5 class="text-xl font-bold mb-2">Envío Gratis</h5>
+            <p class="text-gray-600">En compras mayores a S/100</p>
+        </div>
+        <div class="p-6">
+            <i class="bi bi-shield-check text-5xl text-red-600 mb-4"></i>
+            <h5 class="text-xl font-bold mb-2">Compra Segura</h5>
+            <p class="text-gray-600">Tus datos protegidos</p>
+        </div>
+        <div class="p-6">
+            <i class="bi bi-arrow-repeat text-5xl text-red-600 mb-4"></i>
+            <h5 class="text-xl font-bold mb-2">Cambios Fáciles</h5>
+            <p class="text-gray-600">30 días para cambios</p>
+        </div>
+        <div class="p-6">
+            <i class="bi bi-headset text-5xl text-red-600 mb-4"></i>
+            <h5 class="text-xl font-bold mb-2">Soporte 24/7</h5>
+            <p class="text-gray-600">Estamos para ayudarte</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const API_URL = window.CONFIG.API_URL;
+
+// ==================== CARGAR CATEGORÍAS ====================
+fetch(`${API_URL}/categorias/listar`)
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById('categorias-container');
+        
+        if (data.status && data.data && data.data.length > 0) {
+            container.innerHTML = '';
+            data.data.forEach(cat => {
+                const imgUrl = `${API_URL}/uploads/fotos/categorias/${cat.imagen}`;
+                
+                // ✅ SIN ONCLICK - NO REDIRIGE
+                container.innerHTML += `
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                        <img 
+                            src="${imgUrl}" 
+                            alt="${cat.nombreCategoria}"
+                            class="w-full h-48 object-cover rounded-t-lg"
+                            onerror="this.src='https://via.placeholder.com/300x200?text=${cat.nombreCategoria}'">
+                        <div class="p-4 text-center">
+                            <h5 class="text-lg font-bold text-red-600">${cat.nombreCategoria}</h5>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            container.innerHTML = '<p class="col-span-full text-center text-gray-500">No hay categorías disponibles</p>';
+        }
+    })
+    .catch(err => {
+        console.error('Error al cargar categorías:', err);
+        document.getElementById('categorias-container').innerHTML = '<p class="col-span-full text-center text-red-500">Error al cargar categorías</p>';
+    });
+
+// ==================== CARGAR PRODUCTOS ====================
+fetch(`${API_URL}/productos/listar`)
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById('productos-container');
+        
+        if (data.status && data.data && data.data.length > 0) {
+            container.innerHTML = '';
+            data.data.slice(0, 8).forEach(prod => {
+                // ✅ SIN ONCLICK EN BOTÓN VER - NO REDIRIGE
+                container.innerHTML += `
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300">
+                        <img 
+                            src="${prod.url_img}" 
+                            alt="${prod.nombre}"
+                            class="w-full h-64 object-cover rounded-t-lg"
+                            onerror="this.src='https://via.placeholder.com/300x400?text=Producto'">
+                        <div class="p-4">
+                            <span class="inline-block bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2">${prod.marca || 'Sin marca'}</span>
+                            <h6 class="text-lg font-bold mb-2 text-gray-800">${prod.nombre}</h6>
+                            <p class="text-sm text-gray-600 mb-3">
+                                <i class="bi bi-rulers"></i> Talla: ${prod.talla} | 
+                                <i class="bi bi-palette-fill"></i> ${prod.color}
+                            </p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-2xl font-bold text-red-600">S/ ${parseFloat(prod.precio).toFixed(2)}</span>
+                                <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                                    <i class="bi bi-eye"></i> Ver
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            container.innerHTML = '<p class="col-span-full text-center text-gray-500">No hay productos disponibles</p>';
+        }
+    })
+    .catch(err => {
+        console.error('Error al cargar productos:', err);
+        document.getElementById('productos-container').innerHTML = '<p class="col-span-full text-center text-red-500">Error al cargar productos</p>';
+    });
+
+// ✅ FUNCIONES ELIMINADAS - YA NO SE USAN
+// function verCategoria(id) { ... }
+// function verDetalle(id) { ... }
+
+function irAPostularEmpresa() {
+    const token = localStorage.getItem('token');
+    
+    // Validar si está logueado
+    if (!token) {
+        alert('⚠️ Debes iniciar sesión para postular tu empresa');
+        window.location.href = '/login?redirect=/postular-empresa';
+        return;
+    }
+    
+    // Validar rol Cliente
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            const roles = user.roles || [];
+            const esCliente = roles.some(r => r.nombre === 'Cliente');
+            
+            if (!esCliente) {
+                alert('⚠️ Solo los usuarios con rol Cliente pueden postular empresas. Por favor regístrate como cliente primero.');
+                window.location.href = '/registro';
+                return;
+            }
+            
+            // Si es cliente, redirigir a postular empresa
+            window.location.href = '/postular-empresa';
+        } catch (e) {
+            alert('⚠️ Error al verificar permisos');
+        }
+    }
+}
+</script>
+{% endblock %}

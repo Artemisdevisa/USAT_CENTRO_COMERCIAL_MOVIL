@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horarios de Sucursales - Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; overflow-x: hidden; }
+        
+        .layout { display: flex; min-height: 100vh; }
+        
+        #sidebar { width: 250px; background: #dc2626; color: white; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-title { font-size: 1.375rem; font-weight: 700; display: flex; align-items: center; gap: 0.625rem; }
+        .sidebar-user { font-size: 0.875rem; color: rgba(255,255,255,0.9); margin-top: 0.625rem; }
+        .sidebar-badge { display: inline-block; background: rgba(0,0,0,0.3); padding: 0.25rem 0.625rem; border-radius: 0.375rem; font-size: 0.75rem; margin-top: 0.375rem; }
+        .sidebar-nav { padding: 1.25rem; }
+        .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 0.5rem; color: white; text-decoration: none; transition: all 0.2s; margin-bottom: 0.375rem; font-size: 0.9375rem; }
+        .sidebar-link:hover { background: rgba(255,255,255,0.1); color: white; transform: translateX(4px); }
+        .sidebar-link.active { background: rgba(255,255,255,0.2); font-weight: 600; }
+        .sidebar-link i { font-size: 1.125rem; }
+        
+        #content { flex: 1; }
+        
+        .page-header { background: white; padding: 1.5rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 1.75rem; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 0.625rem; }
+        .page-title i { color: #dc2626; }
+        
+        .main-content { padding: 2rem; }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        .card-header { padding: 1.25rem 1.75rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; }
+        
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f9fafb; }
+        th { padding: 1rem 1.5rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.025em; }
+        td { padding: 1.125rem 1.5rem; border-top: 1px solid #f3f4f6; font-size: 0.9375rem; }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: #fef2f2; }
+        
+        .btn { padding: 0.625rem 1.25rem; border-radius: 0.5rem; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; }
+        .btn-primary { background: #dc2626; color: white; box-shadow: 0 1px 3px rgba(220,38,38,0.3); }
+        .btn-primary:hover { background: #b91c1c; box-shadow: 0 4px 12px rgba(220,38,38,0.4); transform: translateY(-1px); }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-icon { padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-edit { background: #3b82f6; color: white; margin-right: 0.5rem; }
+        .btn-edit:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(59,130,246,0.3); }
+        .btn-delete { background: #dc2626; color: white; }
+        .btn-delete:hover { background: #b91c1c; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(220,38,38,0.3); }
+        
+        .badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
+        .badge-lunes { background: #dbeafe; color: #1e40af; }
+        .badge-martes { background: #fef3c7; color: #92400e; }
+        .badge-miercoles { background: #d1fae5; color: #065f46; }
+        .badge-jueves { background: #fce7f3; color: #9f1239; }
+        .badge-viernes { background: #e9d5ff; color: #6b21a8; }
+        .badge-sabado { background: #fed7aa; color: #9a3412; }
+        .badge-domingo { background: #fee2e2; color: #991b1b; }
+        
+        .alert { padding: 1rem 1.25rem; border-radius: 0.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+        .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+        
+        .filter-section { background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 2rem; }
+        .filter-label { font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title"><i class="bi bi-shop"></i>Dashboard</div>
+                <div class="sidebar-user" id="userName">Cargando...</div>
+                <span class="sidebar-badge">Empresa</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="sidebar-link"><i class="bi bi-house-door"></i>Inicio</a>
+                <a href="/dashboard/empresa" class="sidebar-link"><i class="bi bi-building"></i>Mi Empresa</a>
+                <a href="/dashboard/sucursales" class="sidebar-link"><i class="bi bi-shop"></i>Sucursales</a>
+                <a href="/dashboard/horarios-sucursal" class="sidebar-link active"><i class="bi bi-clock-history"></i>Horarios</a>
+                <a href="/dashboard/productos" class="sidebar-link"><i class="bi bi-box-seam"></i>Productos</a>
+                <a href="/" class="sidebar-link" style="margin-top:2.5rem;opacity:0.85"><i class="bi bi-house"></i>Volver al Inicio</a>
+            </nav>
+        </aside>
+        
+        <main id="content">
+            <header class="page-header">
+                <h1 class="page-title"><i class="bi bi-clock-history"></i>Horarios de Sucursales</h1>
+            </header>
+            
+            <div class="main-content">
+                <div id="alertContainer"></div>
+                
+                <!-- Filtro de Sucursal -->
+                <div class="filter-section">
+                    <label class="filter-label">Seleccionar Sucursal</label>
+                    <select id="filtroSucursal" class="form-select" onchange="cargar()">
+                        <option value="">Seleccionar sucursal...</option>
+                    </select>
+                </div>
+                
+                <!-- Lista de Horarios -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Lista de Horarios</h5>
+                        <button class="btn btn-primary" onclick="abrirModal()" id="btnNuevo">
+                            <i class="bi bi-plus-circle"></i>Nuevo Horario
+                        </button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>DÍA</th>
+                                    <th>HORA INICIO</th>
+                                    <th>HORA FIN</th>
+                                    <th style="text-align:center">ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="modalTitle">Nuevo Horario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="id_horario">
+                    <input type="hidden" id="id_sucursal">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Día de la Semana *</label>
+                        <select class="form-select" id="dia" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="1">Lunes</option>
+                            <option value="2">Martes</option>
+                            <option value="3">Miércoles</option>
+                            <option value="4">Jueves</option>
+                            <option value="5">Viernes</option>
+                            <option value="6">Sábado</option>
+                            <option value="0">Domingo</option>
+                        </select>
+                        <small class="text-muted">Seleccione el día de la semana</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Hora Inicio *</label>
+                            <input type="time" class="form-control" id="hora_inicio" value="09:00" required>
+                            <small class="text-muted">Formato 24 horas</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Hora Fin *</label>
+                            <input type="time" class="form-control" id="hora_fin" value="18:00" required>
+                            <small class="text-muted">Formato 24 horas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i>Cancelar</button>
+                    <button class="btn btn-primary" onclick="guardar()"><i class="bi bi-save"></i>Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/config.js"></script>
+    
+    <script>
+        const API = window.CONFIG?.API_URL || 'http://127.0.0.1:3007';
+        let modalInstance;
+        let idEmpresa;
+        let sucursalSeleccionada = null;
+        
+        const DIAS = {
+            0: 'Domingo',
+            1: 'Lunes',
+            2: 'Martes',
+            3: 'Miércoles',
+            4: 'Jueves',
+            5: 'Viernes',
+            6: 'Sábado'
+        };
+        
+        const BADGE_CLASSES = {
+            1: 'badge-lunes',
+            2: 'badge-martes',
+            3: 'badge-miercoles',
+            4: 'badge-jueves',
+            5: 'badge-viernes',
+            6: 'badge-sabado',
+            0: 'badge-domingo'
+        };
+
+        function mostrarAlerta(mensaje, tipo = 'success') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo}`;
+            alert.innerHTML = `<i class="bi bi-${tipo === 'success' ? 'check-circle' : 'x-circle'}-fill"></i>${mensaje}`;
+            container.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        (async function init() {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            document.getElementById('userName').textContent = user.nomusuario;
+            idEmpresa = user.id_empresa;
+
+            if (!idEmpresa) {
+                mostrarAlerta('No tienes una empresa asociada', 'error');
+                setTimeout(() => window.location.href = '/dashboard', 2000);
+                return;
+            }
+
+            modalInstance = new bootstrap.Modal(document.getElementById('modal'));
+            await cargarSucursales();
+        })();
+
+        async function cargarSucursales() {
+            try {
+                const res = await fetch(`${API}/sucursales/listar-por-empresa/${idEmpresa}`);
+                const data = await res.json();
+                
+                if (data.status) {
+                    const select = document.getElementById('filtroSucursal');
+                    select.innerHTML = '<option value="">Seleccionar sucursal...</option>';
+                    
+                    data.data.forEach(s => {
+                        const option = document.createElement('option');
+                        option.value = s.id_sucursal;
+                        option.textContent = s.nombre;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('Error al cargar sucursales', 'error');
+            }
+        }
+
+        async function cargar() {
+            const idSucursal = document.getElementById('filtroSucursal').value;
+            sucursalSeleccionada = idSucursal;
+            
+            if (!idSucursal) {
+                document.getElementById('tabla').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem"><i class="bi bi-info-circle" style="font-size:3rem;display:block;margin-bottom:1rem"></i>Seleccione una sucursal para ver sus horarios</td></tr>';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API}/horarios-sucursal/listar/${idSucursal}`);
+                const data = await res.json();
+                
+                if (data.status) {
+                    renderizar(data.data);
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('Error al cargar horarios', 'error');
+            }
+        }
+
+        function renderizar(data) {
+            const tbody = document.getElementById('tabla');
+            
+            if (!data || !data.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay horarios registrados para esta sucursal</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(h => `
+                <tr>
+                    <td><span class="badge ${BADGE_CLASSES[h.dia]}">${h.dia_nombre}</span></td>
+                    <td><strong>${h.hora_inicio.substring(0, 5)}</strong></td>
+                    <td><strong>${h.hora_fin.substring(0, 5)}</strong></td>
+                    <td style="text-align:center">
+                        <button class="btn-icon btn-edit" onclick="editar(${h.id_horario})" title="Editar"><i class="bi bi-pencil"></i></button>
+                        <button class="btn-icon btn-delete" onclick="eliminar(${h.id_horario})" title="Eliminar"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function abrirModal() {
+            if (!sucursalSeleccionada) {
+                mostrarAlerta('Seleccione una sucursal primero', 'error');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = 'Nuevo Horario';
+            document.getElementById('id_horario').value = '';
+            document.getElementById('id_sucursal').value = sucursalSeleccionada;
+            document.getElementById('dia').value = '';
+            document.getElementById('hora_inicio').value = '09:00';
+            document.getElementById('hora_fin').value = '18:00';
+            modalInstance.show();
+        }
+
+        async function editar(id) {
+            try {
+                const res = await fetch(`${API}/horarios-sucursal/obtener/${id}`);
+                const data = await res.json();
+                
+                if (data.status) {
+                    document.getElementById('modalTitle').textContent = 'Editar Horario';
+                    document.getElementById('id_horario').value = data.data.id_horario;
+                    document.getElementById('id_sucursal').value = data.data.id_sucursal;
+                    document.getElementById('dia').value = data.data.dia;
+                    document.getElementById('hora_inicio').value = data.data.hora_inicio.substring(0, 5);
+                    document.getElementById('hora_fin').value = data.data.hora_fin.substring(0, 5);
+                    modalInstance.show();
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('Error al cargar horario', 'error');
+            }
+        }
+
+        async function guardar() {
+            const id = document.getElementById('id_horario').value;
+            const id_sucursal = document.getElementById('id_sucursal').value;
+            const dia = document.getElementById('dia').value;
+            const hora_inicio = document.getElementById('hora_inicio').value;
+            const hora_fin = document.getElementById('hora_fin').value;
+            
+            // Validaciones detalladas
+            if (!dia) {
+                mostrarAlerta('❌ Debe seleccionar un día de la semana', 'error');
+                return;
+            }
+            
+            if (!hora_inicio || !hora_fin) {
+                mostrarAlerta('❌ Debe ingresar hora de inicio y fin', 'error');
+                return;
+            }
+            
+            // Validar que hora_inicio < hora_fin
+            if (hora_inicio >= hora_fin) {
+                mostrarAlerta('❌ La hora de inicio debe ser menor que la hora de fin', 'error');
+                return;
+            }
+            
+            try {
+                const url = id ? `${API}/horarios-sucursal/modificar/${id}` : `${API}/horarios-sucursal/crear`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_sucursal, dia: parseInt(dia), hora_inicio, hora_fin })
+                });
+                
+                const data = await res.json();
+                
+                if (data.status) {
+                    mostrarAlerta(data.message, 'success');
+                    modalInstance.hide();
+                    await cargar();
+                } else {
+                    mostrarAlerta('❌ ' + data.message, 'error');
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('❌ Error al guardar horario', 'error');
+            }
+        }
+
+        async function eliminar(id) {
+            if (!confirm('⚠️ ¿Eliminar este horario?')) return;
+            
+            try {
+                const res = await fetch(`${API}/horarios-sucursal/eliminar/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                
+                if (data.status) {
+                    mostrarAlerta(data.message, 'success');
+                    await cargar();
+                } else {
+                    mostrarAlerta(data.message, 'error');
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                mostrarAlerta('Error al eliminar horario', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

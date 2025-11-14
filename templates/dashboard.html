@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Centro Comercial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/js/config.js"></script>
+    <style>
+        body { overflow-x: hidden; }
+        #sidebar { min-height: 100vh; width: 250px; }
+        #content { width: calc(100% - 250px); }
+        .sidebar-link { transition: all 0.2s; }
+        .sidebar-link:hover { background-color: rgba(255,255,255,0.1); }
+        .sidebar-link.active { background-color: rgba(255,255,255,0.2); font-weight: bold; }
+        .module-card { transition: all 0.3s; cursor: pointer; border: 2px solid transparent; }
+        .module-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(220, 20, 60, 0.2); border-color: #DC143C; }
+        .section-header { cursor: pointer; transition: all 0.3s; }
+        .section-header:hover { background-color: #f3f4f6; }
+        .section-content { max-height: 0; overflow: hidden; transition: max-height 0.5s; }
+        .section-content.active { max-height: 2000px; }
+        .rotate-icon { transition: transform 0.3s; }
+        .rotate-icon.active { transform: rotate(180deg); }
+        .empresa-logo { width: 60px; height: 60px; object-fit: contain; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex">
+        <aside id="sidebar" class="bg-red-600 text-white">
+            <div class="p-4 border-b border-red-500">
+                <div class="flex items-center gap-3 mb-2">
+                    <img id="empresaLogo" src="/uploads/fotos/aguirre/logo3.png" alt="Logo" class="empresa-logo">
+                </div>
+                <p class="text-sm text-gray-200 mt-2" id="empresaNombre">Centro Comercial Elías Aguirre</p>
+                <span class="text-xs bg-red-800 px-2 py-1 rounded mt-1 inline-block" id="rolBadge">Administrador</span>
+            </div>
+            
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li><a href="/dashboard" class="sidebar-link active flex items-center space-x-2 p-3 rounded"><i class="bi bi-house-door"></i><span>Inicio</span></a></li>
+                    <li><a href="/dashboard/roles" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-person-badge"></i><span>Roles</span></a></li>
+                    <li><a href="/dashboard/categorias" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-tags"></i><span>Categorías</span></a></li>
+                    <li><a href="/dashboard/empresas" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-building"></i><span>Empresas</span></a></li>
+                    <li><a href="/dashboard/marcas" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-bookmark"></i><span>Marcas</span></a></li>
+                    <li><a href="/dashboard/tipos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-grid"></i><span>Tipos de Producto</span></a></li>
+                    <li><a href="/dashboard/modelos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-layers"></i><span>Modelos</span></a></li>
+                    <li><a href="/dashboard/colores" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-palette"></i><span>Colores</span></a></li>
+                    <li><a href="/dashboard/productos-color" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-grid-3x3-gap"></i><span>Variantes</span></a></li>
+                    <li><a href="/dashboard/productos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-box-seam"></i><span>Productos</span></a></li>
+                    <li><a href="/dashboard/temporadas" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-calendar-event"></i><span>Temporadas</span></a></li>
+                    <li><a href="/dashboard/departamentos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-geo-alt"></i><span>Departamentos</span></a></li>
+                    <li class="border-t border-red-500 pt-2 mt-2"><a href="/" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-house"></i><span>Volver al Inicio</span></a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main id="content" class="flex-1">
+            <header class="bg-white shadow-sm p-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-gray-800">Panel de Administración</h1>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-gray-600" id="currentDateTime"></span>
+                        <div class="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white"><i class="bi bi-person-circle text-2xl"></i></div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="p-6">
+                <div class="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-lg shadow-lg mb-6">
+                    <h2 class="text-3xl font-bold mb-2">¡Bienvenido al Dashboard!</h2>
+                    <p class="text-lg">Gestiona tu centro comercial desde este panel de control</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">Total Ventas</p><h3 class="text-3xl font-bold text-red-600">S/ 12,345</h3></div>
+                            <i class="bi bi-cart-check text-4xl text-red-600"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">Productos</p><h3 class="text-3xl font-bold text-red-600">156</h3></div>
+                            <i class="bi bi-box-seam text-4xl text-red-600"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">Categorías</p><h3 class="text-3xl font-bold text-red-600">8</h3></div>
+                            <i class="bi bi-tags text-4xl text-red-600"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">Usuarios</p><h3 class="text-3xl font-bold text-red-600">24</h3></div>
+                            <i class="bi bi-person-badge text-4xl text-red-600"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CATÁLOGOS Y CLASIFICACIONES -->
+                <div class="bg-white rounded-lg shadow-md mb-6">
+                    <div class="section-header p-4 flex items-center justify-between" onclick="toggleSection('catalogos')">
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center"><i class="bi bi-bookmarks text-red-600 mr-3"></i>Catálogos y Clasificaciones</h3>
+                        <i class="bi bi-chevron-down text-2xl text-gray-600 rotate-icon" id="icon-catalogos"></i>
+                    </div>
+                    <div class="section-content active p-6" id="section-catalogos">
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/categorias'">
+                                <div class="text-center">
+                                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-tags text-3xl text-purple-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Categorías</h5>
+                                    <p class="text-sm text-gray-600">Gestionar categorías</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-purple-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/marcas'">
+                                <div class="text-center">
+                                    <div class="bg-cyan-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-bookmark text-3xl text-cyan-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Marcas</h5>
+                                    <p class="text-sm text-gray-600">Gestionar marcas</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-cyan-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/tipos'">
+                                <div class="text-center">
+                                    <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-grid text-3xl text-orange-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Tipos de Producto</h5>
+                                    <p class="text-sm text-gray-600">Gestionar tipos</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-orange-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/modelos'">
+                                <div class="text-center">
+                                    <div class="bg-lime-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-layers text-3xl text-lime-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Modelos</h5>
+                                    <p class="text-sm text-gray-600">Gestionar modelos</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-lime-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/temporadas'">
+                                <div class="text-center">
+                                    <div class="bg-teal-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-calendar-event text-3xl text-teal-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Temporadas</h5>
+                                    <p class="text-sm text-gray-600">Gestionar temporadas</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-teal-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GESTIÓN DE PRODUCTOS -->
+                <div class="bg-white rounded-lg shadow-md mb-6">
+                    <div class="section-header p-4 flex items-center justify-between" onclick="toggleSection('productos')">
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center"><i class="bi bi-box-seam text-green-600 mr-3"></i>Gestión de Productos</h3>
+                        <i class="bi bi-chevron-down text-2xl text-gray-600 rotate-icon" id="icon-productos"></i>
+                    </div>
+                    <div class="section-content active p-6" id="section-productos">
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" onclick="window.location.href='/dashboard/productos'">
+                                <div class="text-center">
+                                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-box-seam text-3xl text-green-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Productos</h5>
+                                    <p class="text-sm text-gray-600">Gestionar productos</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-green-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/colores'">
+                                <div class="text-center">
+                                    <div class="bg-rose-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-palette text-3xl text-rose-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Colores</h5>
+                                    <p class="text-sm text-gray-600">Gestionar colores</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-rose-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" onclick="window.location.href='/dashboard/productos-color'">
+                                <div class="text-center">
+                                    <div class="bg-violet-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-grid-3x3-gap text-3xl text-violet-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Variantes</h5>
+                                    <p class="text-sm text-gray-600">Gestionar variantes</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-violet-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- USUARIOS Y SEGURIDAD -->
+                <div class="bg-white rounded-lg shadow-md mb-6">
+                    <div class="section-header p-4 flex items-center justify-between" onclick="toggleSection('usuarios')">
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center"><i class="bi bi-people text-pink-600 mr-3"></i>Usuarios y Seguridad</h3>
+                        <i class="bi bi-chevron-down text-2xl text-gray-600 rotate-icon" id="icon-usuarios"></i>
+                    </div>
+                    <div class="section-content active p-6" id="section-usuarios">
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/roles'">
+                                <div class="text-center">
+                                    <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-person-badge text-3xl text-red-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Roles</h5>
+                                    <p class="text-sm text-gray-600">Gestionar roles</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-red-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" style="display:none" id="cardSucursales" onclick="window.location.href='/dashboard/sucursales'">
+                                <div class="text-center">
+                                    <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-shop text-3xl text-indigo-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Mis Sucursales</h5>
+                                    <p class="text-sm text-gray-600">Gestionar sucursales</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-indigo-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" id="cardMiEmpresa" style="display:none" onclick="window.location.href='/dashboard/empresa'">
+                                <div class="text-center">
+                                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="bi bi-building text-3xl text-blue-600"></i>
+                                    </div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Mi Empresa</h5>
+                                    <p class="text-sm text-gray-600">Editar datos de empresa</p>
+                                    <div class="mt-4 pt-4 border-t">
+                                        <span class="text-xs text-blue-600 font-semibold">
+                                            <i class="bi bi-arrow-right-circle"></i> Acceder
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" onclick="window.location.href='/dashboard/horarios-sucursal'">
+                                <div class="text-center">
+                                    <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="bi bi-clock-history text-3xl text-indigo-600"></i>
+                                    </div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Horarios</h5>
+                                    <p class="text-sm text-gray-600">Gestionar horarios de sucursales</p>
+                                    <div class="mt-4 pt-4 border-t">
+                                        <span class="text-xs text-indigo-600 font-semibold">
+                                            <i class="bi bi-arrow-right-circle"></i> Acceder
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/preguntas-frecuentes'">
+                                <div class="text-center">
+                                    <div class="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="bi bi-question-circle text-3xl text-amber-600"></i>
+                                    </div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Preguntas Frecuentes</h5>
+                                    <p class="text-sm text-gray-600">Gestionar FAQ</p>
+                                    <div class="mt-4 pt-4 border-t">
+                                        <span class="text-xs text-amber-600 font-semibold">
+                                            <i class="bi bi-arrow-right-circle"></i> Acceder
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/empresas'">
+                                <div class="text-center">
+                                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-building text-3xl text-blue-600"></i></div>
+                                    <h5 class="text-lg font-bold text-gray-800 mb-2">Empresas</h5>
+                                    <p class="text-sm text-gray-600">Gestionar empresas</p>
+                                    <div class="mt-4 pt-4 border-t"><span class="text-xs text-blue-600 font-semibold"><i class="bi bi-arrow-right-circle"></i> Acceder</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = window.CONFIG?.API_URL || 'http://127.0.0.1:3007';
+        
+        function updateDateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('es-PE', options);
+        }
+        
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        function toggleSection(sectionId) {
+            const content = document.getElementById(`section-${sectionId}`);
+            const icon = document.getElementById(`icon-${sectionId}`);
+            content.classList.toggle('active');
+            icon.classList.toggle('active');
+        }
+
+        (async function cargarDatosEmpresa() {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const user = JSON.parse(userStr);
+                const roles = user.roles || [];
+                const esAdmin = roles.some(r => r.nombre === 'Administrador');
+                const esEmpresa = roles.some(r => r.nombre === 'Empresa');
+                const esCliente = roles.some(r => r.nombre === 'Cliente');
+
+                console.log('🔍 ROLES:', { esAdmin, esEmpresa, esCliente });
+
+                // ✅ LÓGICA DE VISIBILIDAD
+                if (esEmpresa && esCliente) {
+                    // EMPRESA + CLIENTE: Ocultar cards administrativas
+                    console.log('👤 Rol: EMPRESA + CLIENTE');
+                    document.querySelectorAll('.card-admin-empresa').forEach(card => {
+                        card.style.display = 'none';
+                    });
+                    document.querySelectorAll('.card-cliente-empresa').forEach(card => {
+                        card.style.display = 'block';
+                    });
+                    document.getElementById('cardSucursales').style.display = 'block';
+                    document.getElementById('cardMiEmpresa').style.display = 'block';
+                    
+                } else if (esAdmin && esEmpresa) {
+                    // ADMIN + EMPRESA: Ocultar cards de cliente-empresa
+                    console.log('👨‍💼 Rol: ADMIN + EMPRESA');
+                    document.querySelectorAll('.card-cliente-empresa').forEach(card => {
+                        card.style.display = 'none';
+                    });
+                    document.querySelectorAll('.card-admin-empresa').forEach(card => {
+                        card.style.display = 'block';
+                    });
+                }
+
+                // Cargar datos de empresa si corresponde
+                if (esAdmin && !esEmpresa) {
+                    document.getElementById('empresaNombre').textContent = 'Centro Comercial Elías Aguirre';
+                    document.getElementById('empresaLogo').src = '/uploads/fotos/aguirre/logo3.png';
+                    document.getElementById('rolBadge').textContent = 'Administrador';
+                } else if (esEmpresa && user.id_empresa) {
+                    const res = await fetch(`${API_URL}/empresas/obtener-por-usuario/${user.id_empresa}`);
+                    const data = await res.json();
+                    
+                    if (data.status && data.data) {
+                        const empresa = data.data;
+                        document.getElementById('empresaNombre').textContent = empresa.nombre_comercial || empresa.razon_social;
+                        
+                        if (empresa.img_logo) {
+                            document.getElementById('empresaLogo').src = `${API_URL}/uploads/fotos/empresas/logos/${empresa.img_logo}`;
+                        }
+                        
+                        if (esAdmin && esEmpresa) {
+                            document.getElementById('rolBadge').textContent = 'Administrador + Empresa';
+                        } else if (esCliente && esEmpresa) {
+                            document.getElementById('rolBadge').textContent = 'Cliente + Empresa';
+                        } else {
+                            document.getElementById('rolBadge').textContent = 'Empresa';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error al cargar datos de empresa:', e);
+            }
+        })();
+    </script>
+</body>
+</html>

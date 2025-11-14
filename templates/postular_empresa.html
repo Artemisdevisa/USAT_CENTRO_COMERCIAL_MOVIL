@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% block title %}Postular Empresa{% endblock %}
+
+{% block content %}
+<style>
+    main { flex: 0 !important; }
+    footer { margin-top: 0 !important; }
+</style>
+
+<section class="min-h-screen py-12 px-4" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <div class="inline-block bg-blue-600 text-white rounded-full p-4 mb-4">
+                    <i class="bi bi-shop text-5xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Postular mi Empresa</h2>
+                <p class="text-gray-600">Completa el formulario para unirte a nuestro centro comercial</p>
+            </div>
+
+            <form id="formPostulacion" class="space-y-6">
+                <div class="border-b pb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Datos de la Empresa</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">RUC *</label>
+                            <input type="text" id="ruc" name="ruc" required maxlength="11" pattern="[0-9]{11}"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
+                                placeholder="Ej: 20123456789">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Razón Social *</label>
+                            <input type="text" id="razon_social" name="razon_social" required
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
+                                placeholder="Ej: Mi Empresa SAC">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre Comercial *</label>
+                            <input type="text" id="nombre_comercial" name="nombre_comercial" required
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
+                                placeholder="Ej: Mi Tienda">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono *</label>
+                            <input type="text" id="telefono" name="telefono" required maxlength="9" pattern="[0-9]{9}"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
+                                placeholder="Ej: 987654321">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción *</label>
+                            <textarea id="descripcion" name="descripcion" required rows="3"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
+                                placeholder="Describe tu empresa brevemente"></textarea>
+                        </div>
+                        
+                        <!-- Selector de Ubicación -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Departamento *</label>
+                            <select id="departamento" required
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Provincia *</label>
+                            <select id="provincia" required disabled
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600">
+                                <option value="">Seleccionar departamento primero...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Distrito *</label>
+                            <select id="id_dist" name="id_dist" required disabled
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600">
+                                <option value="">Seleccionar provincia primero...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Dirección *</label>
+                            <input type="text" id="direccion" name="direccion" required
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
+                                placeholder="Ej: Av. Principal 123">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center space-x-4">
+                    <button type="button" onclick="window.location.href='/'" 
+                        class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" 
+                        class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold">
+                        <i class="bi bi-send"></i> Enviar Postulación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const API_URL = window.CONFIG?.API_URL || 'http://127.0.0.1:3007';
+
+// Cargar departamentos al iniciar
+(async function cargarDepartamentos() {
+    try {
+        const res = await fetch(`${API_URL}/departamentos/listar`);
+        const data = await res.json();
+        
+        if (data.status) {
+            const select = document.getElementById('departamento');
+            data.data.forEach(dep => {
+                const option = document.createElement('option');
+                option.value = dep.id_dep;
+                option.textContent = dep.nombre;
+                select.appendChild(option);
+            });
+        }
+    } catch (e) {
+        console.error('Error al cargar departamentos:', e);
+    }
+})();
+
+// Cargar provincias al seleccionar departamento
+document.getElementById('departamento').addEventListener('change', async (e) => {
+    const idDep = e.target.value;
+    const selectProv = document.getElementById('provincia');
+    const selectDist = document.getElementById('id_dist');
+    
+    selectProv.innerHTML = '<option value="">Cargando...</option>';
+    selectProv.disabled = true;
+    selectDist.innerHTML = '<option value="">Seleccionar provincia primero...</option>';
+    selectDist.disabled = true;
+    
+    if (!idDep) return;
+    
+    try {
+        const res = await fetch(`${API_URL}/provincias/listar/${idDep}`);
+        const data = await res.json();
+        
+        if (data.status) {
+            selectProv.innerHTML = '<option value="">Seleccionar...</option>';
+            data.data.forEach(prov => {
+                const option = document.createElement('option');
+                option.value = prov.id_prov;
+                option.textContent = prov.nombre;
+                selectProv.appendChild(option);
+            });
+            selectProv.disabled = false;
+        }
+    } catch (e) {
+        console.error('Error al cargar provincias:', e);
+        selectProv.innerHTML = '<option value="">Error al cargar</option>';
+    }
+});
+
+// Cargar distritos al seleccionar provincia
+document.getElementById('provincia').addEventListener('change', async (e) => {
+    const idProv = e.target.value;
+    const selectDist = document.getElementById('id_dist');
+    
+    selectDist.innerHTML = '<option value="">Cargando...</option>';
+    selectDist.disabled = true;
+    
+    if (!idProv) return;
+    
+    try {
+        const res = await fetch(`${API_URL}/distritos/listar/${idProv}`);
+        const data = await res.json();
+        
+        if (data.status) {
+            selectDist.innerHTML = '<option value="">Seleccionar...</option>';
+            data.data.forEach(dist => {
+                const option = document.createElement('option');
+                option.value = dist.id_dist;
+                option.textContent = dist.nombre;
+                selectDist.appendChild(option);
+            });
+            selectDist.disabled = false;
+        }
+    } catch (e) {
+        console.error('Error al cargar distritos:', e);
+        selectDist.innerHTML = '<option value="">Error al cargar</option>';
+    }
+});
+
+// Enviar formulario
+document.getElementById('formPostulacion').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+        alert('⚠️ Debes iniciar sesión para postular tu empresa');
+        window.location.href = '/login';
+        return;
+    }
+    
+    const data = {
+        id_usuario: user.id_usuario,
+        ruc: document.getElementById('ruc').value.trim(),
+        razon_social: document.getElementById('razon_social').value.trim(),
+        nombre_comercial: document.getElementById('nombre_comercial').value.trim(),
+        descripcion: document.getElementById('descripcion').value.trim(),
+        telefono: document.getElementById('telefono').value.trim(),
+        email: user.email,
+        id_dist: parseInt(document.getElementById('id_dist').value),
+        direccion: document.getElementById('direccion').value.trim()
+    };
+    
+    // Validaciones adicionales
+    if (!data.id_dist) {
+        alert('⚠️ Debes seleccionar un distrito');
+        return;
+    }
+    
+    if (data.ruc.length !== 11) {
+        alert('⚠️ El RUC debe tener 11 dígitos');
+        return;
+    }
+    
+    if (data.telefono.length !== 9) {
+        alert('⚠️ El teléfono debe tener 9 dígitos');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/api/postular-empresa`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.status) {
+            alert('✅ ' + result.message);
+            window.location.href = '/';
+        } else {
+            alert('❌ ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error al enviar solicitud. Intenta nuevamente');
+    }
+});
+</script>
+{% endblock %}
