@@ -195,4 +195,6 @@ def registro_page():
 
 # ==================== INICIAR SERVIDOR ====================
 if __name__ == '__main__':
-    app.run(port=3007, debug=True, host='0.0.0.0')
+    # Usar puerto de Render o 3007 por defecto
+    port = int(os.environ.get('PORT', 3007))
+    app.run(host='0.0.0.0', port=port, debug=False)
