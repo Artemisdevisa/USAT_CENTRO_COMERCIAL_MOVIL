@@ -22,7 +22,6 @@ from routes.distrito_routes import ws_distrito
 from config import Config
 import os
 
-
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -142,12 +141,10 @@ def dashboard_empresas():
     """Gestión de empresas - ACCESO LIBRE"""
     return render_template('empresa/lista.html')
 
-# ==================== NUEVA RUTA: MI EMPRESA ====================
 @app.route('/dashboard/empresa')
 def dashboard_empresa():
     """Gestión de empresa del usuario - ACCESO LIBRE"""
     return render_template('empresa/empresa_unica.html')
-# ============================================================
 
 @app.route('/dashboard/marcas')
 def dashboard_marcas():
@@ -199,7 +196,6 @@ def dashboard_preguntas_frecuentes():
     """Gestión de preguntas frecuentes - ACCESO LIBRE"""
     return render_template('pregunta_frecuente/lista.html')
 
-# ==================== RUTAS DE LOGIN (MANTENIDAS PARA COMPATIBILIDAD) ====================
 @app.route('/login')
 def login_page():
     """Página de login (opcional)"""
@@ -209,7 +205,6 @@ def login_page():
 def postular_empresa():
     """Formulario de postulación de empresas"""
     return render_template('postular_empresa.html')
-
 
 @app.route('/dashboard/horarios-sucursal')
 def dashboard_horarios_sucursal():
@@ -223,6 +218,5 @@ def registro_page():
 
 # ==================== INICIAR SERVIDOR ====================
 if __name__ == '__main__':
-    # Usar puerto de Render o 3007 por defecto
     port = int(os.environ.get('PORT', 3007))
     app.run(host='0.0.0.0', port=port, debug=False)
