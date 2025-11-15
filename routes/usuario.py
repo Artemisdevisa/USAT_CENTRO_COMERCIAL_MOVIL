@@ -3,12 +3,13 @@ from models.usuario import Usuario
 import jwt
 from datetime import datetime, timedelta
 from conexionBD import Conexion
+from config import Config
 
 ws_usuario = Blueprint('ws_usuario', __name__)
 usuario_model = Usuario()
 
 # Clave secreta para JWT (cambiar en producción)
-SECRET_KEY = 'tu_clave_secreta_super_segura_2025'
+SECRET_KEY = Config.SECRET_KEY
 
 # ==================== VISTAS HTML ====================
 
