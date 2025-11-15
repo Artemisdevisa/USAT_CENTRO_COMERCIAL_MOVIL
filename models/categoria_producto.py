@@ -32,7 +32,7 @@ class CategoriaProducto:
                 categoria = {
                     "idCategoriaProducto": row['id_categoria'],
                     "nombreCategoria": row['nombre'],
-                    "imagen": row['img']
+                    "imagen": f"/uploads/fotos/categorias/{row['img']}" if row['img'] else None
                 }
                 categorias.append(categoria)
             
@@ -82,8 +82,8 @@ class CategoriaProducto:
                     "nombreProducto": row['nombre'],
                     "nombre": row['nombre'],
                     "precio": float(row['precio']),
-                    "imagen": row['url_img'],
-                    "urlImg": row['url_img'],
+                    "imagen": f"/uploads/fotos/productos/{row['url_img']}" if row['url_img'] else None,
+                    "urlImg": f"/uploads/fotos/productos/{row['url_img']}" if row['url_img'] else None,
                     "genero": row['genero'],
                     "idCategoria": row['id_categoria'],
                     "nombreCategoria": row['nombre_categoria'],
