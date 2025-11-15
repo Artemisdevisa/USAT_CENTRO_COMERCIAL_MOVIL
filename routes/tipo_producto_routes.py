@@ -9,12 +9,19 @@ ws_tipo_producto = Blueprint('ws_tipo_producto', __name__)
 
 @ws_tipo_producto.route('/tipos/listar', methods=['GET'])
 def listar_tipos():
-    """Listar tipos de producto activos para el frontend público"""
+    """listar tipos de producto activos para el frontend público"""
     try:
         tipo_producto = TipoProducto()
         resultado, tipos = tipo_producto.listar_tipos()
         
         if resultado:
+            # ✅ AGREGAR "TODOS" AL INICIO
+            todos = {
+                'id_tipo_prod': -1,
+                'nombre': 'Todos'
+            }
+            tipos.insert(0, todos)
+            
             return jsonify({
                 'status': True,
                 'data': tipos,
@@ -33,7 +40,6 @@ def listar_tipos():
             'data': None,
             'message': f'Error interno: {str(e)}'
         }), 500
-
 
 # ============================================
 # ENDPOINTS CRUD (Dashboard/Admin)
