@@ -212,7 +212,6 @@
                     <label class="form-label fw-semibold">Modelo del Producto *</label>
                     <select class="form-control mb-3" id="id_tipo_modelo">
                         <option value="">Seleccione un modelo</option>
-                    </select>
                     
                     <label class="form-label fw-semibold">Nombre del Producto *</label>
                     <input type="text" class="form-control mb-3" id="nombre" maxlength="200" placeholder="Ej: Camisa Royal Elegante">
@@ -534,7 +533,7 @@
         const id_tipo_modelo = document.getElementById('id_tipo_modelo').value;
         const nombre = document.getElementById('nombre').value.trim();
         const material = document.getElementById('material').value.trim();
-        const genero = document.getElementById('genero').value;
+        const genero = document.getElementById('genero').value.trim();
         
         if (!id_sucursal) return toast('Debe seleccionar una sucursal', 'warning');
         if (!id_temporada) return toast('Debe seleccionar una temporada', 'warning');
@@ -542,7 +541,6 @@
         if (!id_categoria) return toast('Debe seleccionar una categoría', 'warning');
         if (!id_tipo_modelo) return toast('Debe seleccionar un modelo', 'warning');
         if (!nombre) return toast('El nombre del producto es requerido', 'warning');
-        if (!genero) return toast('Debe seleccionar el género', 'warning');
         
         try {
             const body = {
@@ -553,7 +551,7 @@
                 id_tipo_modelo: parseInt(id_tipo_modelo),
                 nombre,
                 material: material || null,
-                genero
+                genero: genero || null
             };
             
             const res = await fetch(`${API}/productos-sucursal/${id ? `modificar/${id}` : 'crear'}`, {
