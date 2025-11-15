@@ -72,9 +72,34 @@
 
 {% block scripts %}
 <script>
-console.log('Script cargado'); // Para debug
+console.log('Script cargado');
 
-const API_URL = `http://${window.location.hostname}:3007`;
+// ✅ DETECTAR API URL SEGÚN ENTORNO
+const detectarApiUrl = () => {
+    const hostname = window.location.hostname;
+    
+    // Producción en Render
+    if (hostname.includes('onrender.com')) {
+        return window.location.origin;
+    }
+    
+    // Desarrollo local
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://127.0.0.1:3007';
+    }
+    
+    // Red local
+    if (hostname.startsWith('192.168.') || hostname.startsWith('10.')) {
+        return `http://${hostname}:3007`;
+    }
+    
+    // Fallback
+    return window.location.origin;
+};
+
+const API_URL = detectarApiUrl();
+console.log('🔧 API URL detectada:', API_URL);
+
 let modalDepartamento;
 
 document.addEventListener('DOMContentLoaded', () => {
