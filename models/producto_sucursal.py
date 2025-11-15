@@ -1,5 +1,7 @@
 from conexionBD import Conexion
 from flask import request
+import os
+
 
 
 class ProductoSucursal:
@@ -38,10 +40,17 @@ class ProductoSucursal:
             cursor.execute(sql)
             resultados = cursor.fetchall()
             
-            # ✅ DETECTAR CLIENTE
+            # ✅ DETECTAR ENTORNO Y CLIENTE
             user_agent = request.headers.get('User-Agent', '').lower()
             is_android = 'okhttp' in user_agent or 'android' in user_agent
-            base_url = "http://10.0.2.2:3007" if is_android else ""
+            
+            # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
+            if os.environ.get('RENDER'):
+                # Producción en Render
+                base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
+            else:
+                # Desarrollo local
+                base_url = "http://10.0.2.2:3007" if is_android else ""
             
             productos = []
             for row in resultados:
