@@ -12,7 +12,7 @@ const detectarApiUrl = () => {
         return `http://${hostname}:3007`;
     }
     
-    return 'https://api.tudominio.com';
+    return 'https://usat-comercial-api.onrender.com';
 };
 
 window.CONFIG = {
