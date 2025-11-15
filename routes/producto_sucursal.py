@@ -205,7 +205,7 @@ def crear_producto():
         id_tipo_modelo = data.get('id_tipo_modelo')
         nombre = data.get('nombre', '').strip()
         material = data.get('material', '').strip() if data.get('material') else None
-        genero = data.get('genero', '').strip()
+        genero = data.get('genero', '').strip() if data.get('genero') else None
         
         if not nombre:
             return jsonify({
@@ -213,12 +213,7 @@ def crear_producto():
                 'message': 'El nombre del producto no puede estar vacío'
             }), 400
         
-        if not genero:
-            return jsonify({
-                'status': False,
-                'message': 'El género es requerido'
-            }), 400
-        
+
         # Crear producto
         exito, resultado = producto_sucursal.crear(id_sucursal, id_temporada, id_marca, id_categoria, id_tipo_modelo, nombre, material, genero)
         
@@ -270,20 +265,14 @@ def modificar_producto(id_prod_sucursal):
         id_tipo_modelo = data.get('id_tipo_modelo')
         nombre = data.get('nombre', '').strip()
         material = data.get('material', '').strip() if data.get('material') else None
-        genero = data.get('genero', '').strip()
+        genero = data.get('genero', '').strip() if data.get('genero') else None
         
         if not nombre:
             return jsonify({
                 'status': False,
                 'message': 'El nombre del producto no puede estar vacío'
             }), 400
-        
-        if not genero:
-            return jsonify({
-                'status': False,
-                'message': 'El género es requerido'
-            }), 400
-        
+
         # Modificar producto
         exito, mensaje = producto_sucursal.modificar(id_prod_sucursal, id_sucursal, id_temporada, id_marca, id_categoria, id_tipo_modelo, nombre, material, genero)
         

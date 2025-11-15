@@ -292,7 +292,7 @@ class ProductoSucursal:
         except Exception as e:
             return False, f"Error al obtener producto: {str(e)}"
     
-    def crear(self, id_sucursal, id_temporada, id_marca, id_categoria, id_tipo_modelo, nombre, material, genero):
+    def crear(self, id_sucursal, id_temporada, id_marca, id_categoria, id_tipo_modelo, nombre, material, genero=None):
         """Crear un nuevo producto usando la función de PostgreSQL"""
         try:
             con = Conexion().open
@@ -317,7 +317,7 @@ class ProductoSucursal:
         except Exception as e:
             return False, f"Error al crear producto: {str(e)}"
     
-    def modificar(self, id_prod_sucursal, id_sucursal, id_temporada, id_marca, id_categoria, id_tipo_modelo, nombre, material, genero):
+    def modificar(self, id_prod_sucursal, id_sucursal, id_temporada, id_marca, id_categoria, id_tipo_modelo, nombre, material, genero=None):
         """Modificar un producto"""
         try:
             con = Conexion().open
