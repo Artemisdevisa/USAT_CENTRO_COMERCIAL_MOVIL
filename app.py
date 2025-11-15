@@ -19,6 +19,7 @@ from routes.empresa_routes import ws_empresa
 from routes.provincia_routes import ws_provincia
 from routes.horario_sucursal_routes import ws_horario_sucursal
 from routes.distrito_routes import ws_distrito
+from config import Config
 import os
 
 
@@ -36,8 +37,8 @@ def add_header(response):
 
 # Configuración de CORS y SECRET_KEY
 CORS(app)
-app.secret_key = 'tu_clave_secreta_super_segura_2025'
-app.config['SECRET_KEY'] = 'tu_clave_secreta_super_segura_2025'
+app.secret_key = Config.SECRET_KEY
+app.config['SECRET_KEY'] = Config.SECRET_KEY
 
 try:
     app.json.ensure_ascii = False
