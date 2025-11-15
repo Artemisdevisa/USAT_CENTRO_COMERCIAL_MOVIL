@@ -27,19 +27,45 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-# Configuración de CORS y SECRET_KEY
-CORS(app)
-app.secret_key = Config.SECRET_KEY
-app.config['SECRET_KEY'] = Config.SECRET_KEY
+# ✅ CONFIGURAR CORS CORRECTAMENTE
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+        "expose_headers": ["Content-Type"],
+        "supports_credentials": False,
+        "max_age": 3600
+    }
+})
+
+# ✅ MANEJAR PREFLIGHT (OPTIONS)
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = make_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+        response.headers['Access-Control-Max-Age'] = '3600'
+        return response
 
 @app.after_request
 def add_header(response):
+    # ✅ HEADERS CORS EXPLÍCITOS
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+    
+    # Cache control
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '-1'
     return response
 
-
+# Configuración de SECRET_KEY
+app.secret_key = Config.SECRET_KEY
+app.config['SECRET_KEY'] = Config.SECRET_KEY
 
 try:
     app.json.ensure_ascii = False
