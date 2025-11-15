@@ -327,6 +327,23 @@ def postular_empresa():
         con = Conexion().open
         cursor = con.cursor()
         
+        # ✅ PRIMERO: Verificar si ya tiene solicitud pendiente
+        cursor.execute("""
+            SELECT COUNT(*) as total 
+            FROM solicitud_empresa 
+            WHERE id_usuario = %s AND estado = 'pendiente'
+        """, [id_usuario])
+        
+        ya_tiene_solicitud = cursor.fetchone()['total'] > 0
+        
+        if ya_tiene_solicitud:
+            cursor.close()
+            con.close()
+            return jsonify({
+                'status': False,
+                'message': 'Ya tienes una solicitud pendiente. Espera la revisión del administrador.'
+            }), 400
+        
         # Validar que el distrito existe
         cursor.execute("SELECT 1 FROM distrito WHERE id_dist = %s AND estado = TRUE", [id_dist])
         if not cursor.fetchone():
@@ -338,8 +355,9 @@ def postular_empresa():
             }), 400
         
         print(f"🔍 DEBUG - Datos recibidos: {data}")
+        print(f"🔍 DEBUG - id_usuario: {id_usuario}")
         
-        # ✅ CORRECCIÓN: La función retorna directamente un valor, no necesita [0]
+        # ✅ LLAMAR A LA FUNCIÓN
         cursor.execute("""
             SELECT fn_solicitud_empresa_crear(%s, %s, %s, %s, %s, %s, %s, %s, %s) as resultado
         """, [
@@ -354,9 +372,8 @@ def postular_empresa():
             data.get('direccion')
         ])
         
-        # ✅ ACCEDER USANDO LA CLAVE DEL DICCIONARIO
-        resultado_dict = cursor.fetchone()
-        resultado = resultado_dict['resultado'] if resultado_dict else -1
+        resultado_row = cursor.fetchone()
+        resultado = resultado_row['resultado'] if resultado_row else -1
         
         print(f"✅ Resultado de la función: {resultado}")
         
@@ -367,7 +384,7 @@ def postular_empresa():
         if resultado == -1:
             return jsonify({
                 'status': False,
-                'message': 'Error: Ya tienes una solicitud pendiente o los datos son inválidos'
+                'message': 'Error: Datos inválidos o RUC duplicado'
             }), 400
         
         return jsonify({
@@ -376,14 +393,6 @@ def postular_empresa():
             'id_solicitud': resultado
         }), 201
             
-    except KeyError as ke:
-        print(f"💥 KeyError: {str(ke)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'status': False,
-            'message': 'Error de configuración en el servidor'
-        }), 500
     except Exception as e:
         print(f"💥 ERROR COMPLETO: {str(e)}")
         import traceback
@@ -393,7 +402,6 @@ def postular_empresa():
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
-
     
 @ws_usuario.route('/api/usuario/registrar-completo', methods=['POST'])
 def registrar_completo():
