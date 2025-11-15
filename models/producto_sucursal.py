@@ -134,6 +134,16 @@ class ProductoSucursal:
             cursor.execute(sql_variantes, (id_prod_sucursal,))
             variantes = cursor.fetchall()
             
+            # ✅ DETECTAR ENTORNO Y CLIENTE
+            user_agent = request.headers.get('User-Agent', '').lower()
+            is_android = 'okhttp' in user_agent or 'android' in user_agent
+            
+            # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
+            if os.environ.get('RENDER'):
+                base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
+            else:
+                base_url = "http://10.0.2.2:3007" if is_android else ""
+            
             # Agrupar por color y talla
             colores = {}
             tallas = set()
@@ -150,11 +160,19 @@ class ProductoSucursal:
                         'tallas': {}
                     }
                 
+                # ✅ CONSTRUIR URL COMPLETA PARA ANDROID
+                url_img = var['url_img'] if var['url_img'] else ''
+                if url_img and is_android:
+                    if not url_img.startswith('http'):
+                        if not url_img.startswith('/'):
+                            url_img = '/' + url_img
+                        url_img = base_url + url_img
+                
                 colores[color_nombre]['tallas'][talla] = {
                     'id_prod_color': var['id_prod_color'],
                     'precio': float(var['precio']),
                     'stock': var['stock'],
-                    'url_img': var['url_img'] if var['url_img'] else ''
+                    'url_img': url_img
                 }
             
             resultado = {
