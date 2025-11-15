@@ -27,6 +27,10 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
+# Configuración de CORS y SECRET_KEY
+CORS(app)
+app.secret_key = Config.SECRET_KEY
+app.config['SECRET_KEY'] = Config.SECRET_KEY
 
 @app.after_request
 def add_header(response):
@@ -35,10 +39,7 @@ def add_header(response):
     response.headers['Expires'] = '-1'
     return response
 
-# Configuración de CORS y SECRET_KEY
-CORS(app)
-app.secret_key = Config.SECRET_KEY
-app.config['SECRET_KEY'] = Config.SECRET_KEY
+
 
 try:
     app.json.ensure_ascii = False
