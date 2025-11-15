@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 import os
 from werkzeug.utils import secure_filename
 from models.producto_color import ProductoColor
+from conexionBD import Conexion
 
 ws_producto_color = Blueprint('ws_producto_color', __name__)
 producto_color = ProductoColor()
