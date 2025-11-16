@@ -7,7 +7,7 @@ class Favorito:
     def listar_favoritos(self, id_usuario):
         """Lista todos los favoritos de un usuario"""
         try:
-            con = Conexion().open  # ✅ CORRECTO
+            con = Conexion().open
             cursor = con.cursor()
             
             sql = """
@@ -19,7 +19,7 @@ class Favorito:
                     pc.precio,
                     pc.stock,
                     pc.url_img,
-                    ps.talla,
+                    pc.talla,  -- ✅ CAMBIAR: talla viene de producto_color
                     ps.genero,
                     ps.material,
                     m.nombre as marca,
@@ -51,9 +51,9 @@ class Favorito:
                     "precio": float(row['precio']) if row['precio'] else 0.0,
                     "stock": row['stock'],
                     "url_img": row['url_img'] if row['url_img'] else '',
-                    "talla": row['talla'],
-                    "genero": row['genero'],
-                    "material": row['material'],
+                    "talla": row['talla'] if row['talla'] else '',  # ✅ Ahora viene de producto_color
+                    "genero": row['genero'] if row['genero'] else '',
+                    "material": row['material'] if row['material'] else '',
                     "marca": row['marca'] if row['marca'] else '',
                     "categoria": row['categoria'] if row['categoria'] else '',
                     "color": row['color'],

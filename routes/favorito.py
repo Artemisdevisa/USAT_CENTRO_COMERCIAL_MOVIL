@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+import os
 from models.favorito import Favorito
 
 ws_favorito = Blueprint('ws_favorito', __name__)
@@ -11,6 +12,25 @@ def listar_favoritos(id_usuario):
         exito, resultado = favorito.listar_favoritos(id_usuario)
         
         if exito:
+            # ✅ DETECTAR ENTORNO Y CLIENTE
+            user_agent = request.headers.get('User-Agent', '').lower()
+            is_android = 'okhttp' in user_agent or 'android' in user_agent
+            
+            # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
+            if os.environ.get('RENDER'):
+                base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
+            else:
+                base_url = "http://10.0.2.2:3007" if is_android else ""
+            
+            # ✅ PROCESAR URLs DE IMÁGENES
+            for fav in resultado:
+                url_img = fav.get('url_img', '')
+                if url_img and is_android:
+                    if not url_img.startswith('http'):
+                        if not url_img.startswith('/'):
+                            url_img = '/' + url_img
+                        fav['url_img'] = base_url + url_img
+            
             return jsonify({
                 'status': True,
                 'data': resultado,
@@ -29,6 +49,7 @@ def listar_favoritos(id_usuario):
             'data': None,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
+
 
 @ws_favorito.route('/favoritos/agregar', methods=['POST'])
 def agregar_favorito():
