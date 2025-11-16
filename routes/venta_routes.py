@@ -87,24 +87,72 @@ def crear_venta_multiple():
 
 @ws_venta.route('/ventas/listar/<int:id_usuario>', methods=['GET'])
 def listar_ventas(id_usuario):
-    """Listar ventas del usuario"""
+    """Listar productos comprados del usuario"""
     try:
+        print(f"\n{'='*60}")
+        print(f"📥 PETICIÓN: Listar ventas usuario {id_usuario}")
+        print(f"{'='*60}")
+        
+        # ✅ DETECTAR ENTORNO Y CLIENTE
+        user_agent = request.headers.get('User-Agent', '').lower()
+        is_android = 'okhttp' in user_agent or 'android' in user_agent
+        
+        print(f"User-Agent: {user_agent}")
+        print(f"Es Android: {is_android}")
+        
+        # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
+        if os.environ.get('RENDER'):
+            base_url = "https://usat-comercial-api.onrender.com"
+            print(f"🌍 Entorno: RENDER (Producción)")
+        else:
+            base_url = "http://10.0.2.2:3007" if is_android else "http://localhost:3007"
+            print(f"💻 Entorno: LOCAL (Desarrollo)")
+        
+        print(f"Base URL: {base_url}")
+        
         venta = Venta()
         exito, resultado = venta.listar_por_usuario(id_usuario)
         
         if exito:
+            print(f"\n✅ Productos obtenidos: {len(resultado)}")
+            
+            # ✅ PROCESAR URLs DE IMÁGENES
+            for i, producto in enumerate(resultado):
+                url_img = producto.get('url_img_producto', '')
+                print(f"\n📦 Producto {i+1}:")
+                print(f"   - Nombre: {producto.get('nombre_producto')}")
+                print(f"   - URL Original: {url_img}")
+                
+                if url_img:
+                    if not url_img.startswith('http'):
+                        if not url_img.startswith('/'):
+                            url_img = '/' + url_img
+                        producto['url_img_producto'] = base_url + url_img
+                        print(f"   - URL Procesada: {producto['url_img_producto']}")
+                else:
+                    print(f"   - ⚠️ Sin imagen")
+            
+            print(f"\n{'='*60}")
+            print(f"📤 RESPUESTA ENVIADA")
+            print(f"{'='*60}\n")
+            
             return jsonify({
                 'status': True,
                 'data': resultado,
-                'message': 'Ventas listadas correctamente'
+                'message': 'Productos listados correctamente'
             }), 200
         else:
+            print(f"\n❌ Error al listar productos: {resultado}")
             return jsonify({
                 'status': False,
                 'data': [],
                 'message': resultado
             }), 500
     except Exception as e:
+        print(f"\n💥 ERROR CRÍTICO: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'status': False,
             'data': [],

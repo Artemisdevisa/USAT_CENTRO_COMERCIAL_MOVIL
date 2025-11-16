@@ -108,31 +108,32 @@ class Venta:
             return False, f"Error: {str(e)}"
     
     def listar_por_usuario(self, id_usuario):
-        """Listar ventas del usuario con imagen del primer producto"""
+        """Listar productos comprados individualmente (sin agrupar por venta)"""
         try:
             con = Conexion().open
             cursor = con.cursor()
             
             sql = """
                 SELECT 
+                    dv.id_detalle_venta,
                     v.id_venta,
                     v.codigo_qr as codigo_venta,
                     v.created_at as fecha_venta,
-                    v.total,
+                    dv.precio_unitario as total,
                     v.estado,
                     s.nombre as nombre_sucursal,
-                    (SELECT COUNT(*) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta AND dv.estado = TRUE) as cantidad_productos,
-                    (
-                        SELECT pc.url_img 
-                        FROM detalle_venta dv
-                        INNER JOIN producto_color pc ON dv.id_prod_color = pc.id_prod_color
-                        WHERE dv.id_venta = v.id_venta 
-                        AND dv.estado = TRUE
-                        LIMIT 1
-                    ) as url_img_producto
-                FROM venta v
+                    p.nombre as nombre_producto,
+                    pc.url_img as url_img_producto,
+                    c.nombre as color,
+                    t.nombre as talla
+                FROM detalle_venta dv
+                INNER JOIN venta v ON dv.id_venta = v.id_venta
                 INNER JOIN sucursal s ON v.id_sucursal = s.id_sucursal
-                WHERE v.id_usuario = %s
+                INNER JOIN producto_color pc ON dv.id_prod_color = pc.id_prod_color
+                INNER JOIN producto p ON pc.id_producto = p.id_producto
+                INNER JOIN color c ON pc.id_color = c.id_color
+                INNER JOIN talla t ON dv.id_talla = t.id_talla
+                WHERE v.id_usuario = %s AND dv.estado = TRUE
                 ORDER BY v.created_at DESC
             """
             
@@ -142,24 +143,47 @@ class Venta:
             cursor.close()
             con.close()
             
+            print(f"\n{'='*60}")
+            print(f"📊 PRODUCTOS ENCONTRADOS PARA USUARIO {id_usuario}: {len(resultados)}")
+            print(f"{'='*60}")
+            
             if resultados:
-                ventas = []
+                productos = []
                 for row in resultados:
-                    venta = {
+                    url_img = row['url_img_producto'] if row['url_img_producto'] else ''
+                    
+                    print(f"\n🔍 Producto:")
+                    print(f"   - Nombre: {row['nombre_producto']}")
+                    print(f"   - Sucursal: {row['nombre_sucursal']}")
+                    print(f"   - Color: {row['color']}")
+                    print(f"   - Talla: {row['talla']}")
+                    print(f"   - Precio: {row['total']}")
+                    print(f"   - URL Original: {url_img}")
+                    
+                    producto = {
+                        'id_detalle_venta': row['id_detalle_venta'],
                         'id_venta': row['id_venta'],
                         'codigo_venta': row['codigo_venta'],
                         'fecha_venta': str(row['fecha_venta']) if row['fecha_venta'] else '',
                         'total': float(row['total']) if row['total'] else 0.0,
                         'estado': row['estado'],
                         'nombre_sucursal': row['nombre_sucursal'],
-                        'cantidad_productos': int(row['cantidad_productos']) if row['cantidad_productos'] else 0,
-                        'url_img_producto': row['url_img_producto'] if row['url_img_producto'] else ''
+                        'nombre_producto': row['nombre_producto'],
+                        'url_img_producto': url_img,
+                        'color': row['color'],
+                        'talla': row['talla']
                     }
-                    ventas.append(venta)
-                return True, ventas
+                    productos.append(producto)
+                
+                print(f"\n✅ Total productos procesados: {len(productos)}")
+                return True, productos
             else:
+                print("\n⚠️ No se encontraron productos")
                 return True, []
         except Exception as e:
+            print(f"\n💥 ERROR: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False, f"Error: {str(e)}"
     
     def obtener_detalle(self, id_venta):
