@@ -761,3 +761,101 @@ def obtener_persona(id_persona):
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
+
+@ws_usuario.route('/api/usuario/actualizar-foto', methods=['POST'])
+def actualizar_foto():
+    """Actualizar foto de perfil"""
+    try:
+        if 'foto' not in request.files:
+            return jsonify({
+                'status': False,
+                'message': 'No se envió ninguna imagen'
+            }), 400
+        
+        file = request.files['foto']
+        id_usuario = request.form.get('id_usuario')
+        
+        if not id_usuario:
+            return jsonify({
+                'status': False,
+                'message': 'ID de usuario no proporcionado'
+            }), 400
+        
+        if file.filename == '':
+            return jsonify({
+                'status': False,
+                'message': 'Archivo sin nombre'
+            }), 400
+        
+        # Extensiones permitidas
+        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+        
+        def allowed_file(filename):
+            return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        
+        if not allowed_file(file.filename):
+            return jsonify({
+                'status': False,
+                'message': 'Formato de imagen no permitido. Use: png, jpg, jpeg, gif'
+            }), 400
+        
+        # Crear nombre único
+        import os
+        from werkzeug.utils import secure_filename
+        
+        extension = file.filename.rsplit('.', 1)[1].lower()
+        nuevo_nombre = f"user_{id_usuario}_{int(time.time())}.{extension}"
+        
+        # Crear carpeta si no existe
+        upload_folder = os.path.join('uploads', 'fotos', 'usuarios')
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # Guardar archivo
+        file_path = os.path.join(upload_folder, nuevo_nombre)
+        file.save(file_path)
+        
+        # Actualizar en base de datos
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # Obtener imagen antigua para eliminarla
+        cursor.execute("SELECT img_logo FROM usuario WHERE id_usuario = %s", [id_usuario])
+        resultado = cursor.fetchone()
+        old_image = resultado['img_logo'] if resultado else None
+        
+        # Actualizar con nueva imagen
+        cursor.execute("""
+            UPDATE usuario 
+            SET img_logo = %s 
+            WHERE id_usuario = %s
+        """, [nuevo_nombre, id_usuario])
+        
+        con.commit()
+        cursor.close()
+        con.close()
+        
+        # Eliminar imagen antigua si existe
+        if old_image and old_image != nuevo_nombre:
+            try:
+                old_path = os.path.join(upload_folder, old_image)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            except Exception as e:
+                print(f"No se pudo eliminar imagen antigua: {str(e)}")
+        
+        return jsonify({
+            'status': True,
+            'message': 'Foto actualizada correctamente',
+            'img_logo': nuevo_nombre
+        }), 200
+        
+    except Exception as e:
+        print(f"💥 ERROR en actualizar_foto: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error al actualizar foto: {str(e)}'
+        }), 500
+
+
