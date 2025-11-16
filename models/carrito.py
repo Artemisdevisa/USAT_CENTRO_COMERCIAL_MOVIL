@@ -14,12 +14,13 @@ class Carrito:
                 SELECT 
                     s.id_sucursal,
                     s.nombre as sucursal,
+                    s.logo as sucursal_logo,  -- ✅ AGREGAR LOGO
                     cc.id_carrito,
                     cc.id_prod_color,
                     cc.cantidad,
                     ps.id_prod_sucursal,
                     ps.nombre as producto_nombre,
-                    pc.talla,  -- ✅ LÍNEA 10: CAMBIAR DE ps.talla A pc.talla
+                    pc.talla,
                     ps.genero,
                     ps.material,
                     pc.precio,
@@ -51,6 +52,7 @@ class Carrito:
                     sucursales[id_sucursal] = {
                         'id_sucursal': id_sucursal,
                         'nombre_sucursal': row['sucursal'],
+                        'logo_sucursal': row['sucursal_logo'] if row['sucursal_logo'] else '',  # ✅ AGREGAR
                         'productos': [],
                         'subtotal': 0
                     }
@@ -64,7 +66,7 @@ class Carrito:
                     'precio': float(row['precio']),
                     'stock': row['stock'],
                     'url_img': row['url_img'] if row['url_img'] else '',
-                    'talla': row['talla'] if row['talla'] else '',  # ✅ Ahora viene de producto_color
+                    'talla': row['talla'] if row['talla'] else '',
                     'genero': row['genero'] if row['genero'] else '',
                     'material': row['material'] if row['material'] else '',
                     'marca': row['marca'] if row['marca'] else '',
@@ -107,31 +109,40 @@ class Carrito:
                 con.close()
                 return False, f"Stock insuficiente. Disponible: {producto['stock']}"
             
-            # Verificar si ya existe
+            # ✅ VERIFICAR SI YA EXISTE (INCLUSO CON estado = FALSE)
             sql_exists = """
-                SELECT id_carrito, cantidad 
+                SELECT id_carrito, cantidad, estado
                 FROM carrito_compra 
-                WHERE id_usuario = %s AND id_prod_color = %s AND estado = TRUE
+                WHERE id_usuario = %s AND id_prod_color = %s
             """
             cursor.execute(sql_exists, (id_usuario, id_prod_color))
             existe = cursor.fetchone()
             
             if existe:
-                nueva_cantidad = existe['cantidad'] + cantidad
-                if nueva_cantidad > producto['stock']:
-                    cursor.close()
-                    con.close()
-                    return False, f"Stock insuficiente. Disponible: {producto['stock']}"
-                
-                # Actualizar cantidad
-                sql_update = """
-                    UPDATE carrito_compra 
-                    SET cantidad = %s
-                    WHERE id_carrito = %s
-                """
-                cursor.execute(sql_update, (nueva_cantidad, existe['id_carrito']))
+                # ✅ SI EXISTE PERO ESTÁ INACTIVO, REACTIVAR
+                if not existe['estado']:
+                    sql_reactivar = """
+                        UPDATE carrito_compra 
+                        SET cantidad = %s, estado = TRUE
+                        WHERE id_carrito = %s
+                    """
+                    cursor.execute(sql_reactivar, (cantidad, existe['id_carrito']))
+                else:
+                    # ✅ SI YA ESTÁ ACTIVO, SUMAR CANTIDAD
+                    nueva_cantidad = existe['cantidad'] + cantidad
+                    if nueva_cantidad > producto['stock']:
+                        cursor.close()
+                        con.close()
+                        return False, f"Stock insuficiente. Disponible: {producto['stock']}"
+                    
+                    sql_update = """
+                        UPDATE carrito_compra 
+                        SET cantidad = %s
+                        WHERE id_carrito = %s
+                    """
+                    cursor.execute(sql_update, (nueva_cantidad, existe['id_carrito']))
             else:
-                # Insertar nuevo
+                # ✅ NO EXISTE, INSERTAR NUEVO
                 sql_insert = """
                     INSERT INTO carrito_compra (id_usuario, id_prod_color, cantidad, estado)
                     VALUES (%s, %s, %s, TRUE)
@@ -145,7 +156,7 @@ class Carrito:
                 
         except Exception as e:
             return False, f"Error al agregar al carrito: {str(e)}"
-    
+        
     def actualizar_cantidad(self, id_usuario, id_carrito, cantidad):
         """Actualiza cantidad de un producto"""
         try:
