@@ -52,19 +52,15 @@ class CategoriaProducto:
             
             sql = """
                 SELECT 
-                    ps.id_prod_sucursal as idProducto,
                     ps.id_prod_sucursal,
-                    ps.nombre as nombreProducto,
                     ps.nombre,
                     pc.precio,
                     pc.url_img,
                     ps.genero,
                     ps.material,
                     m.nombre as marca,
-                    cat.nombre as nombreCategoria,
                     cat.nombre as categoria,
-                    cat.id_categoria as idCategoria,
-                    pc.id_prod_color as idProdColor,
+                    cat.id_categoria,
                     pc.id_prod_color,
                     pc.talla,
                     col.nombre as color
@@ -87,25 +83,23 @@ class CategoriaProducto:
             if resultados:
                 productos = []
                 for row in resultados:
-                    # ✅ SOLO OBTENER LA URL TAL CUAL ESTÁ EN LA BD
-                    # NO agregar ningún prefijo aquí
                     url_img = row['url_img'] if row['url_img'] else ''
                     
                     producto = {
-                        "idProducto": row['idProducto'],
+                        "idProducto": row['id_prod_sucursal'],
                         "id_prod_sucursal": row['id_prod_sucursal'],
-                        "nombreProducto": row['nombreProducto'],
+                        "nombreProducto": row['nombre'],
                         "nombre": row['nombre'],
                         "precio": float(row['precio']) if row['precio'] else 0.0,
-                        "urlImg": url_img,  # ✅ URL tal cual viene de la BD
-                        "imagen": url_img,  # ✅ URL tal cual viene de la BD
+                        "urlImg": url_img,
+                        "imagen": url_img,
                         "genero": row['genero'] if row['genero'] else '',
                         "material": row['material'] if row['material'] else '',
                         "marca": row['marca'] if row['marca'] else '',
-                        "nombreCategoria": row['nombreCategoria'] if row['nombreCategoria'] else '',
+                        "nombreCategoria": row['categoria'] if row['categoria'] else '',
                         "categoria": row['categoria'] if row['categoria'] else '',
-                        "idCategoria": row['idCategoria'] if row['idCategoria'] else 0,
-                        "idProdColor": row['idProdColor'] if row['idProdColor'] else 0,
+                        "idCategoria": row['id_categoria'] if row['id_categoria'] else 0,
+                        "idProdColor": row['id_prod_color'] if row['id_prod_color'] else 0,
                         "id_prod_color": row['id_prod_color'] if row['id_prod_color'] else 0,
                         "talla": row['talla'] if row['talla'] else '',
                         "color": row['color'] if row['color'] else ''
