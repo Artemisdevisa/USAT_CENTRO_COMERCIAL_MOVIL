@@ -54,21 +54,26 @@ class CategoriaProducto:
                 SELECT 
                     ps.id_prod_sucursal,
                     ps.nombre,
-                    ps.precio,
-                    ps.url_img,
+                    pc.precio,  -- ✅ CAMBIO: ps.precio → pc.precio
+                    pc.url_img,  -- ✅ CAMBIO: ps.url_img → pc.url_img
                     ps.genero,
                     ps.id_marca,
                     ps.id_categoria,
                     cp.nombre AS nombre_categoria,
                     ps.id_tipo_modelo,
-                    ps.talla,
+                    pc.talla,  -- ✅ CAMBIO: ps.talla → pc.talla
                     ps.material,
-                    m.nombre AS marca
+                    m.nombre AS marca,
+                    pc.id_prod_color,  -- ✅ AGREGAR
+                    col.nombre AS color  -- ✅ AGREGAR
                 FROM producto_sucursal ps
                 INNER JOIN categoria_producto cp ON ps.id_categoria = cp.id_categoria
+                INNER JOIN producto_color pc ON ps.id_prod_sucursal = pc.id_prod_sucursal  -- ✅ JOIN NECESARIO
+                INNER JOIN color col ON pc.id_color = col.id_color  -- ✅ JOIN NECESARIO
                 LEFT JOIN marca m ON ps.id_marca = m.id_marca
                 WHERE ps.id_categoria = %s
                 AND ps.estado = TRUE
+                AND pc.estado = TRUE  -- ✅ AGREGAR
                 ORDER BY ps.id_prod_sucursal DESC
             """
             
@@ -89,7 +94,9 @@ class CategoriaProducto:
                     "nombreCategoria": row['nombre_categoria'],
                     "talla": row['talla'],
                     "material": row['material'],
-                    "marca": row.get('marca', 'Sin marca')
+                    "marca": row.get('marca', 'Sin marca'),
+                    "idProdColor": row['id_prod_color'],  # ✅ AGREGAR
+                    "color": row['color']  # ✅ AGREGAR
                 }
                 productos.append(producto)
             
