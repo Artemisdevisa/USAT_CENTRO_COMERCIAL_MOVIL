@@ -119,20 +119,19 @@ class Venta:
                     v.id_venta,
                     v.codigo_qr as codigo_venta,
                     v.created_at as fecha_venta,
-                    dv.precio_unitario as total,
+                    dv.sub_total as total,
                     v.estado,
                     s.nombre as nombre_sucursal,
-                    p.nombre as nombre_producto,
+                    ps.nombre as nombre_producto,
                     pc.url_img as url_img_producto,
                     c.nombre as color,
-                    t.nombre as talla
+                    pc.talla as talla
                 FROM detalle_venta dv
                 INNER JOIN venta v ON dv.id_venta = v.id_venta
                 INNER JOIN sucursal s ON v.id_sucursal = s.id_sucursal
                 INNER JOIN producto_color pc ON dv.id_prod_color = pc.id_prod_color
-                INNER JOIN producto p ON pc.id_producto = p.id_producto
+                INNER JOIN producto_sucursal ps ON pc.id_prod_sucursal = ps.id_prod_sucursal
                 INNER JOIN color c ON pc.id_color = c.id_color
-                INNER JOIN talla t ON dv.id_talla = t.id_talla
                 WHERE v.id_usuario = %s AND dv.estado = TRUE
                 ORDER BY v.created_at DESC
             """
