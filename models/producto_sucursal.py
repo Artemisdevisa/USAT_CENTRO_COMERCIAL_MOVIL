@@ -168,8 +168,9 @@ class ProductoSucursal:
                             url_img = '/' + url_img
                         url_img = base_url + url_img
                 
+                # ✅ AQUÍ ESTÁ EL CAMBIO - LÍNEA 186-191
                 colores[color_nombre]['tallas'][talla] = {
-                    'id_prod_color': var['id_prod_color'],
+                    'id_prod_color': var['id_prod_color'],  # ✅ AGREGAR ESTA LÍNEA
                     'precio': float(var['precio']),
                     'stock': var['stock'],
                     'url_img': url_img
