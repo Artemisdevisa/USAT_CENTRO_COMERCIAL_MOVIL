@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+import os
 from models.carrito import Carrito
 
 ws_carrito = Blueprint('ws_carrito', __name__)
@@ -11,6 +12,25 @@ def listar_carrito(id_usuario):
         exito, resultado = carrito.listar_carrito(id_usuario)
         
         if exito:
+            # ✅ AGREGAR BASE_URL PARA ANDROID
+            user_agent = request.headers.get('User-Agent', '').lower()
+            is_android = 'okhttp' in user_agent or 'android' in user_agent
+            
+            if os.environ.get('RENDER'):
+                base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
+            else:
+                base_url = "http://10.0.2.2:3007" if is_android else ""
+            
+            # Procesar URLs de imágenes en cada sucursal
+            for sucursal in resultado:
+                for producto in sucursal['productos']:
+                    url_img = producto.get('url_img', '')
+                    if url_img and is_android:
+                        if not url_img.startswith('http'):
+                            if not url_img.startswith('/'):
+                                url_img = '/' + url_img
+                            producto['url_img'] = base_url + url_img
+            
             return jsonify({
                 'status': True,
                 'data': resultado,
