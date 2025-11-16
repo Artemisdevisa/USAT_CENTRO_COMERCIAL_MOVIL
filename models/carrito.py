@@ -14,7 +14,7 @@ class Carrito:
                 SELECT 
                     s.id_sucursal,
                     s.nombre as sucursal,
-                    s.logo as sucursal_logo,  -- ✅ AGREGAR LOGO
+                    s.img_logo as sucursal_logo,  -- ✅ CAMBIAR: logo → img_logo
                     cc.id_carrito,
                     cc.id_prod_color,
                     cc.cantidad,
@@ -52,7 +52,7 @@ class Carrito:
                     sucursales[id_sucursal] = {
                         'id_sucursal': id_sucursal,
                         'nombre_sucursal': row['sucursal'],
-                        'logo_sucursal': row['sucursal_logo'] if row['sucursal_logo'] else '',  # ✅ AGREGAR
+                        'logo_sucursal': row['sucursal_logo'] if row['sucursal_logo'] else '',  # ✅ img_logo
                         'productos': [],
                         'subtotal': 0
                     }
