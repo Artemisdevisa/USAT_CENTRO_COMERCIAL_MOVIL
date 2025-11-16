@@ -19,6 +19,8 @@ from routes.empresa_routes import ws_empresa
 from routes.provincia_routes import ws_provincia
 from routes.horario_sucursal_routes import ws_horario_sucursal
 from routes.distrito_routes import ws_distrito
+from routes.tarjeta_routes import ws_tarjeta
+from routes.venta_routes import ws_venta
 from config import Config
 import os
 
@@ -78,6 +80,8 @@ app.register_blueprint(ws_carrito)
 app.register_blueprint(ws_producto_sucursal)
 app.register_blueprint(ws_producto_color)
 app.register_blueprint(ws_tipo_producto)
+app.register_blueprint(ws_tarjeta)
+app.register_blueprint(ws_venta)
 app.register_blueprint(ws_color)
 app.register_blueprint(ws_horario_sucursal)
 app.register_blueprint(ws_categoria_producto)
