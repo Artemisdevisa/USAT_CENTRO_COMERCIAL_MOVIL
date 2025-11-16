@@ -52,11 +52,12 @@ def listar_productos_por_categoria(id_categoria):
         resultado, productos = categoria_producto.listar_productos_por_categoria(id_categoria)
         
         if resultado:
-            # ✅ DETECTAR ENTORNO Y CLIENTE
+            # ✅ DETECTAR ANDROID
             user_agent = request.headers.get('User-Agent', '').lower()
             is_android = 'okhttp' in user_agent or 'android' in user_agent
             
-            # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
+            # ✅ BASE URL
+            import os
             if os.environ.get('RENDER'):
                 base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
             else:
