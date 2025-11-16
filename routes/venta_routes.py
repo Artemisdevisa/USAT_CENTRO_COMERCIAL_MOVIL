@@ -14,6 +14,13 @@ def crear_venta_multiple():
         id_tarjeta = data.get('id_tarjeta')
         sucursales = data.get('sucursales')  # Lista de IDs de sucursales
         
+        print(f"\n{'='*60}")
+        print(f"📥 PETICIÓN RECIBIDA - CREAR VENTA MÚLTIPLE")
+        print(f"{'='*60}")
+        print(f"ID Usuario: {id_usuario}")
+        print(f"ID Tarjeta: {id_tarjeta}")
+        print(f"Sucursales: {sucursales}")
+        
         if not all([id_usuario, id_tarjeta, sucursales]):
             return jsonify({
                 'status': False,
@@ -26,17 +33,31 @@ def crear_venta_multiple():
         
         # Crear una venta por cada sucursal
         for id_sucursal in sucursales:
+            print(f"\n🏪 Procesando sucursal ID: {id_sucursal}")
+            
             exito, resultado = venta_model.crear_venta_completa(
                 id_usuario, id_sucursal, id_tarjeta
             )
             
             if exito:
+                print(f"✅ Venta creada exitosamente:")
+                print(f"   - ID Venta: {resultado.get('id_venta')}")
+                print(f"   - Código: {resultado.get('codigo_venta')}")
+                print(f"   - Total: {resultado.get('total', 0)}")
+                
                 ventas_creadas.append(resultado)
             else:
+                print(f"❌ Error: {resultado}")
                 errores.append({
                     'id_sucursal': id_sucursal,
                     'error': resultado
                 })
+        
+        print(f"\n{'='*60}")
+        print(f"📊 RESUMEN:")
+        print(f"   Ventas creadas: {len(ventas_creadas)}")
+        print(f"   Errores: {len(errores)}")
+        print(f"{'='*60}\n")
         
         if ventas_creadas:
             return jsonify({
@@ -55,6 +76,10 @@ def crear_venta_multiple():
             }), 400
             
     except Exception as e:
+        print(f"\n💥 ERROR CRÍTICO: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'status': False,
             'message': f'Error: {str(e)}'

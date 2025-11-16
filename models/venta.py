@@ -10,25 +10,51 @@ class Venta:
             con = Conexion().open
             cursor = con.cursor()
             
+            print(f"\n🔍 EJECUTANDO fn_crear_venta_completa:")
+            print(f"   Usuario: {id_usuario}, Sucursal: {id_sucursal}, Tarjeta: {id_tarjeta}")
+            
             cursor.execute("""
                 SELECT * FROM fn_crear_venta_completa(%s, %s, %s)
             """, [id_usuario, id_sucursal, id_tarjeta])
             
             resultado = cursor.fetchone()
             
+            print(f"\n📊 RESULTADO DE LA FUNCIÓN:")
+            print(f"   ID Venta: {resultado['id_venta']}")
+            print(f"   Código: {resultado['codigo_venta']}")
+            print(f"   Mensaje: {resultado['mensaje']}")
+            
             con.commit()
             cursor.close()
             con.close()
             
             if resultado and resultado['id_venta'] > 0:
+                # ✅ OBTENER EL TOTAL DESDE LA BD
+                con2 = Conexion().open
+                cursor2 = con2.cursor()
+                
+                cursor2.execute("SELECT total FROM venta WHERE id_venta = %s", [resultado['id_venta']])
+                venta_info = cursor2.fetchone()
+                
+                cursor2.close()
+                con2.close()
+                
+                total_venta = float(venta_info['total']) if venta_info else 0.0
+                
+                print(f"   ✅ Total recuperado: {total_venta}")
+                
                 return True, {
                     'id_venta': resultado['id_venta'],
                     'codigo_venta': resultado['codigo_venta'],
+                    'total': total_venta,
                     'mensaje': resultado['mensaje']
                 }
             else:
                 return False, resultado['mensaje'] if resultado else 'Error al crear venta'
         except Exception as e:
+            print(f"\n💥 ERROR EN crear_venta_completa: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False, f"Error: {str(e)}"
     
     def crear_venta_multiple(self, id_usuario, id_sucursal, id_tarjeta):
