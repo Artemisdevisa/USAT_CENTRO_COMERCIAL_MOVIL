@@ -639,3 +639,125 @@ def rechazar_solicitud(id_solicitud):
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
+    
+@ws_usuario.route('/api/usuario/actualizar-perfil', methods=['POST'])
+def actualizar_perfil():
+    """Actualizar perfil de usuario"""
+    try:
+        data = request.get_json()
+        id_usuario = data.get('id_usuario')
+        id_persona = data.get('id_persona')
+        
+        nombres = data.get('nombres')
+        apellidos = data.get('apellidos')
+        telefono = data.get('telefono')
+        direccion = data.get('direccion')
+        fecha_nacimiento = data.get('fecha_nacimiento')
+        
+        # Validaciones
+        if not all([id_usuario, id_persona, nombres, apellidos, telefono, direccion, fecha_nacimiento]):
+            return jsonify({
+                'status': False,
+                'message': 'Todos los campos son requeridos'
+            }), 400
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # Actualizar persona
+        cursor.execute("""
+            UPDATE persona 
+            SET nombres = %s, apellidos = %s, telefono = %s, 
+                direccion = %s, fecha_nacimiento = %s
+            WHERE id_persona = %s AND estado = TRUE
+        """, [nombres, apellidos, telefono, direccion, fecha_nacimiento, id_persona])
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            con.close()
+            return jsonify({
+                'status': False,
+                'message': 'No se pudo actualizar. Persona no encontrada.'
+            }), 404
+        
+        con.commit()
+        cursor.close()
+        con.close()
+        
+        return jsonify({
+            'status': True,
+            'message': 'Perfil actualizado correctamente'
+        }), 200
+        
+    except Exception as e:
+        print(f"💥 ERROR en actualizar_perfil: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error al actualizar perfil: {str(e)}'
+        }), 500
+
+
+@ws_usuario.route('/api/persona/<int:id_persona>', methods=['GET'])
+def obtener_persona(id_persona):
+    """Obtener datos completos de persona"""
+    try:
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                p.id_persona,
+                p.nombres,
+                p.apellidos,
+                p.tipo_doc,
+                p.documento,
+                p.fecha_nacimiento,
+                p.telefono,
+                p.id_dist,
+                p.direccion,
+                d.nombre as distrito,
+                pr.nombre as provincia,
+                dep.nombre as departamento
+            FROM persona p
+            LEFT JOIN distrito d ON p.id_dist = d.id_dist
+            LEFT JOIN provincia pr ON d.id_prov = pr.id_prov
+            LEFT JOIN departamento dep ON pr.id_dep = dep.id_dep
+            WHERE p.id_persona = %s AND p.estado = TRUE
+        """, [id_persona])
+        
+        resultado = cursor.fetchone()
+        cursor.close()
+        con.close()
+        
+        if not resultado:
+            return jsonify({
+                'status': False,
+                'message': 'Persona no encontrada'
+            }), 404
+        
+        return jsonify({
+            'status': True,
+            'data': {
+                'id_persona': resultado['id_persona'],
+                'nombres': resultado['nombres'],
+                'apellidos': resultado['apellidos'],
+                'tipo_doc': resultado['tipo_doc'],
+                'documento': resultado['documento'],
+                'fecha_nacimiento': str(resultado['fecha_nacimiento']) if resultado['fecha_nacimiento'] else None,
+                'telefono': resultado['telefono'],
+                'id_dist': resultado['id_dist'],
+                'direccion': resultado['direccion'],
+                'distrito': resultado['distrito'],
+                'provincia': resultado['provincia'],
+                'departamento': resultado['departamento']
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"💥 ERROR en obtener_persona: {str(e)}")
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
