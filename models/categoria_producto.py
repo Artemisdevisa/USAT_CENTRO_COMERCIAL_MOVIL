@@ -45,65 +45,76 @@ class CategoriaProducto:
             return False, f"Error al listar categorías: {str(e)}"
     
     def listar_productos_por_categoria(self, id_categoria):
-        """Listar productos por categoría para el frontend público"""
+        """Lista productos de una categoría específica"""
         try:
             con = Conexion().open
             cursor = con.cursor()
             
             sql = """
                 SELECT 
+                    ps.id_prod_sucursal as idProducto,
                     ps.id_prod_sucursal,
+                    ps.nombre as nombreProducto,
                     ps.nombre,
-                    pc.precio,  -- ✅ CAMBIO: ps.precio → pc.precio
-                    pc.url_img,  -- ✅ CAMBIO: ps.url_img → pc.url_img
+                    pc.precio,
+                    pc.url_img,
                     ps.genero,
-                    ps.id_marca,
-                    ps.id_categoria,
-                    cp.nombre AS nombre_categoria,
-                    ps.id_tipo_modelo,
-                    pc.talla,  -- ✅ CAMBIO: ps.talla → pc.talla
                     ps.material,
-                    m.nombre AS marca,
-                    pc.id_prod_color,  -- ✅ AGREGAR
-                    col.nombre AS color  -- ✅ AGREGAR
+                    m.nombre as marca,
+                    cat.nombre as nombreCategoria,
+                    cat.nombre as categoria,
+                    cat.id_categoria as idCategoria,
+                    pc.id_prod_color as idProdColor,
+                    pc.id_prod_color,
+                    pc.talla,
+                    col.nombre as color
                 FROM producto_sucursal ps
-                INNER JOIN categoria_producto cp ON ps.id_categoria = cp.id_categoria
-                INNER JOIN producto_color pc ON ps.id_prod_sucursal = pc.id_prod_sucursal  -- ✅ JOIN NECESARIO
-                INNER JOIN color col ON pc.id_color = col.id_color  -- ✅ JOIN NECESARIO
+                INNER JOIN producto_color pc ON ps.id_prod_sucursal = pc.id_prod_sucursal
                 LEFT JOIN marca m ON ps.id_marca = m.id_marca
-                WHERE ps.id_categoria = %s
-                AND ps.estado = TRUE
-                AND pc.estado = TRUE  -- ✅ AGREGAR
-                ORDER BY ps.id_prod_sucursal DESC
+                LEFT JOIN categoria_producto cat ON ps.id_categoria = cat.id_categoria
+                LEFT JOIN color col ON pc.id_color = col.id_color
+                WHERE ps.id_categoria = %s 
+                    AND ps.estado = TRUE 
+                    AND pc.estado = TRUE
+                ORDER BY ps.id_prod_sucursal, pc.talla
             """
             
             cursor.execute(sql, (id_categoria,))
             resultados = cursor.fetchall()
-            
-            productos = []
-            for row in resultados:
-                producto = {
-                    "idProducto": row['id_prod_sucursal'],
-                    "nombreProducto": row['nombre'],
-                    "nombre": row['nombre'],
-                    "precio": float(row['precio']),
-                    "imagen": f"/uploads/fotos/productos/{row['url_img']}" if row['url_img'] else None,
-                    "urlImg": f"/uploads/fotos/productos/{row['url_img']}" if row['url_img'] else None,
-                    "genero": row['genero'],
-                    "idCategoria": row['id_categoria'],
-                    "nombreCategoria": row['nombre_categoria'],
-                    "talla": row['talla'],
-                    "material": row['material'],
-                    "marca": row.get('marca', 'Sin marca'),
-                    "idProdColor": row['id_prod_color'],  # ✅ AGREGAR
-                    "color": row['color']  # ✅ AGREGAR
-                }
-                productos.append(producto)
-            
             cursor.close()
             con.close()
             
-            return True, productos
+            if resultados:
+                productos = []
+                for row in resultados:
+                    # ✅ SOLO OBTENER LA URL TAL CUAL ESTÁ EN LA BD
+                    # NO agregar ningún prefijo aquí
+                    url_img = row['url_img'] if row['url_img'] else ''
+                    
+                    producto = {
+                        "idProducto": row['idProducto'],
+                        "id_prod_sucursal": row['id_prod_sucursal'],
+                        "nombreProducto": row['nombreProducto'],
+                        "nombre": row['nombre'],
+                        "precio": float(row['precio']) if row['precio'] else 0.0,
+                        "urlImg": url_img,  # ✅ URL tal cual viene de la BD
+                        "imagen": url_img,  # ✅ URL tal cual viene de la BD
+                        "genero": row['genero'] if row['genero'] else '',
+                        "material": row['material'] if row['material'] else '',
+                        "marca": row['marca'] if row['marca'] else '',
+                        "nombreCategoria": row['nombreCategoria'] if row['nombreCategoria'] else '',
+                        "categoria": row['categoria'] if row['categoria'] else '',
+                        "idCategoria": row['idCategoria'] if row['idCategoria'] else 0,
+                        "idProdColor": row['idProdColor'] if row['idProdColor'] else 0,
+                        "id_prod_color": row['id_prod_color'] if row['id_prod_color'] else 0,
+                        "talla": row['talla'] if row['talla'] else '',
+                        "color": row['color'] if row['color'] else ''
+                    }
+                    productos.append(producto)
+                
+                return True, productos
+            else:
+                return True, []
                 
         except Exception as e:
             return False, f"Error al listar productos por categoría: {str(e)}"
