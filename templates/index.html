@@ -3,22 +3,36 @@
 {% block title %}Inicio - Centro Comercial Elías Aguirre{% endblock %}
 
 {% block content %}
-<!-- HERO SECTION -->
-<section class="bg-gradient-to-r from-red-600 to-red-700 py-16">
-    <div class="container mx-auto px-4">
+<!-- HERO SECTION CON IMAGEN DE FONDO -->
+<section class="relative py-32 overflow-hidden">
+    <!-- Imagen de fondo con overlay -->
+    <div class="absolute inset-0 z-0">
+        <img 
+            src="/uploads/fotos/aguirre/banner.jpg" 
+            alt="Centro Comercial Elías Aguirre" 
+            class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-black/50"></div>
+    </div>
+    
+    <!-- Contenido -->
+    <div class="container mx-auto px-4 relative z-10">
         <div class="text-center text-white">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4">Bienvenido a Centro Comercial Elías Aguirre</h1>
-            <p class="text-xl md:text-2xl mb-8">Descubre las mejores ofertas y productos de calidad</p>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg">
+                Tu Destino de Compras en Chiclayo
+            </h1>
+            <p class="text-xl md:text-2xl mb-10 drop-shadow-md">
+                Encuentra las mejores marcas y productos en un solo lugar
+            </p>
             
             <!-- Buscador -->
             <div class="max-w-2xl mx-auto">
-                <div class="flex rounded-lg overflow-hidden shadow-lg">
+                <div class="flex rounded-full overflow-hidden shadow-2xl bg-white">
                     <input 
                         type="text" 
                         id="searchInput" 
-                        placeholder="Buscar productos..." 
-                        class="flex-1 px-6 py-4 text-gray-800 text-lg focus:outline-none">
-                    <button class="bg-white text-red-600 px-8 py-4 font-bold hover:bg-gray-100 transition">
+                        placeholder="¿Qué estás buscando?" 
+                        class="flex-1 px-8 py-5 text-gray-800 text-lg focus:outline-none">
+                    <button class="bg-red-600 text-white px-10 py-5 font-bold hover:bg-red-700 transition-all">
                         <i class="bi bi-search"></i> Buscar
                     </button>
                 </div>
@@ -31,19 +45,21 @@
 <section class="container mx-auto px-4 py-12">
     <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
         <div class="grid md:grid-cols-2">
-            <div class="bg-red-600 text-white p-12 flex flex-col justify-center">
-                <span class="bg-gray-900 inline-block px-4 py-1 rounded text-sm font-bold mb-4 w-fit">OFERTA ESPECIAL</span>
-                <h2 class="text-4xl font-bold mb-4">Hasta 40% OFF</h2>
-                <p class="text-xl mb-6">En productos seleccionados</p>
-                <button class="bg-white text-red-600 px-8 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition w-fit">
-                    <i class="bi bi-tag-fill"></i> Ver Ofertas
+            <div class="bg-gradient-to-br from-red-600 to-red-700 text-white p-12 flex flex-col justify-center">
+                <span class="bg-yellow-400 text-red-900 inline-block px-4 py-2 rounded-full text-sm font-bold mb-4 w-fit animate-pulse">
+                    🔥 OFERTA ESPECIAL
+                </span>
+                <h2 class="text-5xl font-bold mb-4">Hasta 40% OFF</h2>
+                <p class="text-xl mb-6 text-red-100">En productos seleccionados de temporada</p>
+                <button class="bg-white text-red-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-yellow-400 hover:text-red-900 transition-all transform hover:scale-105 w-fit shadow-lg">
+                    <i class="bi bi-tag-fill"></i> Ver Ofertas Ahora
                 </button>
             </div>
-            <div class="hidden md:block">
+            <div class="hidden md:block bg-gradient-to-br from-red-50 to-white">
                 <img 
                     src="/uploads/fotos/aguirre/logo3.png" 
                     alt="Oferta Especial" 
-                    class="w-full h-full object-contain p-8">
+                    class="w-full h-full object-contain p-12">
             </div>
         </div>
     </div>
@@ -52,10 +68,14 @@
 <!-- CATEGORÍAS -->
 <section class="container mx-auto px-4 py-12">
     <div class="flex justify-between items-center mb-8">
-        <h2 class="text-3xl font-bold text-red-600 flex items-center space-x-2">
+        <h2 class="text-3xl font-bold text-red-600 flex items-center space-x-3">
             <i class="bi bi-tags-fill"></i>
-            <span>Categorías</span>
+            <span>Explora por Categorías</span>
         </h2>
+        <a href="/categorias" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2">
+            <span>Ver todas</span>
+            <i class="bi bi-arrow-right"></i>
+        </a>
     </div>
     
     <div id="categorias-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -64,29 +84,40 @@
 </section>
 
 <!-- REGISTRAR EMPRESA (VISIBLE PARA TODOS) -->
-<section class="bg-gradient-to-r from-blue-600 to-blue-700 py-16 my-12">
-    <div class="container mx-auto px-4">
+<section class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 py-20 my-12 relative overflow-hidden">
+    <!-- Decoración de fondo -->
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 right-10 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+    </div>
+    
+    <div class="container mx-auto px-4 relative z-10">
         <div class="max-w-4xl mx-auto text-center text-white">
-            <div class="inline-block bg-white/20 backdrop-blur-sm rounded-full p-6 mb-6">
-                <i class="bi bi-shop text-6xl"></i>
+            <div class="inline-block bg-white/20 backdrop-blur-sm rounded-full p-8 mb-6 animate-bounce">
+                <i class="bi bi-shop text-7xl"></i>
             </div>
-            <h2 class="text-4xl font-bold mb-4">¿Tienes una empresa?</h2>
-            <p class="text-xl mb-8 text-blue-100">Únete a nuestro centro comercial y llega a más clientes</p>
-            <button onclick="irAPostularEmpresa()" class="bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-2xl">
-                <i class="bi bi-briefcase-fill"></i> Registrar mi Empresa
+            <h2 class="text-5xl font-bold mb-4">¿Tienes un Negocio?</h2>
+            <p class="text-2xl mb-4 text-blue-100">Únete al centro comercial más grande de Chiclayo</p>
+            <p class="text-lg mb-8 text-blue-200">Llega a miles de clientes potenciales y haz crecer tu negocio</p>
+            <button onclick="irAPostularEmpresa()" class="bg-white text-blue-600 px-12 py-5 rounded-full font-bold text-xl hover:bg-yellow-400 hover:text-blue-900 transition-all transform hover:scale-110 shadow-2xl">
+                <i class="bi bi-briefcase-fill"></i> Registrar mi Empresa Ahora
             </button>
         </div>
     </div>
 </section>
 
 <!-- PRODUCTOS DESTACADOS -->
-<section class="bg-gray-100 py-12">
+<section class="bg-gray-50 py-12">
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center mb-8">
-            <h2 class="text-3xl font-bold text-red-600 flex items-center space-x-2">
+            <h2 class="text-3xl font-bold text-red-600 flex items-center space-x-3">
                 <i class="bi bi-star-fill"></i>
                 <span>Productos Destacados</span>
             </h2>
+            <a href="/productos" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2">
+                <span>Ver todos</span>
+                <i class="bi bi-arrow-right"></i>
+            </a>
         </div>
         
         <div id="productos-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -96,27 +127,53 @@
 </section>
 
 <!-- VENTAJAS -->
-<section class="container mx-auto px-4 py-12">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-        <div class="p-6">
-            <i class="bi bi-truck text-5xl text-red-600 mb-4"></i>
-            <h5 class="text-xl font-bold mb-2">Envío Gratis</h5>
-            <p class="text-gray-600">En compras mayores a S/100</p>
+<section class="container mx-auto px-4 py-16">
+    <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">¿Por qué Comprar con Nosotros?</h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2">
+            <div class="inline-block bg-red-100 rounded-full p-6 mb-4">
+                <i class="bi bi-truck text-5xl text-red-600"></i>
+            </div>
+            <h5 class="text-xl font-bold mb-3 text-gray-800">Envío Gratis</h5>
+            <p class="text-gray-600">En compras mayores a S/100 en Chiclayo</p>
         </div>
-        <div class="p-6">
-            <i class="bi bi-shield-check text-5xl text-red-600 mb-4"></i>
-            <h5 class="text-xl font-bold mb-2">Compra Segura</h5>
-            <p class="text-gray-600">Tus datos protegidos</p>
+        <div class="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2">
+            <div class="inline-block bg-green-100 rounded-full p-6 mb-4">
+                <i class="bi bi-shield-check text-5xl text-green-600"></i>
+            </div>
+            <h5 class="text-xl font-bold mb-3 text-gray-800">Compra Segura</h5>
+            <p class="text-gray-600">Protección total de tus datos personales</p>
         </div>
-        <div class="p-6">
-            <i class="bi bi-arrow-repeat text-5xl text-red-600 mb-4"></i>
-            <h5 class="text-xl font-bold mb-2">Cambios Fáciles</h5>
-            <p class="text-gray-600">30 días para cambios</p>
+        <div class="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2">
+            <div class="inline-block bg-blue-100 rounded-full p-6 mb-4">
+                <i class="bi bi-arrow-repeat text-5xl text-blue-600"></i>
+            </div>
+            <h5 class="text-xl font-bold mb-3 text-gray-800">Cambios Fáciles</h5>
+            <p class="text-gray-600">30 días para cambios y devoluciones</p>
         </div>
-        <div class="p-6">
-            <i class="bi bi-headset text-5xl text-red-600 mb-4"></i>
-            <h5 class="text-xl font-bold mb-2">Soporte 24/7</h5>
-            <p class="text-gray-600">Estamos para ayudarte</p>
+        <div class="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2">
+            <div class="inline-block bg-purple-100 rounded-full p-6 mb-4">
+                <i class="bi bi-headset text-5xl text-purple-600"></i>
+            </div>
+            <h5 class="text-xl font-bold mb-3 text-gray-800">Soporte 24/7</h5>
+            <p class="text-gray-600">Atención al cliente siempre disponible</p>
+        </div>
+    </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="bg-gray-800 text-white py-16">
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-4">Suscríbete a Nuestro Newsletter</h2>
+        <p class="text-xl mb-8 text-gray-300">Recibe las mejores ofertas y novedades en tu correo</p>
+        <div class="max-w-md mx-auto flex rounded-full overflow-hidden shadow-xl">
+            <input 
+                type="email" 
+                placeholder="Tu correo electrónico" 
+                class="flex-1 px-6 py-4 text-gray-800 focus:outline-none">
+            <button class="bg-red-600 text-white px-8 py-4 font-bold hover:bg-red-700 transition">
+                Suscribirse
+            </button>
         </div>
     </div>
 </section>
@@ -137,16 +194,17 @@ fetch(`${API_URL}/categorias/listar`)
             data.data.forEach(cat => {
                 const imgUrl = `${API_URL}/uploads/fotos/categorias/${cat.imagen}`;
                 
-                // ✅ SIN ONCLICK - NO REDIRIGE
                 container.innerHTML += `
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                        <img 
-                            src="${imgUrl}" 
-                            alt="${cat.nombreCategoria}"
-                            class="w-full h-48 object-cover rounded-t-lg"
-                            onerror="this.src='https://via.placeholder.com/300x200?text=${cat.nombreCategoria}'">
+                    <div class="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden">
+                        <div class="overflow-hidden">
+                            <img 
+                                src="${imgUrl}" 
+                                alt="${cat.nombreCategoria}"
+                                class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
+                                onerror="this.src='https://via.placeholder.com/300x200?text=${cat.nombreCategoria}'">
+                        </div>
                         <div class="p-4 text-center">
-                            <h5 class="text-lg font-bold text-red-600">${cat.nombreCategoria}</h5>
+                            <h5 class="text-lg font-bold text-red-600 group-hover:text-red-700">${cat.nombreCategoria}</h5>
                         </div>
                     </div>
                 `;
@@ -169,24 +227,25 @@ fetch(`${API_URL}/productos/listar`)
         if (data.status && data.data && data.data.length > 0) {
             container.innerHTML = '';
             data.data.slice(0, 8).forEach(prod => {
-                // ✅ SIN ONCLICK EN BOTÓN VER - NO REDIRIGE
                 container.innerHTML += `
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300">
-                        <img 
-                            src="${prod.url_img}" 
-                            alt="${prod.nombre}"
-                            class="w-full h-64 object-cover rounded-t-lg"
-                            onerror="this.src='https://via.placeholder.com/300x400?text=Producto'">
-                        <div class="p-4">
+                    <div class="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden">
+                        <div class="overflow-hidden">
+                            <img 
+                                src="${prod.url_img}" 
+                                alt="${prod.nombre}"
+                                class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
+                                onerror="this.src='https://via.placeholder.com/300x400?text=Producto'">
+                        </div>
+                        <div class="p-5">
                             <span class="inline-block bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2">${prod.marca || 'Sin marca'}</span>
-                            <h6 class="text-lg font-bold mb-2 text-gray-800">${prod.nombre}</h6>
+                            <h6 class="text-lg font-bold mb-2 text-gray-800 line-clamp-2">${prod.nombre}</h6>
                             <p class="text-sm text-gray-600 mb-3">
                                 <i class="bi bi-rulers"></i> Talla: ${prod.talla} | 
                                 <i class="bi bi-palette-fill"></i> ${prod.color}
                             </p>
                             <div class="flex justify-between items-center">
                                 <span class="text-2xl font-bold text-red-600">S/ ${parseFloat(prod.precio).toFixed(2)}</span>
-                                <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                                <button class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105">
                                     <i class="bi bi-eye"></i> Ver
                                 </button>
                             </div>
@@ -203,21 +262,15 @@ fetch(`${API_URL}/productos/listar`)
         document.getElementById('productos-container').innerHTML = '<p class="col-span-full text-center text-red-500">Error al cargar productos</p>';
     });
 
-// ✅ FUNCIONES ELIMINADAS - YA NO SE USAN
-// function verCategoria(id) { ... }
-// function verDetalle(id) { ... }
-
 function irAPostularEmpresa() {
     const token = localStorage.getItem('token');
     
-    // Validar si está logueado
     if (!token) {
         alert('⚠️ Debes iniciar sesión para postular tu empresa');
         window.location.href = '/login?redirect=/postular-empresa';
         return;
     }
     
-    // Validar rol Cliente
     const userStr = localStorage.getItem('user');
     if (userStr) {
         try {
@@ -231,7 +284,6 @@ function irAPostularEmpresa() {
                 return;
             }
             
-            // Si es cliente, redirigir a postular empresa
             window.location.href = '/postular-empresa';
         } catch (e) {
             alert('⚠️ Error al verificar permisos');
