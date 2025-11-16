@@ -52,6 +52,26 @@ def listar_productos_por_categoria(id_categoria):
         resultado, productos = categoria_producto.listar_productos_por_categoria(id_categoria)
         
         if resultado:
+            # ✅ DETECTAR ENTORNO Y CLIENTE
+            user_agent = request.headers.get('User-Agent', '').lower()
+            is_android = 'okhttp' in user_agent or 'android' in user_agent
+            
+            # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
+            if os.environ.get('RENDER'):
+                base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
+            else:
+                base_url = "http://10.0.2.2:3007" if is_android else ""
+            
+            # ✅ PROCESAR URLs DE IMÁGENES
+            for producto in productos:
+                url_img = producto.get('urlImg', '')
+                if url_img and is_android:
+                    if not url_img.startswith('http'):
+                        if not url_img.startswith('/'):
+                            url_img = '/' + url_img
+                        producto['urlImg'] = base_url + url_img
+                        producto['imagen'] = base_url + url_img
+            
             return jsonify({
                 'status': True,
                 'data': productos,
