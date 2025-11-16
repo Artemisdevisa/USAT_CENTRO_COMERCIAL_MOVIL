@@ -19,7 +19,7 @@ class Carrito:
                     cc.cantidad,
                     ps.id_prod_sucursal,
                     ps.nombre as producto_nombre,
-                    ps.talla,
+                    pc.talla,  -- ✅ LÍNEA 10: CAMBIAR DE ps.talla A pc.talla
                     ps.genero,
                     ps.material,
                     pc.precio,
@@ -64,9 +64,9 @@ class Carrito:
                     'precio': float(row['precio']),
                     'stock': row['stock'],
                     'url_img': row['url_img'] if row['url_img'] else '',
-                    'talla': row['talla'],
-                    'genero': row['genero'],
-                    'material': row['material'],
+                    'talla': row['talla'] if row['talla'] else '',  # ✅ Ahora viene de producto_color
+                    'genero': row['genero'] if row['genero'] else '',
+                    'material': row['material'] if row['material'] else '',
                     'marca': row['marca'] if row['marca'] else '',
                     'categoria': row['categoria'] if row['categoria'] else '',
                     'color': row['color']
