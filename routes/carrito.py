@@ -12,17 +12,27 @@ def listar_carrito(id_usuario):
         exito, resultado = carrito.listar_carrito(id_usuario)
         
         if exito:
-            # ✅ AGREGAR BASE_URL PARA ANDROID
+            # ✅ DETECTAR ENTORNO Y CLIENTE
             user_agent = request.headers.get('User-Agent', '').lower()
             is_android = 'okhttp' in user_agent or 'android' in user_agent
             
+            # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
             if os.environ.get('RENDER'):
                 base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
             else:
                 base_url = "http://10.0.2.2:3007" if is_android else ""
             
-            # Procesar URLs de imágenes en cada sucursal
+            # ✅ PROCESAR URLs EN CADA SUCURSAL
             for sucursal in resultado:
+                # ✅ PROCESAR LOGO DE SUCURSAL
+                logo_url = sucursal.get('logo_sucursal', '')
+                if logo_url and is_android:
+                    if not logo_url.startswith('http'):
+                        if not logo_url.startswith('/'):
+                            logo_url = '/' + logo_url
+                        sucursal['logo_sucursal'] = base_url + logo_url
+                
+                # ✅ PROCESAR IMÁGENES DE PRODUCTOS
                 for producto in sucursal['productos']:
                     url_img = producto.get('url_img', '')
                     if url_img and is_android:
