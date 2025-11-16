@@ -108,12 +108,35 @@ class Venta:
             return False, f"Error: {str(e)}"
     
     def listar_por_usuario(self, id_usuario):
-        """Listar ventas del usuario"""
+        """Listar ventas del usuario con imagen del primer producto"""
         try:
             con = Conexion().open
             cursor = con.cursor()
             
-            cursor.execute("SELECT * FROM fn_listar_ventas_usuario(%s)", [id_usuario])
+            sql = """
+                SELECT 
+                    v.id_venta,
+                    v.codigo_qr as codigo_venta,
+                    v.created_at as fecha_venta,
+                    v.total,
+                    v.estado,
+                    s.nombre as nombre_sucursal,
+                    (SELECT COUNT(*) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta AND dv.estado = TRUE) as cantidad_productos,
+                    (
+                        SELECT pc.url_img 
+                        FROM detalle_venta dv
+                        INNER JOIN producto_color pc ON dv.id_prod_color = pc.id_prod_color
+                        WHERE dv.id_venta = v.id_venta 
+                        AND dv.estado = TRUE
+                        LIMIT 1
+                    ) as url_img_producto
+                FROM venta v
+                INNER JOIN sucursal s ON v.id_sucursal = s.id_sucursal
+                WHERE v.id_usuario = %s
+                ORDER BY v.created_at DESC
+            """
+            
+            cursor.execute(sql, [id_usuario])
             resultados = cursor.fetchall()
             
             cursor.close()
@@ -129,7 +152,8 @@ class Venta:
                         'total': float(row['total']) if row['total'] else 0.0,
                         'estado': row['estado'],
                         'nombre_sucursal': row['nombre_sucursal'],
-                        'cantidad_productos': int(row['cantidad_productos']) if row['cantidad_productos'] else 0
+                        'cantidad_productos': int(row['cantidad_productos']) if row['cantidad_productos'] else 0,
+                        'url_img_producto': row['url_img_producto'] if row['url_img_producto'] else ''
                     }
                     ventas.append(venta)
                 return True, ventas
