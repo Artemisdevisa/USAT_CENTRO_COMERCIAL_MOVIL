@@ -386,6 +386,7 @@
                 if (data && data.address) {
                     const { road, suburb, city, county, state, town, village, city_district } = data.address;
                     
+                    // Autocompletar dirección
                     let direccion = '';
                     if (road) direccion += road;
                     if (suburb) direccion += (direccion ? ', ' : '') + suburb;
@@ -393,18 +394,41 @@
                         document.getElementById('direccion').value = direccion;
                     }
                     
-                    const nombreDistrito = (city || county || town || village || city_district || '').toLowerCase();
-                    const match = distritosPeru[nombreDistrito];
+                    // Normalizar nombre del distrito
+                    const nombreDistrito = (city || county || town || village || city_district || '').toLowerCase().trim();
+                    
+                    console.log('🔍 Buscando distrito:', nombreDistrito);
+                    console.log('📍 Ubicación OSM:', data.address);
+                    
+                    // Buscar coincidencia exacta
+                    let match = distritosPeru[nombreDistrito];
+                    
+                    // Si no hay coincidencia exacta, buscar coincidencia parcial
+                    if (!match) {
+                        const distritosKeys = Object.keys(distritosPeru);
+                        const matchKey = distritosKeys.find(key => 
+                            key.includes(nombreDistrito) || nombreDistrito.includes(key)
+                        );
+                        
+                        if (matchKey) {
+                            match = distritosPeru[matchKey];
+                            console.log('✅ Coincidencia parcial encontrada:', matchKey);
+                        }
+                    }
                     
                     if (match) {
+                        // ✅ Distrito encontrado en BD
                         document.getElementById('id_dist').value = match.id_dist;
                         document.getElementById('txt_distrito').value = match.distrito;
                         document.getElementById('txt_provincia').value = match.provincia;
                         document.getElementById('txt_departamento').value = match.departamento;
+                        
+                        console.log('✅ Distrito cargado:', match);
                     } else {
-                        document.getElementById('txt_distrito').value = nombreDistrito || 'No detectado';
-                        document.getElementById('txt_provincia').value = state || 'No detectado';
-                        document.getElementById('txt_departamento').value = 'Perú';
+                        // ❌ Distrito NO encontrado - Buscar en API
+                        console.warn('⚠️ Distrito no encontrado en BD local, buscando en API...');
+                        
+                        await buscarDistritoEnAPI(nombreDistrito, state);
                     }
                 }
             } catch (error) {
