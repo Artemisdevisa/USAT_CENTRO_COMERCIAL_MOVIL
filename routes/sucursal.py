@@ -98,6 +98,34 @@ def crear_sucursal():
         import traceback
         traceback.print_exc()
         return jsonify({'status': False, 'message': f'Error: {str(e)}'}), 500
+    
+
+@ws_sucursal.route('/sucursales/listar', methods=['GET'])
+def listar_sucursales():
+    """Listar todas las sucursales activas"""
+    try:
+        sucursal = Sucursal()
+        exito, resultado = sucursal.listar_sucursales()
+        
+        if exito:
+            return jsonify({
+                'status': True,
+                'data': resultado,
+                'message': 'Sucursales listadas correctamente'
+            }), 200
+        else:
+            return jsonify({
+                'status': False,
+                'data': None,
+                'message': resultado
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'status': False,
+            'data': None,
+            'message': f'Error en el servidor: {str(e)}'
+        }), 500
 
 @ws_sucursal.route('/sucursales/obtener/<int:id>', methods=['GET'])
 def obtener_sucursal(id):
