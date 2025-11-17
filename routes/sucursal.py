@@ -43,16 +43,17 @@ def listar_por_empresa(id_empresa):
 
 @ws_sucursal.route('/sucursales/crear', methods=['POST'])
 def crear_sucursal():
-    """Crear nueva sucursal con imágenes"""
+    """Crear nueva sucursal con imágenes y coordenadas"""
     try:
-        # Obtener datos del form-data
         id_empresa = request.form.get('id_empresa')
         nombre = request.form.get('nombre')
         id_dist = request.form.get('id_dist')
         direccion = request.form.get('direccion')
         telefono = request.form.get('telefono')
+        latitud = request.form.get('latitud')
+        longitud = request.form.get('longitud')
         
-        if not all([id_empresa, nombre, id_dist, direccion, telefono]):
+        if not all([id_empresa, nombre, id_dist, direccion, telefono, latitud, longitud]):
             return jsonify({'status': False, 'message': 'Faltan campos obligatorios'}), 400
         
         # Procesar imágenes
@@ -80,8 +81,8 @@ def crear_sucursal():
         cursor = con.cursor()
         
         cursor.execute("""
-            SELECT fn_sucursal_crear(%s, %s, %s, %s, %s, %s, %s) as resultado
-        """, [id_empresa, nombre, int(id_dist), direccion, telefono, img_logo, img_banner])
+            SELECT fn_sucursal_crear(%s, %s, %s, %s, %s, %s, %s, %s, %s) as resultado
+        """, [id_empresa, nombre, int(id_dist), direccion, telefono, img_logo, img_banner, float(latitud), float(longitud)])
         
         resultado = cursor.fetchone()['resultado']
         con.commit()
@@ -93,7 +94,7 @@ def crear_sucursal():
         else:
             return jsonify({'status': False, 'message': 'Error al crear'}), 400
     except Exception as e:
-        print(f"Error al crear sucursal: {str(e)}")
+        print(f"Error: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({'status': False, 'message': f'Error: {str(e)}'}), 500
@@ -130,16 +131,17 @@ def obtener_sucursal(id):
 
 @ws_sucursal.route('/sucursales/modificar/<int:id>', methods=['PUT'])
 def modificar_sucursal(id):
-    """Modificar sucursal con opción de actualizar imágenes"""
+    """Modificar sucursal con coordenadas"""
     try:
-        # Obtener datos del form-data
         id_empresa = request.form.get('id_empresa')
         nombre = request.form.get('nombre')
         id_dist = request.form.get('id_dist')
         direccion = request.form.get('direccion')
         telefono = request.form.get('telefono')
+        latitud = request.form.get('latitud')
+        longitud = request.form.get('longitud')
         
-        if not all([id_empresa, nombre, id_dist, direccion, telefono]):
+        if not all([id_empresa, nombre, id_dist, direccion, telefono, latitud, longitud]):
             return jsonify({'status': False, 'message': 'Faltan campos obligatorios'}), 400
         
         # Obtener imágenes actuales
@@ -151,7 +153,7 @@ def modificar_sucursal(id):
         img_logo = current['img_logo'] if current else None
         img_banner = current['img_banner'] if current else None
         
-        # Procesar nueva imagen logo si existe
+        # Procesar nuevas imágenes
         if 'img_logo' in request.files:
             file = request.files['img_logo']
             if file and file.filename and allowed_file(file.filename):
@@ -160,7 +162,6 @@ def modificar_sucursal(id):
                 file.save(filepath)
                 img_logo = filename
         
-        # Procesar nueva imagen banner si existe
         if 'img_banner' in request.files:
             file = request.files['img_banner']
             if file and file.filename and allowed_file(file.filename):
@@ -169,10 +170,9 @@ def modificar_sucursal(id):
                 file.save(filepath)
                 img_banner = filename
         
-        # Modificar sucursal
         cursor.execute("""
-            SELECT fn_sucursal_modificar(%s, %s, %s, %s, %s, %s, %s, %s) as resultado
-        """, [id, id_empresa, nombre, int(id_dist), direccion, telefono, img_logo, img_banner])
+            SELECT fn_sucursal_modificar(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) as resultado
+        """, [id, id_empresa, nombre, int(id_dist), direccion, telefono, img_logo, img_banner, float(latitud), float(longitud)])
         
         resultado = cursor.fetchone()['resultado']
         con.commit()
@@ -184,7 +184,7 @@ def modificar_sucursal(id):
             'message': 'Sucursal modificada' if resultado == 0 else 'Error'
         }), 200
     except Exception as e:
-        print(f"Error al modificar sucursal: {str(e)}")
+        print(f"Error: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({'status': False, 'message': str(e)}), 500

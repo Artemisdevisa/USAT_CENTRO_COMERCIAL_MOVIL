@@ -7,6 +7,8 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; overflow-x: hidden; }
@@ -69,6 +71,11 @@
         .alert { padding: 1rem 1.25rem; border-radius: 0.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
         .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
         .alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+        
+        #mapa { height: 450px; border-radius: 12px; border: 3px solid #dc2626; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        
+        .coordenadas-info { background: #f9fafb; padding: 1rem; border-radius: 8px; margin-top: 1rem; border-left: 4px solid #dc2626; }
+        .coordenadas-info strong { color: #dc2626; }
     </style>
 </head>
 <body>
@@ -110,6 +117,7 @@
                                     <th>DIRECCIÓN</th>
                                     <th>TELÉFONO</th>
                                     <th>DISTRITO</th>
+                                    <th style="text-align:center">COORDENADAS</th>
                                     <th style="text-align:center">ESTADO</th>
                                     <th style="text-align:center">ACCIONES</th>
                                 </tr>
@@ -133,6 +141,8 @@
                 <div class="modal-body">
                     <form id="formSucursal" enctype="multipart/form-data">
                         <input type="hidden" id="id_sucursal">
+                        <input type="hidden" id="latitud">
+                        <input type="hidden" id="longitud">
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -150,6 +160,22 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Dirección *</label>
                             <input type="text" class="form-control" id="direccion" maxlength="200" placeholder="Ej: Av. José Balta 123" required>
+                            <small class="text-muted">Se autocompletará al hacer clic en el mapa</small>
+                        </div>
+                        
+                        <!-- MAPA -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" style="font-size: 1.1rem; color: #dc2626;">
+                                <i class="bi bi-geo-alt-fill"></i> Ubicación en el Mapa *
+                            </label>
+                            <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 1rem;">
+                                <i class="bi bi-info-circle"></i> Haz clic en el mapa para seleccionar la ubicación exacta de tu sucursal. Puedes arrastrar el marcador para ajustar la posición.
+                            </p>
+                            <div id="mapa"></div>
+                            <div class="coordenadas-info" id="coordenadasInfo" style="display: none;">
+                                <strong><i class="bi bi-pin-map-fill"></i> Coordenadas seleccionadas:</strong><br>
+                                <span id="coordenadasTexto"></span>
+                            </div>
                         </div>
                         
                         <div class="row">
@@ -200,12 +226,18 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/static/js/config.js"></script>
     
     <script>
         const API = window.CONFIG.API_URL;
         let modalInstance;
         let idEmpresa;
+        
+        // Variables del mapa
+        let map = null;
+        let marker = null;
+        let customIcon = null;
 
         function mostrarAlerta(mensaje, tipo = 'success') {
             const container = document.getElementById('alertContainer');
@@ -236,6 +268,135 @@
             } else {
                 container.innerHTML = '';
             }
+        }
+
+        function inicializarMapa() {
+            if (map) {
+                map.remove();
+            }
+            
+            // Centro de Perú (Lambayeque)
+            const centroLambayeque = [-6.7714, -79.8391];
+            
+            map = L.map('mapa').setView(centroLambayeque, 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Crear icono personalizado con logo3.png
+            customIcon = L.icon({
+                iconUrl: '/uploads/fotos/aguirre/logo3.png',
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40]
+            });
+            
+            // Evento de clic en el mapa
+            map.on('click', async function(e) {
+                const { lat, lng } = e.latlng;
+                
+                // Actualizar campos ocultos
+                document.getElementById('latitud').value = lat.toFixed(8);
+                document.getElementById('longitud').value = lng.toFixed(8);
+                
+                // Eliminar marcador anterior
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                
+                // Agregar nuevo marcador con icono personalizado
+                marker = L.marker([lat, lng], { 
+                    icon: customIcon,
+                    draggable: true 
+                }).addTo(map);
+                
+                marker.bindPopup(`<b>📍 Nueva Sucursal</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`).openPopup();
+                
+                // Mostrar coordenadas
+                document.getElementById('coordenadasInfo').style.display = 'block';
+                document.getElementById('coordenadasTexto').innerHTML = 
+                    `Latitud: <strong>${lat.toFixed(8)}</strong> | Longitud: <strong>${lng.toFixed(8)}</strong>`;
+                
+                // Evento cuando se arrastra el marcador
+                marker.on('dragend', async function(event) {
+                    const position = event.target.getLatLng();
+                    document.getElementById('latitud').value = position.lat.toFixed(8);
+                    document.getElementById('longitud').value = position.lng.toFixed(8);
+                    
+                    document.getElementById('coordenadasTexto').innerHTML = 
+                        `Latitud: <strong>${position.lat.toFixed(8)}</strong> | Longitud: <strong>${position.lng.toFixed(8)}</strong>`;
+                    
+                    await obtenerUbicacion(position.lat, position.lng);
+                });
+                
+                // Obtener ubicación mediante API inversa
+                await obtenerUbicacion(lat, lng);
+            });
+            
+            setTimeout(() => map.invalidateSize(), 100);
+        }
+
+        async function obtenerUbicacion(lat, lng) {
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+                );
+                const data = await response.json();
+                
+                if (data && data.address) {
+                    const { road, suburb, city, county, state } = data.address;
+                    
+                    // Autocompletar dirección
+                    let direccion = '';
+                    if (road) direccion += road;
+                    if (suburb) direccion += (direccion ? ', ' : '') + suburb;
+                    
+                    if (direccion) {
+                        document.getElementById('direccion').value = direccion;
+                    }
+                    
+                    console.log('Ubicación detectada:', { state, city, county });
+                }
+            } catch (error) {
+                console.error('Error al obtener ubicación:', error);
+            }
+        }
+
+        function centrarMapaEnCoordenadas(lat, lng) {
+            if (!map) return;
+            
+            map.setView([lat, lng], 15);
+            
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            
+            marker = L.marker([lat, lng], { 
+                icon: customIcon,
+                draggable: true 
+            }).addTo(map);
+            
+            marker.bindPopup(`<b>📍 Sucursal</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`).openPopup();
+            
+            document.getElementById('latitud').value = lat.toFixed(8);
+            document.getElementById('longitud').value = lng.toFixed(8);
+            
+            document.getElementById('coordenadasInfo').style.display = 'block';
+            document.getElementById('coordenadasTexto').innerHTML = 
+                `Latitud: <strong>${lat.toFixed(8)}</strong> | Longitud: <strong>${lng.toFixed(8)}</strong>`;
+            
+            marker.on('dragend', async function(event) {
+                const position = event.target.getLatLng();
+                document.getElementById('latitud').value = position.lat.toFixed(8);
+                document.getElementById('longitud').value = position.lng.toFixed(8);
+                
+                document.getElementById('coordenadasTexto').innerHTML = 
+                    `Latitud: <strong>${position.lat.toFixed(8)}</strong> | Longitud: <strong>${position.lng.toFixed(8)}</strong>`;
+                
+                await obtenerUbicacion(position.lat, position.lng);
+            });
         }
 
         (async function init() {
@@ -349,7 +510,7 @@
             const tbody = document.getElementById('tabla');
             
             if (!data || !data.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay sucursales registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay sucursales registradas</td></tr>';
                 return;
             }
             
@@ -357,6 +518,10 @@
                 const logoImg = s.img_logo 
                     ? `<img src="${API}/uploads/fotos/sucursales/logos/${s.img_logo}" class="sucursal-img" alt="Logo" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Logo'">`
                     : `<img src="https://via.placeholder.com/60x60?text=Sin+Logo" class="sucursal-img" alt="Sin logo">`;
+                
+                const coordenadas = s.latitud && s.longitud
+                    ? `<small style="color: #059669;"><i class="bi bi-geo-alt-fill"></i> ${parseFloat(s.latitud).toFixed(4)}, ${parseFloat(s.longitud).toFixed(4)}</small>`
+                    : '<small style="color: #9ca3af;">Sin coordenadas</small>';
                 
                 const estadoBadge = s.estado 
                     ? '<span class="badge badge-green"><i class="bi bi-check-circle"></i>Activo</span>'
@@ -373,6 +538,7 @@
                         <td>${s.direccion}</td>
                         <td>${s.telefono}</td>
                         <td>${s.distrito || 'N/A'}</td>
+                        <td style="text-align:center">${coordenadas}</td>
                         <td style="text-align:center">${estadoBadge}</td>
                         <td style="text-align:center">
                             ${estadoBtn}
@@ -392,7 +558,13 @@
             document.getElementById('id_dist').disabled = true;
             document.getElementById('previewLogo').innerHTML = '';
             document.getElementById('previewBanner').innerHTML = '';
+            document.getElementById('coordenadasInfo').style.display = 'none';
+            
             modalInstance.show();
+            
+            setTimeout(() => {
+                inicializarMapa();
+            }, 300);
         }
 
         async function editar(id) {
@@ -409,7 +581,6 @@
                     document.getElementById('telefono').value = s.telefono;
                     document.getElementById('direccion').value = s.direccion;
                     
-                    // Cargar ubicación
                     if (s.id_dep) {
                         document.getElementById('departamento').value = s.id_dep;
                         await document.getElementById('departamento').dispatchEvent(new Event('change'));
@@ -428,7 +599,6 @@
                         }, 500);
                     }
                     
-                    // Mostrar imágenes actuales
                     if (s.img_logo) {
                         document.getElementById('previewLogo').innerHTML = 
                             `<img src="${API}/uploads/fotos/sucursales/logos/${s.img_logo}" class="img-preview" alt="Logo actual">`;
@@ -439,6 +609,13 @@
                     }
                     
                     modalInstance.show();
+                    
+                    setTimeout(() => {
+                        inicializarMapa();
+                        if (s.latitud && s.longitud) {
+                            centrarMapaEnCoordenadas(parseFloat(s.latitud), parseFloat(s.longitud));
+                        }
+                    }, 300);
                 }
             } catch (e) {
                 console.error('Error:', e);
@@ -452,9 +629,16 @@
             const telefono = document.getElementById('telefono').value.trim();
             const direccion = document.getElementById('direccion').value.trim();
             const id_dist = document.getElementById('id_dist').value;
+            const latitud = document.getElementById('latitud').value;
+            const longitud = document.getElementById('longitud').value;
             
             if (!nombre || !telefono || !direccion || !id_dist) {
                 mostrarAlerta('Todos los campos obligatorios deben ser completados', 'error');
+                return;
+            }
+            
+            if (!latitud || !longitud) {
+                mostrarAlerta('❌ Debe seleccionar una ubicación en el mapa', 'error');
                 return;
             }
             
@@ -465,8 +649,9 @@
                 formData.append('telefono', telefono);
                 formData.append('direccion', direccion);
                 formData.append('id_dist', id_dist);
+                formData.append('latitud', latitud);
+                formData.append('longitud', longitud);
                 
-                // Agregar imágenes si existen
                 const logoFile = document.getElementById('img_logo').files[0];
                 const bannerFile = document.getElementById('img_banner').files[0];
                 
