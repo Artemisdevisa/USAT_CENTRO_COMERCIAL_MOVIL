@@ -76,6 +76,12 @@
         
         .coordenadas-info { background: #f9fafb; padding: 1rem; border-radius: 8px; margin-top: 1rem; border-left: 4px solid #dc2626; }
         .coordenadas-info strong { color: #dc2626; }
+        
+        .ubicacion-readonly { background: #f3f4f6; border: 2px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+        .ubicacion-readonly .field { margin-bottom: 0.75rem; }
+        .ubicacion-readonly .field:last-child { margin-bottom: 0; }
+        .ubicacion-readonly label { font-size: 0.875rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.25rem; }
+        .ubicacion-readonly input { width: 100%; padding: 0.5rem 0.75rem; background: white; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9375rem; color: #1f2937; }
     </style>
 </head>
 <body>
@@ -116,7 +122,7 @@
                                     <th>NOMBRE</th>
                                     <th>DIRECCIÓN</th>
                                     <th>TELÉFONO</th>
-                                    <th>DISTRITO</th>
+                                    <th>UBICACIÓN</th>
                                     <th style="text-align:center">COORDENADAS</th>
                                     <th style="text-align:center">ESTADO</th>
                                     <th style="text-align:center">ACCIONES</th>
@@ -143,6 +149,7 @@
                         <input type="hidden" id="id_sucursal">
                         <input type="hidden" id="latitud">
                         <input type="hidden" id="longitud">
+                        <input type="hidden" id="id_dist">
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -169,33 +176,41 @@
                                 <i class="bi bi-geo-alt-fill"></i> Ubicación en el Mapa *
                             </label>
                             <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 1rem;">
-                                <i class="bi bi-info-circle"></i> Haz clic en el mapa para seleccionar la ubicación exacta de tu sucursal. Puedes arrastrar el marcador para ajustar la posición.
+                                <i class="bi bi-info-circle"></i> Haz clic en el mapa para seleccionar la ubicación exacta de tu sucursal
                             </p>
                             <div id="mapa"></div>
-                            <div class="coordenadas-info" id="coordenadasInfo" style="display: none;">
-                                <strong><i class="bi bi-pin-map-fill"></i> Coordenadas seleccionadas:</strong><br>
-                                <span id="coordenadasTexto"></span>
-                            </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-semibold">Departamento *</label>
-                                <select id="departamento" class="form-select" required>
-                                    <option value="">Seleccionar...</option>
-                                </select>
+                        <!-- UBICACIÓN DETECTADA (READONLY) -->
+                        <div class="ubicacion-readonly">
+                            <h6 style="color: #dc2626; margin-bottom: 1rem; font-weight: 700;">
+                                <i class="bi bi-pin-map-fill"></i> Ubicación Detectada
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="field">
+                                        <label>Latitud</label>
+                                        <input type="text" id="txt_latitud" readonly>
+                                    </div>
+                                    <div class="field">
+                                        <label>Departamento</label>
+                                        <input type="text" id="txt_departamento" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="field">
+                                        <label>Longitud</label>
+                                        <input type="text" id="txt_longitud" readonly>
+                                    </div>
+                                    <div class="field">
+                                        <label>Provincia</label>
+                                        <input type="text" id="txt_provincia" readonly>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-semibold">Provincia *</label>
-                                <select id="provincia" class="form-select" disabled required>
-                                    <option value="">Seleccionar...</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-semibold">Distrito *</label>
-                                <select id="id_dist" class="form-select" disabled required>
-                                    <option value="">Seleccionar...</option>
-                                </select>
+                            <div class="field" style="margin-top: 0.75rem;">
+                                <label>Distrito</label>
+                                <input type="text" id="txt_distrito" readonly>
                             </div>
                         </div>
                         
@@ -233,11 +248,10 @@
         const API = window.CONFIG.API_URL;
         let modalInstance;
         let idEmpresa;
-        
-        // Variables del mapa
         let map = null;
         let marker = null;
         let customIcon = null;
+        let distritosPeru = {};
 
         function mostrarAlerta(mensaje, tipo = 'success') {
             const container = document.getElementById('alertContainer');
@@ -270,12 +284,48 @@
             }
         }
 
+        async function cargarDistritosPeru() {
+            try {
+                const resDeps = await fetch(`${API}/departamentos/listar`);
+                const dataDeps = await resDeps.json();
+                
+                if (dataDeps.status) {
+                    for (const dep of dataDeps.data) {
+                        const resProv = await fetch(`${API}/provincias/listar/${dep.id_dep}`);
+                        const dataProv = await resProv.json();
+                        
+                        if (dataProv.status) {
+                            for (const prov of dataProv.data) {
+                                const resDist = await fetch(`${API}/distritos/listar/${prov.id_prov}`);
+                                const dataDist = await resDist.json();
+                                
+                                if (dataDist.status) {
+                                    dataDist.data.forEach(dist => {
+                                        distritosPeru[dist.nombre.toLowerCase()] = {
+                                            id_dist: dist.id_dist,
+                                            distrito: dist.nombre,
+                                            provincia: prov.nombre,
+                                            departamento: dep.nombre,
+                                            id_prov: prov.id_prov,
+                                            id_dep: dep.id_dep
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    console.log('✅ Distritos cargados:', Object.keys(distritosPeru).length);
+                }
+            } catch (error) {
+                console.error('Error al cargar distritos:', error);
+            }
+        }
+
         function inicializarMapa() {
             if (map) {
                 map.remove();
             }
             
-            // Centro de Perú (Lambayeque)
             const centroLambayeque = [-6.7714, -79.8391];
             
             map = L.map('mapa').setView(centroLambayeque, 13);
@@ -285,7 +335,6 @@
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
             
-            // Crear icono personalizado con logo3.png
             customIcon = L.icon({
                 iconUrl: '/uploads/fotos/aguirre/logo3.png',
                 iconSize: [40, 40],
@@ -293,20 +342,18 @@
                 popupAnchor: [0, -40]
             });
             
-            // Evento de clic en el mapa
             map.on('click', async function(e) {
                 const { lat, lng } = e.latlng;
                 
-                // Actualizar campos ocultos
                 document.getElementById('latitud').value = lat.toFixed(8);
                 document.getElementById('longitud').value = lng.toFixed(8);
+                document.getElementById('txt_latitud').value = lat.toFixed(8);
+                document.getElementById('txt_longitud').value = lng.toFixed(8);
                 
-                // Eliminar marcador anterior
                 if (marker) {
                     map.removeLayer(marker);
                 }
                 
-                // Agregar nuevo marcador con icono personalizado
                 marker = L.marker([lat, lng], { 
                     icon: customIcon,
                     draggable: true 
@@ -314,24 +361,15 @@
                 
                 marker.bindPopup(`<b>📍 Nueva Sucursal</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`).openPopup();
                 
-                // Mostrar coordenadas
-                document.getElementById('coordenadasInfo').style.display = 'block';
-                document.getElementById('coordenadasTexto').innerHTML = 
-                    `Latitud: <strong>${lat.toFixed(8)}</strong> | Longitud: <strong>${lng.toFixed(8)}</strong>`;
-                
-                // Evento cuando se arrastra el marcador
                 marker.on('dragend', async function(event) {
                     const position = event.target.getLatLng();
                     document.getElementById('latitud').value = position.lat.toFixed(8);
                     document.getElementById('longitud').value = position.lng.toFixed(8);
-                    
-                    document.getElementById('coordenadasTexto').innerHTML = 
-                        `Latitud: <strong>${position.lat.toFixed(8)}</strong> | Longitud: <strong>${position.lng.toFixed(8)}</strong>`;
-                    
+                    document.getElementById('txt_latitud').value = position.lat.toFixed(8);
+                    document.getElementById('txt_longitud').value = position.lng.toFixed(8);
                     await obtenerUbicacion(position.lat, position.lng);
                 });
                 
-                // Obtener ubicación mediante API inversa
                 await obtenerUbicacion(lat, lng);
             });
             
@@ -346,25 +384,35 @@
                 const data = await response.json();
                 
                 if (data && data.address) {
-                    const { road, suburb, city, county, state } = data.address;
+                    const { road, suburb, city, county, state, town, village, city_district } = data.address;
                     
-                    // Autocompletar dirección
                     let direccion = '';
                     if (road) direccion += road;
                     if (suburb) direccion += (direccion ? ', ' : '') + suburb;
-                    
                     if (direccion) {
                         document.getElementById('direccion').value = direccion;
                     }
                     
-                    console.log('Ubicación detectada:', { state, city, county });
+                    const nombreDistrito = (city || county || town || village || city_district || '').toLowerCase();
+                    const match = distritosPeru[nombreDistrito];
+                    
+                    if (match) {
+                        document.getElementById('id_dist').value = match.id_dist;
+                        document.getElementById('txt_distrito').value = match.distrito;
+                        document.getElementById('txt_provincia').value = match.provincia;
+                        document.getElementById('txt_departamento').value = match.departamento;
+                    } else {
+                        document.getElementById('txt_distrito').value = nombreDistrito || 'No detectado';
+                        document.getElementById('txt_provincia').value = state || 'No detectado';
+                        document.getElementById('txt_departamento').value = 'Perú';
+                    }
                 }
             } catch (error) {
                 console.error('Error al obtener ubicación:', error);
             }
         }
 
-        function centrarMapaEnCoordenadas(lat, lng) {
+        function centrarMapaEnCoordenadas(lat, lng, distrito, provincia, departamento) {
             if (!map) return;
             
             map.setView([lat, lng], 15);
@@ -382,19 +430,18 @@
             
             document.getElementById('latitud').value = lat.toFixed(8);
             document.getElementById('longitud').value = lng.toFixed(8);
-            
-            document.getElementById('coordenadasInfo').style.display = 'block';
-            document.getElementById('coordenadasTexto').innerHTML = 
-                `Latitud: <strong>${lat.toFixed(8)}</strong> | Longitud: <strong>${lng.toFixed(8)}</strong>`;
+            document.getElementById('txt_latitud').value = lat.toFixed(8);
+            document.getElementById('txt_longitud').value = lng.toFixed(8);
+            document.getElementById('txt_distrito').value = distrito || '';
+            document.getElementById('txt_provincia').value = provincia || '';
+            document.getElementById('txt_departamento').value = departamento || '';
             
             marker.on('dragend', async function(event) {
                 const position = event.target.getLatLng();
                 document.getElementById('latitud').value = position.lat.toFixed(8);
                 document.getElementById('longitud').value = position.lng.toFixed(8);
-                
-                document.getElementById('coordenadasTexto').innerHTML = 
-                    `Latitud: <strong>${position.lat.toFixed(8)}</strong> | Longitud: <strong>${position.lng.toFixed(8)}</strong>`;
-                
+                document.getElementById('txt_latitud').value = position.lat.toFixed(8);
+                document.getElementById('txt_longitud').value = position.lng.toFixed(8);
                 await obtenerUbicacion(position.lat, position.lng);
             });
         }
@@ -423,74 +470,9 @@
             }
 
             modalInstance = new bootstrap.Modal(document.getElementById('modal'));
-            await cargarDepartamentos();
+            await cargarDistritosPeru();
             await cargar();
         })();
-
-        async function cargarDepartamentos() {
-            const res = await fetch(`${API}/departamentos/listar`);
-            const data = await res.json();
-            if (data.status) {
-                const select = document.getElementById('departamento');
-                data.data.forEach(dep => {
-                    const option = document.createElement('option');
-                    option.value = dep.id_dep;
-                    option.textContent = dep.nombre;
-                    select.appendChild(option);
-                });
-            }
-        }
-
-        document.getElementById('departamento').addEventListener('change', async (e) => {
-            const idDep = e.target.value;
-            const selectProv = document.getElementById('provincia');
-            const selectDist = document.getElementById('id_dist');
-            
-            selectProv.innerHTML = '<option value="">Cargando...</option>';
-            selectProv.disabled = true;
-            selectDist.innerHTML = '<option value="">Seleccionar...</option>';
-            selectDist.disabled = true;
-            
-            if (!idDep) return;
-            
-            const res = await fetch(`${API}/provincias/listar/${idDep}`);
-            const data = await res.json();
-            
-            if (data.status) {
-                selectProv.innerHTML = '<option value="">Seleccionar...</option>';
-                data.data.forEach(prov => {
-                    const option = document.createElement('option');
-                    option.value = prov.id_prov;
-                    option.textContent = prov.nombre;
-                    selectProv.appendChild(option);
-                });
-                selectProv.disabled = false;
-            }
-        });
-
-        document.getElementById('provincia').addEventListener('change', async (e) => {
-            const idProv = e.target.value;
-            const selectDist = document.getElementById('id_dist');
-            
-            selectDist.innerHTML = '<option value="">Cargando...</option>';
-            selectDist.disabled = true;
-            
-            if (!idProv) return;
-            
-            const res = await fetch(`${API}/distritos/listar/${idProv}`);
-            const data = await res.json();
-            
-            if (data.status) {
-                selectDist.innerHTML = '<option value="">Seleccionar...</option>';
-                data.data.forEach(dist => {
-                    const option = document.createElement('option');
-                    option.value = dist.id_dist;
-                    option.textContent = dist.nombre;
-                    selectDist.appendChild(option);
-                });
-                selectDist.disabled = false;
-            }
-        });
 
         async function cargar() {
             try {
@@ -519,6 +501,8 @@
                     ? `<img src="${API}/uploads/fotos/sucursales/logos/${s.img_logo}" class="sucursal-img" alt="Logo" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Logo'">`
                     : `<img src="https://via.placeholder.com/60x60?text=Sin+Logo" class="sucursal-img" alt="Sin logo">`;
                 
+                const ubicacion = s.distrito ? `${s.distrito}` : 'N/A';
+                
                 const coordenadas = s.latitud && s.longitud
                     ? `<small style="color: #059669;"><i class="bi bi-geo-alt-fill"></i> ${parseFloat(s.latitud).toFixed(4)}, ${parseFloat(s.longitud).toFixed(4)}</small>`
                     : '<small style="color: #9ca3af;">Sin coordenadas</small>';
@@ -537,7 +521,7 @@
                         <td class="fw-bold">${s.nombre}</td>
                         <td>${s.direccion}</td>
                         <td>${s.telefono}</td>
-                        <td>${s.distrito || 'N/A'}</td>
+                        <td>${ubicacion}</td>
                         <td style="text-align:center">${coordenadas}</td>
                         <td style="text-align:center">${estadoBadge}</td>
                         <td style="text-align:center">
@@ -554,11 +538,13 @@
             document.getElementById('modalTitle').textContent = 'Nueva Sucursal';
             document.getElementById('formSucursal').reset();
             document.getElementById('id_sucursal').value = '';
-            document.getElementById('provincia').disabled = true;
-            document.getElementById('id_dist').disabled = true;
             document.getElementById('previewLogo').innerHTML = '';
             document.getElementById('previewBanner').innerHTML = '';
-            document.getElementById('coordenadasInfo').style.display = 'none';
+            document.getElementById('txt_latitud').value = '';
+            document.getElementById('txt_longitud').value = '';
+            document.getElementById('txt_departamento').value = '';
+            document.getElementById('txt_provincia').value = '';
+            document.getElementById('txt_distrito').value = '';
             
             modalInstance.show();
             
@@ -580,24 +566,7 @@
                     document.getElementById('nombre').value = s.nombre;
                     document.getElementById('telefono').value = s.telefono;
                     document.getElementById('direccion').value = s.direccion;
-                    
-                    if (s.id_dep) {
-                        document.getElementById('departamento').value = s.id_dep;
-                        await document.getElementById('departamento').dispatchEvent(new Event('change'));
-                        
-                        setTimeout(async () => {
-                            if (s.id_prov) {
-                                document.getElementById('provincia').value = s.id_prov;
-                                await document.getElementById('provincia').dispatchEvent(new Event('change'));
-                                
-                                setTimeout(() => {
-                                    if (s.id_dist) {
-                                        document.getElementById('id_dist').value = s.id_dist;
-                                    }
-                                }, 500);
-                            }
-                        }, 500);
-                    }
+                    document.getElementById('id_dist').value = s.id_dist || '';
                     
                     if (s.img_logo) {
                         document.getElementById('previewLogo').innerHTML = 
@@ -613,7 +582,13 @@
                     setTimeout(() => {
                         inicializarMapa();
                         if (s.latitud && s.longitud) {
-                            centrarMapaEnCoordenadas(parseFloat(s.latitud), parseFloat(s.longitud));
+                            centrarMapaEnCoordenadas(
+                                parseFloat(s.latitud), 
+                                parseFloat(s.longitud),
+                                s.distrito,
+                                s.provincia,
+                                s.departamento
+                            );
                         }
                     }, 300);
                 }
@@ -632,13 +607,18 @@
             const latitud = document.getElementById('latitud').value;
             const longitud = document.getElementById('longitud').value;
             
-            if (!nombre || !telefono || !direccion || !id_dist) {
+            if (!nombre || !telefono || !direccion) {
                 mostrarAlerta('Todos los campos obligatorios deben ser completados', 'error');
                 return;
             }
             
             if (!latitud || !longitud) {
                 mostrarAlerta('❌ Debe seleccionar una ubicación en el mapa', 'error');
+                return;
+            }
+            
+            if (!id_dist) {
+                mostrarAlerta('❌ No se pudo detectar el distrito. Seleccione un punto válido en Perú', 'error');
                 return;
             }
             
