@@ -126,6 +126,48 @@ def listar_sucursales():
             'data': None,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
+    
+
+@ws_sucursal.route('/sucursales/detalle/<int:id_sucursal>', methods=['GET'])
+def obtener_detalle_sucursal(id_sucursal):
+    """Obtener detalle completo de una sucursal con horarios"""
+    try:
+        print("=" * 60)
+        print(f"📥 DETALLE SUCURSAL - ID: {id_sucursal}")
+        print("=" * 60)
+        
+        sucursal_model = Sucursal()
+        exito, resultado = sucursal_model.obtener_detalle_sucursal(id_sucursal)
+        
+        if exito:
+            print(f"✅ Detalle obtenido exitosamente")
+            print(f"   Nombre: {resultado.get('nombre', 'N/A')}")
+            print(f"   Horarios: {len(resultado.get('horarios', []))}")
+            print("=" * 60)
+            
+            return jsonify({
+                'status': True,
+                'data': resultado
+            }), 200
+        else:
+            print(f"❌ Error al obtener detalle: {resultado}")
+            print("=" * 60)
+            return jsonify({
+                'status': False,
+                'data': None,
+                'message': resultado
+            }), 404
+            
+    except Exception as e:
+        print(f"❌ Excepción en detalle sucursal: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        print("=" * 60)
+        return jsonify({
+            'status': False,
+            'data': None,
+            'message': f'Error: {str(e)}'
+        }), 500
 
 @ws_sucursal.route('/sucursales/obtener/<int:id>', methods=['GET'])
 def obtener_sucursal(id):
