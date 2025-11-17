@@ -10,6 +10,7 @@ from routes.departamento import ws_departamento
 from routes.favorito import ws_favorito
 from routes.carrito import ws_carrito
 from routes.rol import ws_rol
+from routes.cupon_routes import ws_cupon
 from routes.temporada_routes import ws_temporada
 from routes.marca_routes import ws_marca
 from routes.tipo_producto_routes import ws_tipo_producto
@@ -84,6 +85,7 @@ app.register_blueprint(ws_tarjeta)
 app.register_blueprint(ws_venta)
 app.register_blueprint(ws_color)
 app.register_blueprint(ws_horario_sucursal)
+app.register_blueprint(ws_cupon)
 app.register_blueprint(ws_categoria_producto)
 app.register_blueprint(ws_sucursal)
 app.register_blueprint(ws_pregunta_frecuente)
