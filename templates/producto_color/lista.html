@@ -362,7 +362,6 @@
             }
         }
 
-        // Render table
         function renderizar(data) {
             const tbody = document.getElementById('tabla');
             if (!data.length) return tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay variantes registradas</td></tr>';
@@ -401,7 +400,6 @@
             }).join('');
         }
 
-        // Cargar select de productos
         function cargarSelectProductos() {
             const select = document.getElementById('id_prod_sucursal');
             select.innerHTML = '<option value="">Seleccione un producto</option>' + 
@@ -415,7 +413,6 @@
                 colores.map(c => `<option value="${c.id_color}">${c.nombre}</option>`).join('');
         }
 
-        // Open modal
         function abrirModal() {
             document.getElementById('modalTitle').textContent = 'Nueva Variante';
             document.getElementById('formProductoColor').reset();
