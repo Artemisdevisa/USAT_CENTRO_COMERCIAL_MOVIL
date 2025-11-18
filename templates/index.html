@@ -192,7 +192,8 @@ fetch(`${API_URL}/categorias/listar`)
         if (data.status && data.data && data.data.length > 0) {
             container.innerHTML = '';
             data.data.forEach(cat => {
-                const imgUrl = `${API_URL}/uploads/fotos/categorias/${cat.imagen}`;
+                // ✅ CLOUDINARY: Usar URL directa
+                const imgUrl = cat.imagen || 'https://via.placeholder.com/300x200?text=Sin+Imagen';
                 
                 container.innerHTML += `
                     <div class="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden">

@@ -352,8 +352,9 @@
                 document.getElementById('nombre').value = data.data.nombre;
                 document.getElementById('imagen').value = '';
                 
+                // ✅ CLOUDINARY: Usar URL directa
                 if (data.data.img) {
-                    document.getElementById('imgPreview').src = `${API}/uploads/fotos/categorias/${data.data.img}`;
+                    document.getElementById('imgPreview').src = data.data.img;
                     document.getElementById('preview').style.display = 'block';
                 } else {
                     document.getElementById('preview').style.display = 'none';

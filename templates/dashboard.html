@@ -314,6 +314,7 @@
             icon.classList.toggle('active');
         }
 
+        // LÍNEA 323 - Reemplazar toda la función cargarDatosEmpresa
         (async function cargarDatosEmpresa() {
             const userStr = localStorage.getItem('user');
             if (!userStr) {
@@ -332,7 +333,6 @@
 
                 // ✅ LÓGICA DE VISIBILIDAD
                 if (esEmpresa && esCliente) {
-                    // EMPRESA + CLIENTE: Ocultar cards administrativas
                     console.log('👤 Rol: EMPRESA + CLIENTE');
                     document.querySelectorAll('.card-admin-empresa').forEach(card => {
                         card.style.display = 'none';
@@ -344,7 +344,6 @@
                     document.getElementById('cardMiEmpresa').style.display = 'block';
                     
                 } else if (esAdmin && esEmpresa) {
-                    // ADMIN + EMPRESA: Ocultar cards de cliente-empresa
                     console.log('👨‍💼 Rol: ADMIN + EMPRESA');
                     document.querySelectorAll('.card-cliente-empresa').forEach(card => {
                         card.style.display = 'none';
@@ -354,7 +353,7 @@
                     });
                 }
 
-                // Cargar datos de empresa si corresponde
+                // Cargar datos de empresa
                 if (esAdmin && !esEmpresa) {
                     document.getElementById('empresaNombre').textContent = 'Centro Comercial Elías Aguirre';
                     document.getElementById('empresaLogo').src = '/uploads/fotos/aguirre/logo3.png';
@@ -367,8 +366,9 @@
                         const empresa = data.data;
                         document.getElementById('empresaNombre').textContent = empresa.nombre_comercial || empresa.razon_social;
                         
+                        // ✅ CLOUDINARY: Usar URL directa
                         if (empresa.img_logo) {
-                            document.getElementById('empresaLogo').src = `${API_URL}/uploads/fotos/empresas/logos/${empresa.img_logo}`;
+                            document.getElementById('empresaLogo').src = empresa.img_logo;
                         }
                         
                         if (esAdmin && esEmpresa) {
@@ -384,6 +384,8 @@
                 console.error('Error al cargar datos de empresa:', e);
             }
         })();
+    
+    
     </script>
 </body>
 </html>
