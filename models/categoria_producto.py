@@ -32,7 +32,7 @@ class CategoriaProducto:
                 categoria = {
                     "idCategoriaProducto": row['id_categoria'],
                     "nombreCategoria": row['nombre'],
-                    "imagen": f"/uploads/fotos/categorias/{row['img']}" if row['img'] else None
+                    "imagen": row['img'] if row['img'] else None  # Ya es URL de Cloudinary
                 }
                 categorias.append(categoria)
             

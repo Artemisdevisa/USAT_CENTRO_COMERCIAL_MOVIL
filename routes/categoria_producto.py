@@ -1,16 +1,37 @@
 from flask import Blueprint, jsonify, request
 from models.categoria_producto import CategoriaProducto
-from werkzeug.utils import secure_filename
-import os
+import cloudinary.uploader
 
 ws_categoria_producto = Blueprint('ws_categoria_producto', __name__)
 
-# Configuración de uploads
-UPLOAD_FOLDER = 'uploads/fotos/categorias'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def subir_a_cloudinary(file, folder):
+    """Subir imagen a Cloudinary"""
+    try:
+        if not file:
+            return None
+        
+        print(f"📤 Subiendo categoría a Cloudinary: {file.filename}")
+        
+        resultado = cloudinary.uploader.upload(
+            file,
+            folder=f"centro_comercial/{folder}",
+            resource_type="auto",
+            overwrite=True,
+            invalidate=True
+        )
+        
+        url = resultado['secure_url']
+        print(f"✅ URL Cloudinary: {url}")
+        return url
+        
+    except Exception as e:
+        print(f"❌ Error Cloudinary: {str(e)}")
+        return None
 
 # ============================================
 # ENDPOINTS EXISTENTES (Frontend público)
@@ -52,26 +73,6 @@ def listar_productos_por_categoria(id_categoria):
         resultado, productos = categoria_producto.listar_productos_por_categoria(id_categoria)
         
         if resultado:
-            # ✅ DETECTAR ENTORNO Y CLIENTE
-            user_agent = request.headers.get('User-Agent', '').lower()
-            is_android = 'okhttp' in user_agent or 'android' in user_agent
-            
-            # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
-            if os.environ.get('RENDER'):
-                base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
-            else:
-                base_url = "http://10.0.2.2:3007" if is_android else ""
-            
-            # ✅ PROCESAR URLs DE IMÁGENES
-            for producto in productos:
-                url_img = producto.get('urlImg', '')
-                if url_img and is_android:
-                    if not url_img.startswith('http'):
-                        if not url_img.startswith('/'):
-                            url_img = '/' + url_img
-                        producto['urlImg'] = base_url + url_img
-                        producto['imagen'] = base_url + url_img
-            
             return jsonify({
                 'status': True,
                 'data': productos,
@@ -150,7 +151,7 @@ def obtener_categoria(id_categoria):
 
 @ws_categoria_producto.route('/categorias/crear', methods=['POST'])
 def crear_categoria():
-    """Crear una nueva categoría"""
+    """Crear una nueva categoría con Cloudinary"""
     try:
         # Obtener datos del formulario
         nombre = request.form.get('nombre', '').strip()
@@ -161,40 +162,24 @@ def crear_categoria():
                 'message': 'El nombre de la categoría es requerido'
             }), 400
         
-        # Manejar archivo de imagen
-        img_filename = None
+        # ✅ SUBIR IMAGEN A CLOUDINARY
+        img_url = None
         if 'imagen' in request.files:
             file = request.files['imagen']
-            if file and file.filename != '' and allowed_file(file.filename):
-                # Generar nombre seguro
-                filename = secure_filename(file.filename)
-                # Agregar timestamp para evitar duplicados
-                import time
-                img_filename = f"{int(time.time())}_{filename}"
-                
-                # Guardar archivo
-                filepath = os.path.join(UPLOAD_FOLDER, img_filename)
-                os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-                file.save(filepath)
+            if file and file.filename and allowed_file(file.filename):
+                img_url = subir_a_cloudinary(file, 'categorias')
         
         # Crear categoría
         categoria = CategoriaProducto()
-        exito, resultado = categoria.crear(nombre, img_filename)
+        exito, resultado = categoria.crear(nombre, img_url)
         
         if exito:
             return jsonify({
                 'status': True,
                 'message': 'Categoría creada correctamente',
-                'data': {'id_categoria': resultado}
+                'data': {'id_categoria': resultado, 'img': img_url}
             }), 201
         else:
-            # Si falló, eliminar imagen subida
-            if img_filename:
-                try:
-                    os.remove(os.path.join(UPLOAD_FOLDER, img_filename))
-                except:
-                    pass
-            
             return jsonify({
                 'status': False,
                 'message': resultado
@@ -209,7 +194,7 @@ def crear_categoria():
 
 @ws_categoria_producto.route('/categorias/modificar/<int:id_categoria>', methods=['PUT'])
 def modificar_categoria(id_categoria):
-    """Modificar una categoría existente"""
+    """Modificar una categoría con Cloudinary"""
     try:
         # Obtener datos del formulario
         nombre = request.form.get('nombre', '').strip()
@@ -220,38 +205,36 @@ def modificar_categoria(id_categoria):
                 'message': 'El nombre de la categoría es requerido'
             }), 400
         
-        # Manejar archivo de imagen
-        img_filename = None
+        # Obtener URL actual
+        from conexionBD import Conexion
+        con = Conexion().open
+        cursor = con.cursor()
+        cursor.execute("SELECT img FROM categoria_producto WHERE id_categoria = %s", [id_categoria])
+        current = cursor.fetchone()
+        cursor.close()
+        con.close()
+        
+        img_url = current['img'] if current else None
+        
+        # ✅ SUBIR NUEVA IMAGEN SI EXISTE
         if 'imagen' in request.files:
             file = request.files['imagen']
-            if file and file.filename != '' and allowed_file(file.filename):
-                # Generar nombre seguro
-                filename = secure_filename(file.filename)
-                import time
-                img_filename = f"{int(time.time())}_{filename}"
-                
-                # Guardar archivo
-                filepath = os.path.join(UPLOAD_FOLDER, img_filename)
-                os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-                file.save(filepath)
+            if file and file.filename and allowed_file(file.filename):
+                nueva_url = subir_a_cloudinary(file, 'categorias')
+                if nueva_url:
+                    img_url = nueva_url
         
         # Modificar categoría
         categoria = CategoriaProducto()
-        exito, mensaje = categoria.modificar(id_categoria, nombre, img_filename)
+        exito, mensaje = categoria.modificar(id_categoria, nombre, img_url)
         
         if exito:
             return jsonify({
                 'status': True,
-                'message': mensaje
+                'message': mensaje,
+                'data': {'img': img_url}
             }), 200
         else:
-            # Si falló, eliminar imagen subida
-            if img_filename:
-                try:
-                    os.remove(os.path.join(UPLOAD_FOLDER, img_filename))
-                except:
-                    pass
-            
             return jsonify({
                 'status': False,
                 'message': mensaje
