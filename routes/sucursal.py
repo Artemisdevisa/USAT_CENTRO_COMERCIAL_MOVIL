@@ -2,19 +2,49 @@ from flask import Blueprint, jsonify, request
 from models.sucursal import Sucursal
 from conexionBD import Conexion
 from werkzeug.utils import secure_filename
+import cloudinary.uploader
 import os
 
 ws_sucursal = Blueprint('ws_sucursal', __name__)
 
-# Configuración de uploads
-UPLOAD_FOLDER_LOGO = 'uploads/fotos/sucursales/logos'
-UPLOAD_FOLDER_BANNER = 'uploads/fotos/sucursales/banners'
-os.makedirs(UPLOAD_FOLDER_LOGO, exist_ok=True)
-os.makedirs(UPLOAD_FOLDER_BANNER, exist_ok=True)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 def allowed_file(filename):
+    """Verificar si el archivo tiene una extensión permitida"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def subir_a_cloudinary(file, folder):
+    """
+    Subir archivo a Cloudinary y retornar URL pública
+    
+    Args:
+        file: Archivo de Flask (request.files)
+        folder: Carpeta en Cloudinary (ej: 'sucursales/logos')
+    
+    Returns:
+        str: URL pública de Cloudinary o None si falla
+    """
+    try:
+        if not file:
+            return None
+        
+        print(f"📤 Subiendo a Cloudinary: {file.filename} → {folder}")
+        
+        resultado = cloudinary.uploader.upload(
+            file,
+            folder=f"centro_comercial/{folder}",
+            resource_type="auto",
+            overwrite=True,
+            invalidate=True
+        )
+        
+        url = resultado['secure_url']
+        print(f"✅ URL Cloudinary: {url}")
+        return url
+        
+    except Exception as e:
+        print(f"❌ Error Cloudinary: {str(e)}")
+        return None
 
 @ws_sucursal.route('/sucursales/listar-por-empresa/<int:id_empresa>', methods=['GET'])
 def listar_por_empresa(id_empresa):
@@ -24,9 +54,18 @@ def listar_por_empresa(id_empresa):
         cursor = con.cursor()
         
         cursor.execute("""
-            SELECT s.id_sucursal, s.nombre, s.direccion, s.telefono, 
-                   s.img_logo, s.img_banner,
-                   d.nombre as distrito, s.estado, s.id_dist
+            SELECT 
+                s.id_sucursal, 
+                s.nombre, 
+                s.direccion, 
+                s.telefono, 
+                s.img_logo, 
+                s.img_banner,
+                s.latitud,
+                s.longitud,
+                d.nombre as distrito, 
+                s.estado, 
+                s.id_dist
             FROM sucursal s
             LEFT JOIN distrito d ON s.id_dist = d.id_dist
             WHERE s.id_empresa = %s
@@ -43,8 +82,9 @@ def listar_por_empresa(id_empresa):
 
 @ws_sucursal.route('/sucursales/crear', methods=['POST'])
 def crear_sucursal():
-    """Crear nueva sucursal con imágenes y coordenadas"""
+    """Crear nueva sucursal con imágenes en Cloudinary"""
     try:
+        # Obtener datos del formulario
         id_empresa = request.form.get('id_empresa')
         nombre = request.form.get('nombre')
         id_dist = request.form.get('id_dist')
@@ -53,36 +93,49 @@ def crear_sucursal():
         latitud = request.form.get('latitud')
         longitud = request.form.get('longitud')
         
+        print("=" * 60)
+        print("📝 CREAR SUCURSAL")
+        print("=" * 60)
+        print(f"   Nombre: {nombre}")
+        print(f"   Dirección: {direccion}")
+        print(f"   Coordenadas: {latitud}, {longitud}")
+        
         if not all([id_empresa, nombre, id_dist, direccion, telefono, latitud, longitud]):
             return jsonify({'status': False, 'message': 'Faltan campos obligatorios'}), 400
         
-        # Procesar imágenes
-        img_logo = None
-        img_banner = None
+        # ✅ SUBIR IMÁGENES A CLOUDINARY
+        img_logo_url = None
+        img_banner_url = None
         
         if 'img_logo' in request.files:
             file = request.files['img_logo']
             if file and file.filename and allowed_file(file.filename):
-                filename = secure_filename(f"logo_{id_empresa}_{nombre}_{file.filename}")
-                filepath = os.path.join(UPLOAD_FOLDER_LOGO, filename)
-                file.save(filepath)
-                img_logo = filename
+                print(f"📸 Logo detectado: {file.filename}")
+                img_logo_url = subir_a_cloudinary(file, 'sucursales/logos')
         
         if 'img_banner' in request.files:
             file = request.files['img_banner']
             if file and file.filename and allowed_file(file.filename):
-                filename = secure_filename(f"banner_{id_empresa}_{nombre}_{file.filename}")
-                filepath = os.path.join(UPLOAD_FOLDER_BANNER, filename)
-                file.save(filepath)
-                img_banner = filename
+                print(f"🖼️ Banner detectado: {file.filename}")
+                img_banner_url = subir_a_cloudinary(file, 'sucursales/banners')
         
-        # Crear sucursal
+        # Crear sucursal en BD
         con = Conexion().open
         cursor = con.cursor()
         
         cursor.execute("""
             SELECT fn_sucursal_crear(%s, %s, %s, %s, %s, %s, %s, %s, %s) as resultado
-        """, [id_empresa, nombre, int(id_dist), direccion, telefono, img_logo, img_banner, float(latitud), float(longitud)])
+        """, [
+            int(id_empresa), 
+            nombre, 
+            int(id_dist), 
+            direccion, 
+            telefono, 
+            img_logo_url,      # URL de Cloudinary
+            img_banner_url,    # URL de Cloudinary
+            float(latitud), 
+            float(longitud)
+        ])
         
         resultado = cursor.fetchone()['resultado']
         con.commit()
@@ -90,15 +143,26 @@ def crear_sucursal():
         con.close()
         
         if resultado > 0:
-            return jsonify({'status': True, 'message': 'Sucursal creada', 'id_sucursal': resultado}), 201
+            print(f"✅ Sucursal creada con ID: {resultado}")
+            print("=" * 60)
+            return jsonify({
+                'status': True, 
+                'message': 'Sucursal creada exitosamente', 
+                'id_sucursal': resultado,
+                'img_logo': img_logo_url,
+                'img_banner': img_banner_url
+            }), 201
         else:
-            return jsonify({'status': False, 'message': 'Error al crear'}), 400
+            print(f"❌ Error al crear sucursal")
+            print("=" * 60)
+            return jsonify({'status': False, 'message': 'Error al crear sucursal'}), 400
+            
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"❌ Error: {str(e)}")
         import traceback
         traceback.print_exc()
+        print("=" * 60)
         return jsonify({'status': False, 'message': f'Error: {str(e)}'}), 500
-    
 
 @ws_sucursal.route('/sucursales/listar', methods=['GET'])
 def listar_sucursales():
@@ -126,7 +190,6 @@ def listar_sucursales():
             'data': None,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
-    
 
 @ws_sucursal.route('/sucursales/detalle/<int:id_sucursal>', methods=['GET'])
 def obtener_detalle_sucursal(id_sucursal):
@@ -195,13 +258,17 @@ def obtener_sucursal(id):
         cursor.close()
         con.close()
         
-        return jsonify({'status': True, 'data': sucursal}), 200
+        if sucursal:
+            return jsonify({'status': True, 'data': sucursal}), 200
+        else:
+            return jsonify({'status': False, 'message': 'Sucursal no encontrada'}), 404
+            
     except Exception as e:
         return jsonify({'status': False, 'message': str(e)}), 500
 
 @ws_sucursal.route('/sucursales/modificar/<int:id>', methods=['PUT'])
 def modificar_sucursal(id):
-    """Modificar sucursal con coordenadas"""
+    """Modificar sucursal con nuevas imágenes en Cloudinary"""
     try:
         id_empresa = request.form.get('id_empresa')
         nombre = request.form.get('nombre')
@@ -211,56 +278,83 @@ def modificar_sucursal(id):
         latitud = request.form.get('latitud')
         longitud = request.form.get('longitud')
         
+        print("=" * 60)
+        print(f"📝 MODIFICAR SUCURSAL - ID: {id}")
+        print("=" * 60)
+        print(f"   Nombre: {nombre}")
+        print(f"   Dirección: {direccion}")
+        
         if not all([id_empresa, nombre, id_dist, direccion, telefono, latitud, longitud]):
             return jsonify({'status': False, 'message': 'Faltan campos obligatorios'}), 400
         
-        # Obtener imágenes actuales
+        # Obtener URLs actuales
         con = Conexion().open
         cursor = con.cursor()
         cursor.execute("SELECT img_logo, img_banner FROM sucursal WHERE id_sucursal = %s", [id])
         current = cursor.fetchone()
         
-        img_logo = current['img_logo'] if current else None
-        img_banner = current['img_banner'] if current else None
+        img_logo_url = current['img_logo'] if current else None
+        img_banner_url = current['img_banner'] if current else None
         
-        # Procesar nuevas imágenes
+        # ✅ SUBIR NUEVAS IMÁGENES SI EXISTEN
         if 'img_logo' in request.files:
             file = request.files['img_logo']
             if file and file.filename and allowed_file(file.filename):
-                filename = secure_filename(f"logo_{id_empresa}_{nombre}_{file.filename}")
-                filepath = os.path.join(UPLOAD_FOLDER_LOGO, filename)
-                file.save(filepath)
-                img_logo = filename
+                print(f"📸 Nuevo logo detectado: {file.filename}")
+                nueva_url = subir_a_cloudinary(file, 'sucursales/logos')
+                if nueva_url:
+                    img_logo_url = nueva_url
         
         if 'img_banner' in request.files:
             file = request.files['img_banner']
             if file and file.filename and allowed_file(file.filename):
-                filename = secure_filename(f"banner_{id_empresa}_{nombre}_{file.filename}")
-                filepath = os.path.join(UPLOAD_FOLDER_BANNER, filename)
-                file.save(filepath)
-                img_banner = filename
+                print(f"🖼️ Nuevo banner detectado: {file.filename}")
+                nueva_url = subir_a_cloudinary(file, 'sucursales/banners')
+                if nueva_url:
+                    img_banner_url = nueva_url
         
         cursor.execute("""
             SELECT fn_sucursal_modificar(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) as resultado
-        """, [id, id_empresa, nombre, int(id_dist), direccion, telefono, img_logo, img_banner, float(latitud), float(longitud)])
+        """, [
+            id, 
+            int(id_empresa), 
+            nombre, 
+            int(id_dist), 
+            direccion, 
+            telefono, 
+            img_logo_url, 
+            img_banner_url, 
+            float(latitud), 
+            float(longitud)
+        ])
         
         resultado = cursor.fetchone()['resultado']
         con.commit()
         cursor.close()
         con.close()
         
+        if resultado == 0:
+            print(f"✅ Sucursal modificada correctamente")
+            print("=" * 60)
+        else:
+            print(f"❌ Error al modificar sucursal")
+            print("=" * 60)
+        
         return jsonify({
             'status': resultado == 0, 
-            'message': 'Sucursal modificada' if resultado == 0 else 'Error'
+            'message': 'Sucursal modificada correctamente' if resultado == 0 else 'Error al modificar'
         }), 200
+        
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"❌ Error: {str(e)}")
         import traceback
         traceback.print_exc()
+        print("=" * 60)
         return jsonify({'status': False, 'message': str(e)}), 500
 
 @ws_sucursal.route('/sucursales/cambiar-estado/<int:id>', methods=['PATCH'])
 def cambiar_estado(id):
+    """Cambiar estado activo/inactivo de una sucursal"""
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -268,7 +362,8 @@ def cambiar_estado(id):
         con.commit()
         cursor.close()
         con.close()
-        return jsonify({'status': True, 'message': 'Estado cambiado'}), 200
+        
+        return jsonify({'status': True, 'message': 'Estado cambiado correctamente'}), 200
     except Exception as e:
         return jsonify({'status': False, 'message': str(e)}), 500
 
@@ -287,15 +382,15 @@ def eliminar_sucursal(id):
         con.close()
         
         if resultado == 0:
-            return jsonify({'status': True, 'message': 'Sucursal eliminada'}), 200
+            return jsonify({'status': True, 'message': 'Sucursal eliminada correctamente'}), 200
         else:
-            return jsonify({'status': False, 'message': 'No se puede eliminar'}), 400
+            return jsonify({'status': False, 'message': 'No se puede eliminar la sucursal'}), 400
     except Exception as e:
         return jsonify({'status': False, 'message': f'Error: {str(e)}'}), 500
 
 @ws_sucursal.route('/sucursales/eliminar-fisico/<int:id>', methods=['DELETE'])
 def eliminar_fisico(id):
-    """Eliminación física permanente"""
+    """Eliminación física permanente de la base de datos"""
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -303,6 +398,7 @@ def eliminar_fisico(id):
         con.commit()
         cursor.close()
         con.close()
+        
         return jsonify({'status': True, 'message': 'Sucursal eliminada permanentemente'}), 200
     except Exception as e:
         return jsonify({'status': False, 'message': str(e)}), 500

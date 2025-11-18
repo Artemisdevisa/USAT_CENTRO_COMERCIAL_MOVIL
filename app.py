@@ -29,6 +29,9 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
+# ✅ IMPRIMIR CONFIGURACIÓN AL INICIAR
+Config.print_config()
+
 # ✅ CONFIGURAR CORS CORRECTAMENTE
 CORS(app, resources={
     r"/*": {
@@ -222,7 +225,28 @@ def registro_page():
     """Página de registro"""
     return render_template('registro.html')
 
+# ==================== API INFO ====================
+@app.route('/api/info')
+def api_info():
+    """Información de la API y configuración de Cloudinary"""
+    return {
+        'status': True,
+        'app': 'Centro Comercial Elías Aguirre API',
+        'version': '2.0',
+        'cloudinary': {
+            'enabled': True,
+            'cloud_name': Config.CLOUDINARY_CLOUD_NAME
+        },
+        'database': {
+            'host': Config.DB_HOST,
+            'name': Config.DB_NAME
+        }
+    }
+
 # ==================== INICIAR SERVIDOR ====================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3007))
+    print(f"\n🚀 Servidor iniciado en puerto {port}")
+    print(f"📡 API URL: http://localhost:{port}")
+    print(f"☁️  Cloudinary: {Config.CLOUDINARY_CLOUD_NAME}\n")
     app.run(host='0.0.0.0', port=port, debug=False)

@@ -5,7 +5,7 @@ class Sucursal:
         pass
     
     def listar_sucursales(self):
-        """Lista todas las sucursales activas con coordenadas"""
+        """Lista todas las sucursales con URLs de Cloudinary"""
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -21,10 +21,8 @@ class Sucursal:
                     s.latitud,
                     s.longitud,
                     e.nombre_comercial as empresa,
-                    e.sitio_web,
                     d.nombre as distrito,
-                    s.estado,
-                    s.created_at
+                    s.estado
                 FROM sucursal s
                 LEFT JOIN empresa e ON s.id_empresa = e.id_empresa
                 LEFT JOIN distrito d ON s.id_dist = d.id_dist
@@ -42,14 +40,13 @@ class Sucursal:
                     "nombre": row['nombre'],
                     "direccion": row['direccion'],
                     "telefono": row['telefono'],
-                    "img_logo": row['img_logo'] if row['img_logo'] else '',
-                    "img_banner": row['img_banner'] if row['img_banner'] else '',
+                    "img_logo": row['img_logo'] or '',  # URL completa de Cloudinary
+                    "img_banner": row['img_banner'] or '',  # URL completa de Cloudinary
                     "latitud": str(row['latitud']) if row['latitud'] else None,
                     "longitud": str(row['longitud']) if row['longitud'] else None,
-                    "empresa": row['empresa'] if row['empresa'] else '',
-                    "sitio_web": row['sitio_web'] if row['sitio_web'] else '',
-                    "distrito": row['distrito'] if row['distrito'] else '',
-                    "estado": "Abierto" if row['estado'] else "Cerrado"
+                    "empresa": row['empresa'] or '',
+                    "distrito": row['distrito'] or '',
+                    "estado": row['estado']
                 }
                 sucursales.append(sucursal)
             
@@ -59,7 +56,7 @@ class Sucursal:
             return True, sucursales
                 
         except Exception as e:
-            return False, f"Error al listar sucursales: {str(e)}"
+            return False, f"Error: {str(e)}"
     
     def obtener_detalle_sucursal(self, id_sucursal):
         """Obtiene el detalle completo de una sucursal con sus horarios"""
