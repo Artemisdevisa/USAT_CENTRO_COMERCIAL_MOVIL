@@ -24,7 +24,7 @@ class Config:
     # ==========================================
     # CONFIGURACIÓN DE CLOUDINARY (HARDCODED)
     # ==========================================
-    CLOUDINARY_CLOUD_NAME = 'dir3o09q0'
+    CLOUDINARY_CLOUD_NAME = 'dlr3o09q0'  # ← dlr (con L)
     CLOUDINARY_API_KEY = '375591668928889'
     CLOUDINARY_API_SECRET = '5u3OfMWZEoCNfp5HvwmvrI_Zjuk'
     
@@ -46,11 +46,11 @@ class Config:
 # ==========================================
 try:
     cloudinary.config(
-        cloud_name='dir3o09q0',
+        cloud_name='dlr3o09q0',  # ← dlr (con L)
         api_key='375591668928889',
         api_secret='5u3OfMWZEoCNfp5HvwmvrI_Zjuk',
         secure=True
     )
-    print(f"✅ Cloudinary configurado: dir3o09q0")
+    print(f"✅ Cloudinary configurado: dlr3o09q0")
 except Exception as e:
     print(f"⚠️ Error al configurar Cloudinary: {e}")
