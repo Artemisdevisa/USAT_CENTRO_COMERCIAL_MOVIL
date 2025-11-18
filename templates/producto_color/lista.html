@@ -530,7 +530,6 @@
             }
         }
 
-        // Delete (Eliminación física)
         async function eliminar(id, nombre) {
             const ok = await confirmar(`Esta acción eliminará PERMANENTEMENTE la variante "${nombre}" de la base de datos. Esta acción no se puede deshacer.`, '¿Eliminar variante?');
             if (!ok) return;
@@ -550,7 +549,7 @@
             }
         }
 
-        // Search
+     
         document.getElementById('search').addEventListener('input', e => {
             const val = e.target.value.toLowerCase();
             document.querySelectorAll('#tabla tr').forEach(row => {
