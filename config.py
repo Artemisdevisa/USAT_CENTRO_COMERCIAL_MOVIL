@@ -22,7 +22,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev_key')
     
     # ==========================================
-    # CONFIGURACIÓN DE CLOUDINARY
+    # CONFIGURACIÓN DE CLOUDINARY (HARDCODED)
     # ==========================================
     CLOUDINARY_CLOUD_NAME = 'dir3o09q0'
     CLOUDINARY_API_KEY = '375591668928889'
@@ -51,6 +51,6 @@ try:
         api_secret='5u3OfMWZEoCNfp5HvwmvrI_Zjuk',
         secure=True
     )
-    print(f"✅ Cloudinary configurado: {Config.CLOUDINARY_CLOUD_NAME}")
+    print(f"✅ Cloudinary configurado: dir3o09q0")
 except Exception as e:
     print(f"⚠️ Error al configurar Cloudinary: {e}")
