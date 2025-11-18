@@ -5,7 +5,7 @@ class Empresa:
         pass
     
     def listar(self):
-        """Listar todas las empresas"""
+        """Listar todas las empresas con URLs de Cloudinary"""
         try:
             con = Conexion().open
             cursor = con.cursor()

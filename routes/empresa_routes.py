@@ -1,20 +1,39 @@
 from flask import Blueprint, jsonify, request
 from conexionBD import Conexion
 from werkzeug.utils import secure_filename
-import os
-import time
+import cloudinary.uploader
 
 ws_empresa = Blueprint('ws_empresa', __name__)
 
-# Configuración de uploads con subcarpetas
-UPLOAD_FOLDER_LOGOS = 'uploads/fotos/empresas/logos'
-UPLOAD_FOLDER_BANNERS = 'uploads/fotos/empresas/banners'
-os.makedirs(UPLOAD_FOLDER_LOGOS, exist_ok=True)
-os.makedirs(UPLOAD_FOLDER_BANNERS, exist_ok=True)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 def allowed_file(filename):
+    """Verificar extensión permitida"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def subir_a_cloudinary(file, folder):
+    """Subir archivo a Cloudinary"""
+    try:
+        if not file:
+            return None
+        
+        print(f"📤 Subiendo a Cloudinary: {file.filename} → {folder}")
+        
+        resultado = cloudinary.uploader.upload(
+            file,
+            folder=f"centro_comercial/{folder}",
+            resource_type="auto",
+            overwrite=True,
+            invalidate=True
+        )
+        
+        url = resultado['secure_url']
+        print(f"✅ URL Cloudinary: {url}")
+        return url
+        
+    except Exception as e:
+        print(f"❌ Error Cloudinary: {str(e)}")
+        return None
 
 @ws_empresa.route('/empresas/listar-admin', methods=['GET'])
 def listar_empresas_admin():
@@ -224,7 +243,7 @@ def obtener_empresa_por_usuario(id_empresa):
 
 @ws_empresa.route('/empresas/modificar/<int:id_empresa>', methods=['PUT'])
 def modificar_empresa(id_empresa):
-    """Modificar datos de empresa con logo y banner"""
+    """Modificar datos de empresa con logo y banner en Cloudinary"""
     try:
         print("=" * 60)
         print(f"🔄 MODIFICANDO EMPRESA ID: {id_empresa}")
@@ -245,76 +264,52 @@ def modificar_empresa(id_empresa):
         if not all([ruc, razon_social, nombre_comercial, telefono, email, id_dist, direccion]):
             return jsonify({'status': False, 'message': 'Faltan campos obligatorios'}), 400
         
-        # Procesar LOGO
-        img_logo = None
-        if 'img_logo' in request.files:
-            file_logo = request.files['img_logo']
-            if file_logo and file_logo.filename and allowed_file(file_logo.filename):
-                # Generar nombre único con timestamp
-                timestamp = int(time.time() * 1000)
-                extension = file_logo.filename.rsplit('.', 1)[1].lower()
-                filename_logo = f"{timestamp}_logo.{extension}"
-                
-                # Guardar en subcarpeta logos/
-                filepath_logo = os.path.join(UPLOAD_FOLDER_LOGOS, filename_logo)
-                file_logo.save(filepath_logo)
-                img_logo = filename_logo
-                
-                print(f"✅ LOGO GUARDADO: {filepath_logo}")
-        
-        # Procesar BANNER
-        img_banner = None
-        if 'img_banner' in request.files:
-            file_banner = request.files['img_banner']
-            if file_banner and file_banner.filename and allowed_file(file_banner.filename):
-                # Generar nombre único con timestamp
-                timestamp = int(time.time() * 1000)
-                extension = file_banner.filename.rsplit('.', 1)[1].lower()
-                filename_banner = f"{timestamp}_banner.{extension}"
-                
-                # Guardar en subcarpeta banners/
-                filepath_banner = os.path.join(UPLOAD_FOLDER_BANNERS, filename_banner)
-                file_banner.save(filepath_banner)
-                img_banner = filename_banner
-                
-                print(f"✅ BANNER GUARDADO: {filepath_banner}")
-        
-        # Actualizar empresa en BD
+        # Obtener URLs actuales
         con = Conexion().open
         cursor = con.cursor()
+        cursor.execute("SELECT img_logo, img_banner FROM empresa WHERE id_empresa = %s", [id_empresa])
+        current = cursor.fetchone()
         
-        # Construir SQL dinámicamente
-        updates = [
-            "ruc = %s",
-            "razon_social = %s",
-            "nombre_comercial = %s",
-            "descripcion = %s",
-            "sitio_web = %s",
-            "telefono = %s",
-            "email = %s",
-            "id_dist = %s",
-            "direccion = %s"
-        ]
-        params = [ruc, razon_social, nombre_comercial, descripcion, sitio_web, 
-                  telefono, email, int(id_dist), direccion]
+        img_logo_url = current['img_logo'] if current else None
+        img_banner_url = current['img_banner'] if current else None
         
-        # Agregar logo si existe
-        if img_logo:
-            updates.append("img_logo = %s")
-            params.append(img_logo)
+        # ✅ SUBIR NUEVO LOGO SI EXISTE
+        if 'img_logo' in request.files:
+            file = request.files['img_logo']
+            if file and file.filename and allowed_file(file.filename):
+                print(f"📸 Nuevo logo detectado: {file.filename}")
+                nueva_url = subir_a_cloudinary(file, 'empresas/logos')
+                if nueva_url:
+                    img_logo_url = nueva_url
         
-        # Agregar banner si existe
-        if img_banner:
-            updates.append("img_banner = %s")
-            params.append(img_banner)
+        # ✅ SUBIR NUEVO BANNER SI EXISTE
+        if 'img_banner' in request.files:
+            file = request.files['img_banner']
+            if file and file.filename and allowed_file(file.filename):
+                print(f"🖼️ Nuevo banner detectado: {file.filename}")
+                nueva_url = subir_a_cloudinary(file, 'empresas/banners')
+                if nueva_url:
+                    img_banner_url = nueva_url
         
-        params.append(id_empresa)
-        
-        sql = f"""
+        # Actualizar empresa en BD
+        sql = """
             UPDATE empresa 
-            SET {', '.join(updates)}
+            SET ruc = %s,
+                razon_social = %s,
+                nombre_comercial = %s,
+                descripcion = %s,
+                sitio_web = %s,
+                telefono = %s,
+                email = %s,
+                id_dist = %s,
+                direccion = %s,
+                img_logo = %s,
+                img_banner = %s
             WHERE id_empresa = %s
         """
+        
+        params = [ruc, razon_social, nombre_comercial, descripcion, sitio_web, 
+                  telefono, email, int(id_dist), direccion, img_logo_url, img_banner_url, id_empresa]
         
         print(f"📝 SQL: {sql}")
         print(f"📊 PARAMS: {params}")
@@ -332,8 +327,8 @@ def modificar_empresa(id_empresa):
             'status': True, 
             'message': '✅ Empresa modificada correctamente',
             'data': {
-                'img_logo': img_logo,
-                'img_banner': img_banner
+                'img_logo': img_logo_url,
+                'img_banner': img_banner_url
             }
         }), 200
             

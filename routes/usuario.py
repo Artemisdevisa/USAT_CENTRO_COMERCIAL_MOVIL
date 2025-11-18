@@ -4,12 +4,43 @@ import jwt
 from datetime import datetime, timedelta
 from conexionBD import Conexion
 from config import Config
+import cloudinary.uploader
 
 ws_usuario = Blueprint('ws_usuario', __name__)
 usuario_model = Usuario()
 
-# Clave secreta para JWT (cambiar en producción)
+# Clave secreta para JWT
 SECRET_KEY = Config.SECRET_KEY
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def allowed_file(filename):
+    """Verificar extensión permitida"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def subir_a_cloudinary(file, folder):
+    """Subir imagen a Cloudinary"""
+    try:
+        if not file:
+            return None
+        
+        print(f"📤 Subiendo foto de usuario a Cloudinary: {file.filename}")
+        
+        resultado = cloudinary.uploader.upload(
+            file,
+            folder=f"centro_comercial/{folder}",
+            resource_type="auto",
+            overwrite=True,
+            invalidate=True
+        )
+        
+        url = resultado['secure_url']
+        print(f"✅ URL Cloudinary: {url}")
+        return url
+        
+    except Exception as e:
+        print(f"❌ Error Cloudinary: {str(e)}")
+        return None
 
 # ==================== VISTAS HTML ====================
 
@@ -327,7 +358,7 @@ def postular_empresa():
         con = Conexion().open
         cursor = con.cursor()
         
-        # ✅ PRIMERO: Verificar si ya tiene solicitud pendiente
+        # Verificar si ya tiene solicitud pendiente
         cursor.execute("""
             SELECT COUNT(*) as total 
             FROM solicitud_empresa 
@@ -354,10 +385,7 @@ def postular_empresa():
                 'message': 'El distrito seleccionado no es válido'
             }), 400
         
-        print(f"🔍 DEBUG - Datos recibidos: {data}")
-        print(f"🔍 DEBUG - id_usuario: {id_usuario}")
-        
-        # ✅ LLAMAR A LA FUNCIÓN
+        # Llamar a la función
         cursor.execute("""
             SELECT fn_solicitud_empresa_crear(%s, %s, %s, %s, %s, %s, %s, %s, %s) as resultado
         """, [
@@ -374,8 +402,6 @@ def postular_empresa():
         
         resultado_row = cursor.fetchone()
         resultado = resultado_row['resultado'] if resultado_row else -1
-        
-        print(f"✅ Resultado de la función: {resultado}")
         
         con.commit()
         cursor.close()
@@ -405,11 +431,9 @@ def postular_empresa():
     
 @ws_usuario.route('/api/usuario/registrar-completo', methods=['POST'])
 def registrar_completo():
-    """Registrar usuario completo con persona y dirección"""
+    """Registrar usuario completo con persona, dirección e imagen en Cloudinary"""
     try:
         from models.persona import Persona
-        import os
-        from werkzeug.utils import secure_filename
         
         # Obtener datos del formulario
         nombres = request.form.get('nombres')
@@ -451,17 +475,12 @@ def registrar_completo():
                 'message': f'Error al crear persona: {id_persona}'
             }), 400
         
-        # 2. Procesar imagen si existe
-        img_logo = None
+        # 2. Procesar imagen con Cloudinary
+        img_logo_url = None
         if 'img_logo' in request.files:
             file = request.files['img_logo']
-            if file and file.filename:
-                filename = secure_filename(f"{nomusuario}_{file.filename}")
-                upload_folder = os.path.join('uploads', 'fotos', 'usuarios')
-                os.makedirs(upload_folder, exist_ok=True)
-                file_path = os.path.join(upload_folder, filename)
-                file.save(file_path)
-                img_logo = filename
+            if file and file.filename and allowed_file(file.filename):
+                img_logo_url = subir_a_cloudinary(file, 'usuarios')
         
         # 3. Crear usuario con rol Cliente (id_rol = 3)
         exito, id_usuario = usuario_model.registrar(
@@ -477,10 +496,10 @@ def registrar_completo():
             }), 400
         
         # 4. Actualizar imagen si existe
-        if img_logo:
+        if img_logo_url:
             con = Conexion().open
             cursor = con.cursor()
-            cursor.execute("UPDATE usuario SET img_logo = %s WHERE id_usuario = %s", [img_logo, id_usuario])
+            cursor.execute("UPDATE usuario SET img_logo = %s WHERE id_usuario = %s", [img_logo_url, id_usuario])
             con.commit()
             cursor.close()
             con.close()
@@ -510,7 +529,76 @@ def registrar_completo():
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
-    
+
+@ws_usuario.route('/api/usuario/actualizar-foto', methods=['POST'])
+def actualizar_foto():
+    """Actualizar foto de perfil con Cloudinary"""
+    try:
+        if 'foto' not in request.files:
+            return jsonify({
+                'status': False,
+                'message': 'No se envió ninguna imagen'
+            }), 400
+        
+        file = request.files['foto']
+        id_usuario = request.form.get('id_usuario')
+        
+        if not id_usuario:
+            return jsonify({
+                'status': False,
+                'message': 'ID de usuario no proporcionado'
+            }), 400
+        
+        if file.filename == '':
+            return jsonify({
+                'status': False,
+                'message': 'Archivo sin nombre'
+            }), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({
+                'status': False,
+                'message': 'Formato de imagen no permitido. Use: png, jpg, jpeg, gif, webp'
+            }), 400
+        
+        # ✅ Subir a Cloudinary
+        img_logo_url = subir_a_cloudinary(file, 'usuarios')
+        
+        if not img_logo_url:
+            return jsonify({
+                'status': False,
+                'message': 'Error al subir la imagen a Cloudinary'
+            }), 500
+        
+        # Actualizar en base de datos
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        cursor.execute("""
+            UPDATE usuario 
+            SET img_logo = %s 
+            WHERE id_usuario = %s
+        """, [img_logo_url, id_usuario])
+        
+        con.commit()
+        cursor.close()
+        con.close()
+        
+        return jsonify({
+            'status': True,
+            'message': 'Foto actualizada correctamente',
+            'img_logo': img_logo_url
+        }), 200
+        
+    except Exception as e:
+        print(f"💥 ERROR en actualizar_foto: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error al actualizar foto: {str(e)}'
+        }), 500
+
 @ws_usuario.route('/api/solicitudes-empresa/pendientes', methods=['GET'])
 def listar_solicitudes_pendientes():
     """Listar solicitudes pendientes"""
@@ -761,101 +849,3 @@ def obtener_persona(id_persona):
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
-
-@ws_usuario.route('/api/usuario/actualizar-foto', methods=['POST'])
-def actualizar_foto():
-    """Actualizar foto de perfil"""
-    try:
-        if 'foto' not in request.files:
-            return jsonify({
-                'status': False,
-                'message': 'No se envió ninguna imagen'
-            }), 400
-        
-        file = request.files['foto']
-        id_usuario = request.form.get('id_usuario')
-        
-        if not id_usuario:
-            return jsonify({
-                'status': False,
-                'message': 'ID de usuario no proporcionado'
-            }), 400
-        
-        if file.filename == '':
-            return jsonify({
-                'status': False,
-                'message': 'Archivo sin nombre'
-            }), 400
-        
-        # Extensiones permitidas
-        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-        
-        def allowed_file(filename):
-            return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-        
-        if not allowed_file(file.filename):
-            return jsonify({
-                'status': False,
-                'message': 'Formato de imagen no permitido. Use: png, jpg, jpeg, gif'
-            }), 400
-        
-        # Crear nombre único
-        import os
-        from werkzeug.utils import secure_filename
-        
-        extension = file.filename.rsplit('.', 1)[1].lower()
-        nuevo_nombre = f"user_{id_usuario}_{int(time.time())}.{extension}"
-        
-        # Crear carpeta si no existe
-        upload_folder = os.path.join('uploads', 'fotos', 'usuarios')
-        os.makedirs(upload_folder, exist_ok=True)
-        
-        # Guardar archivo
-        file_path = os.path.join(upload_folder, nuevo_nombre)
-        file.save(file_path)
-        
-        # Actualizar en base de datos
-        con = Conexion().open
-        cursor = con.cursor()
-        
-        # Obtener imagen antigua para eliminarla
-        cursor.execute("SELECT img_logo FROM usuario WHERE id_usuario = %s", [id_usuario])
-        resultado = cursor.fetchone()
-        old_image = resultado['img_logo'] if resultado else None
-        
-        # Actualizar con nueva imagen
-        cursor.execute("""
-            UPDATE usuario 
-            SET img_logo = %s 
-            WHERE id_usuario = %s
-        """, [nuevo_nombre, id_usuario])
-        
-        con.commit()
-        cursor.close()
-        con.close()
-        
-        # Eliminar imagen antigua si existe
-        if old_image and old_image != nuevo_nombre:
-            try:
-                old_path = os.path.join(upload_folder, old_image)
-                if os.path.exists(old_path):
-                    os.remove(old_path)
-            except Exception as e:
-                print(f"No se pudo eliminar imagen antigua: {str(e)}")
-        
-        return jsonify({
-            'status': True,
-            'message': 'Foto actualizada correctamente',
-            'img_logo': nuevo_nombre
-        }), 200
-        
-    except Exception as e:
-        print(f"💥 ERROR en actualizar_foto: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'status': False,
-            'message': f'Error al actualizar foto: {str(e)}'
-        }), 500
-
-
