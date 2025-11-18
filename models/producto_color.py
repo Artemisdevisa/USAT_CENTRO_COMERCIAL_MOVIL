@@ -7,7 +7,7 @@ class ProductoColor:
         pass
     
     def listar_todos(self):
-        """Lista TODOS los productos_color con URLs adaptadas al cliente"""
+        """Lista TODOS los productos_color con URLs de Cloudinary"""
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -44,20 +44,9 @@ class ProductoColor:
             if resultado:
                 productos_color = []
                 
-                # ✅ DETECTAR SI ES ANDROID
-                user_agent = request.headers.get('User-Agent', '').lower()
-                is_android = 'okhttp' in user_agent or 'android' in user_agent
-                base_url = "http://10.0.2.2:3007" if is_android else ""
-                
                 for row in resultado:
+                    # ✅ CLOUDINARY: URL ya viene completa desde la BD
                     url_img = row['url_img'] if row['url_img'] else ''
-                    
-                    # ✅ CONSTRUIR URL COMPLETA SOLO PARA ANDROID
-                    if url_img and is_android:
-                        if not url_img.startswith('http'):
-                            if not url_img.startswith('/'):
-                                url_img = '/' + url_img
-                            url_img = base_url + url_img
                     
                     productos_color.append({
                         'id_prod_color': row['id_prod_color'],
@@ -68,7 +57,7 @@ class ProductoColor:
                         'talla': row['talla'],
                         'precio': float(row['precio']) if row['precio'] else 0.0,
                         'stock': row['stock'],
-                        'url_img': url_img,
+                        'url_img': url_img,  # URL directa de Cloudinary
                         'estado': row['estado'],
                         'nombre_marca': row['nombre_marca'] if row['nombre_marca'] else '',
                         'nombre_categoria': row['nombre_categoria'] if row['nombre_categoria'] else ''
