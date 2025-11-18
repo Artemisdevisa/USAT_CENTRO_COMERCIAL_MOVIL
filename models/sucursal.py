@@ -5,7 +5,7 @@ class Sucursal:
         pass
     
     def listar_sucursales(self):
-        """Lista todas las sucursales activas con información completa"""
+        """Lista todas las sucursales activas con coordenadas"""
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -18,6 +18,8 @@ class Sucursal:
                     s.telefono,
                     s.img_logo,
                     s.img_banner,
+                    s.latitud,
+                    s.longitud,
                     e.nombre_comercial as empresa,
                     e.sitio_web,
                     d.nombre as distrito,
@@ -42,6 +44,8 @@ class Sucursal:
                     "telefono": row['telefono'],
                     "img_logo": row['img_logo'] if row['img_logo'] else '',
                     "img_banner": row['img_banner'] if row['img_banner'] else '',
+                    "latitud": str(row['latitud']) if row['latitud'] else None,
+                    "longitud": str(row['longitud']) if row['longitud'] else None,
                     "empresa": row['empresa'] if row['empresa'] else '',
                     "sitio_web": row['sitio_web'] if row['sitio_web'] else '',
                     "distrito": row['distrito'] if row['distrito'] else '',
