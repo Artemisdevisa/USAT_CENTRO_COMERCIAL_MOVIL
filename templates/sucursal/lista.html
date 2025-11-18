@@ -522,7 +522,7 @@
             
             tbody.innerHTML = data.map(s => {
                 const logoImg = s.img_logo 
-                    ? `<img src="${API}/uploads/fotos/sucursales/logos/${s.img_logo}" class="sucursal-img" alt="Logo" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Logo'">`
+                    ? `<img src="${s.img_logo}" class="sucursal-img" alt="Logo" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Logo'">`  // ✅ BIEN
                     : `<img src="https://via.placeholder.com/60x60?text=Sin+Logo" class="sucursal-img" alt="Sin logo">`;
                 
                 const ubicacion = s.distrito ? `${s.distrito}` : 'N/A';
@@ -592,13 +592,14 @@
                     document.getElementById('direccion').value = s.direccion;
                     document.getElementById('id_dist').value = s.id_dist || '';
                     
+                    // ✅ CORRECCIÓN: img_logo e img_banner son URLs completas de Cloudinary
                     if (s.img_logo) {
                         document.getElementById('previewLogo').innerHTML = 
-                            `<img src="${API}/uploads/fotos/sucursales/logos/${s.img_logo}" class="img-preview" alt="Logo actual">`;
+                            `<img src="${s.img_logo}" class="img-preview" alt="Logo actual">`;
                     }
                     if (s.img_banner) {
                         document.getElementById('previewBanner').innerHTML = 
-                            `<img src="${API}/uploads/fotos/sucursales/banners/${s.img_banner}" class="img-preview" alt="Banner actual">`;
+                            `<img src="${s.img_banner}" class="img-preview" alt="Banner actual">`;
                     }
                     
                     modalInstance.show();

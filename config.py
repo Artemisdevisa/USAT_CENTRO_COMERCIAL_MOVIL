@@ -24,9 +24,9 @@ class Config:
     # ==========================================
     # CONFIGURACIÓN DE CLOUDINARY
     # ==========================================
-    CLOUDINARY_CLOUD_NAME = os.environ.get('dlr3o09q0')
-    CLOUDINARY_API_KEY = os.environ.get('375591668928889')
-    CLOUDINARY_API_SECRET = os.environ.get('5u3OfMWZEoCNfp5HvwmvrI_Zjuk')
+    CLOUDINARY_CLOUD_NAME = 'dir3o09q0'
+    CLOUDINARY_API_KEY = '375591668928889'
+    CLOUDINARY_API_SECRET = '5u3OfMWZEoCNfp5HvwmvrI_Zjuk'
     
     @staticmethod
     def print_config():
@@ -46,9 +46,9 @@ class Config:
 # ==========================================
 try:
     cloudinary.config(
-        cloud_name=Config.CLOUDINARY_CLOUD_NAME,
-        api_key=Config.CLOUDINARY_API_KEY,
-        api_secret=Config.CLOUDINARY_API_SECRET,
+        cloud_name='dir3o09q0',
+        api_key='375591668928889',
+        api_secret='5u3OfMWZEoCNfp5HvwmvrI_Zjuk',
         secure=True
     )
     print(f"✅ Cloudinary configurado: {Config.CLOUDINARY_CLOUD_NAME}")
