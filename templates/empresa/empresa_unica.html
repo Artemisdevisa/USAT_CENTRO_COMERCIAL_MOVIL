@@ -343,12 +343,12 @@
                     // ✅ RUTAS CORRECTAS CON SUBCARPETAS
                     if (e.img_logo) {
                         const containerLogo = document.getElementById('previewLogo');
-                        containerLogo.innerHTML = `<img src="${API}/uploads/fotos/empresas/logos/${e.img_logo}" class="img-preview" alt="Logo actual">`;
+                        containerLogo.innerHTML = `<img src="${e.img_logo}" class="img-preview" alt="Logo actual">`;
                     }
-                    
+
                     if (e.img_banner) {
                         const containerBanner = document.getElementById('previewBanner');
-                        containerBanner.innerHTML = `<img src="${API}/uploads/fotos/empresas/banners/${e.img_banner}" class="img-preview" alt="Banner actual">`;
+                        containerBanner.innerHTML = `<img src="${e.img_banner}" class="img-preview" alt="Banner actual">`;
                     }
                 }
             } catch (e) {
