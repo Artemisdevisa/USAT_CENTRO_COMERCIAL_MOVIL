@@ -52,7 +52,7 @@ class Cupon:
             print(f"🔍 BUSCANDO CUPONES PARA SUCURSAL {id_sucursal}")
             print(f"{'='*60}")
             
-            # ✅ CONSULTA DIRECTA (sin función)
+            # ✅ CONSULTA DIRECTA
             cursor.execute("""
                 SELECT 
                     c.id_cupon,
@@ -63,7 +63,8 @@ class Cupon:
                     c.fecha_inicio,
                     c.fecha_fin,
                     (c.cantidad_total - c.cantidad_usada) as cantidad_disponible,
-                    cat.nombre as categoria
+                    cat.nombre as categoria,
+                    c.id_sucursal  -- ✅ AGREGAR ESTE CAMPO
                 FROM cupon c
                 LEFT JOIN categoria_producto cat ON c.id_categoria = cat.id_categoria
                 WHERE c.id_sucursal = %s 
@@ -93,10 +94,11 @@ class Cupon:
                         'fecha_inicio': row['fecha_inicio'].isoformat() if row['fecha_inicio'] else None,
                         'fecha_fin': row['fecha_fin'].isoformat() if row['fecha_fin'] else None,
                         'cantidad_disponible': row['cantidad_disponible'],
-                        'categoria': row['categoria']
+                        'categoria': row['categoria'],
+                        'id_sucursal': row['id_sucursal']  # ✅ AGREGAR ESTE CAMPO
                     }
                     cupones.append(cupon)
-                    print(f"   📦 Cupón: {cupon['codigo']} - {cupon['porcentaje_descuento']}%")
+                    print(f"   📦 Cupón: {cupon['codigo']} - {cupon['porcentaje_descuento']}% - Sucursal: {cupon['id_sucursal']}")
                 
                 return cupones
             else:
