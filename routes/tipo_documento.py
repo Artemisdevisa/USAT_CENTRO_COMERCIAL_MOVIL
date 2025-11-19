@@ -10,3 +10,11 @@ def listar_tipo_documento():
     ok, data, msg = tipo_documento.listar_tipo_documento()
     code = 200 if ok else 500
     return jsonify({"status": ok, "data": data if ok else None, "message": msg}), code
+
+
+@ws_tipo_documento.get("/api/tipos-documento/listar")
+def listar_tipos_documento_android():
+    """Endpoint compatible con Android"""
+    ok, data, msg = tipo_documento.listar_tipo_documento()
+    code = 200 if ok else 500
+    return jsonify({"status": ok, "data": data if ok else [], "message": msg}), code
