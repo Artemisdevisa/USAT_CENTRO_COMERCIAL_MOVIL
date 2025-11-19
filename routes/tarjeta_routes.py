@@ -41,6 +41,11 @@ def agregar_tarjeta():
     try:
         data = request.get_json()
         
+        print("════════════════════════════════════════")
+        print("📥 PETICIÓN AGREGAR TARJETA")
+        print("════════════════════════════════════════")
+        print(f"Data recibida: {data}")
+        
         id_usuario = data.get('id_usuario')
         numero = data.get('numero')
         titular = data.get('titular')
@@ -49,7 +54,15 @@ def agregar_tarjeta():
         tipo_tarjeta = data.get('tipo_tarjeta')
         es_principal = data.get('es_principal', False)
         
+        print(f"ID Usuario: {id_usuario}")
+        print(f"Número: {numero}")
+        print(f"Titular: {titular}")
+        print(f"Fecha: {fecha_vencimiento}")
+        print(f"Tipo: {tipo_tarjeta}")
+        print(f"Principal: {es_principal}")
+        
         if not all([id_usuario, numero, titular, fecha_vencimiento, cvv, tipo_tarjeta]):
+            print("❌ Faltan datos requeridos")
             return jsonify({
                 'status': False,
                 'message': 'Faltan datos requeridos'
@@ -62,21 +75,28 @@ def agregar_tarjeta():
         )
         
         if exito:
+            print(f"✅ Tarjeta agregada con ID: {resultado}")
             return jsonify({
                 'status': True,
                 'data': {'id_tarjeta': resultado},
                 'message': 'Tarjeta agregada correctamente'
             }), 201
         else:
+            print(f"❌ Error: {resultado}")
             return jsonify({
                 'status': False,
                 'message': resultado
             }), 400
+            
     except Exception as e:
+        print(f"💥 ERROR CRÍTICO: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
+
 
 @ws_tarjeta.route('/tarjetas/eliminar', methods=['POST'])
 def eliminar_tarjeta():
