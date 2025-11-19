@@ -215,6 +215,13 @@ def postular_empresa():
     """Formulario de postulación de empresas"""
     return render_template('postular_empresa.html')
 
+
+@app.route('/dashboard/cupones')
+def dashboard_cupones():
+    """Gestión de cupones - ACCESO LIBRE"""
+    return render_template('cupon/lista.html')
+
+
 @app.route('/dashboard/horarios-sucursal')
 def dashboard_horarios_sucursal():
     """Gestión de horarios de sucursales - ACCESO LIBRE"""
