@@ -33,30 +33,129 @@ class Tarjeta:
             else:
                 return True, []
         except Exception as e:
+            print(f"❌ Error en listar_por_usuario: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False, f"Error al listar tarjetas: {str(e)}"
     
     def agregar(self, id_usuario, numero, titular, fecha_vencimiento, cvv, tipo_tarjeta, es_principal=False):
         """Agregar nueva tarjeta"""
+        con = None
+        cursor = None
         try:
+            print("════════════════════════════════════════")
+            print("🔧 MODEL TARJETA - agregar()")
+            print("════════════════════════════════════════")
+            print(f"📋 Parámetros:")
+            print(f"   id_usuario: {id_usuario}")
+            print(f"   numero: {numero}")
+            print(f"   titular: {titular}")
+            print(f"   fecha_vencimiento: {fecha_vencimiento}")
+            print(f"   cvv: {cvv}")
+            print(f"   tipo_tarjeta: {tipo_tarjeta}")
+            print(f"   es_principal: {es_principal}")
+            
+            print("🔌 Abriendo conexión...")
             con = Conexion().open
             cursor = con.cursor()
+            print("✅ Conexión abierta")
             
+            # Verificar primero si la tarjeta ya existe
+            print("🔍 Verificando si la tarjeta ya existe...")
             cursor.execute("""
-                SELECT fn_agregar_tarjeta(%s, %s, %s, %s, %s, %s, %s) as id_tarjeta
-            """, [id_usuario, numero, titular, fecha_vencimiento, cvv, tipo_tarjeta, es_principal])
+                SELECT id_tarjeta FROM tarjeta 
+                WHERE id_usuario = %s 
+                AND numero = %s 
+                AND estado = TRUE
+            """, [id_usuario, numero])
+            
+            existe = cursor.fetchone()
+            if existe:
+                print(f"⚠️ La tarjeta ya existe con ID: {existe['id_tarjeta']}")
+                cursor.close()
+                con.close()
+                return False, 'La tarjeta ya está registrada'
+            
+            print("✅ La tarjeta no existe, procediendo a insertar...")
+            
+            # Llamar a la función
+            print("📡 Ejecutando fn_agregar_tarjeta...")
+            sql = "SELECT fn_agregar_tarjeta(%s, %s, %s, %s, %s, %s, %s) as id_tarjeta"
+            params = [id_usuario, numero, titular, fecha_vencimiento, cvv, tipo_tarjeta, es_principal]
+            
+            print(f"   SQL: {sql}")
+            print(f"   Params: {params}")
+            
+            cursor.execute(sql, params)
             
             resultado = cursor.fetchone()
-            con.commit()
-            cursor.close()
-            con.close()
+            print(f"📊 Resultado RAW: {resultado}")
             
-            if resultado and resultado['id_tarjeta'] > 0:
-                return True, resultado['id_tarjeta']
-            elif resultado and resultado['id_tarjeta'] == -2:
-                return False, 'La tarjeta ya está registrada'
+            if resultado:
+                id_tarjeta_result = resultado['id_tarjeta']
+                print(f"🔢 ID Tarjeta retornado: {id_tarjeta_result} (tipo: {type(id_tarjeta_result)})")
+                
+                if id_tarjeta_result and id_tarjeta_result > 0:
+                    print("✅ Tarjeta creada exitosamente")
+                    con.commit()
+                    print("✅ Commit realizado")
+                    cursor.close()
+                    con.close()
+                    print("🔌 Conexión cerrada")
+                    return True, id_tarjeta_result
+                    
+                elif id_tarjeta_result == -2:
+                    print("⚠️ Código -2: La tarjeta ya está registrada")
+                    con.rollback()
+                    cursor.close()
+                    con.close()
+                    return False, 'La tarjeta ya está registrada'
+                    
+                elif id_tarjeta_result == -1:
+                    print("❌ Código -1: Error en validación")
+                    con.rollback()
+                    cursor.close()
+                    con.close()
+                    return False, 'Datos inválidos o error en la base de datos'
+                    
+                else:
+                    print(f"❌ Código desconocido: {id_tarjeta_result}")
+                    con.rollback()
+                    cursor.close()
+                    con.close()
+                    return False, f'Error desconocido: código {id_tarjeta_result}'
             else:
-                return False, 'Error al agregar tarjeta'
+                print("❌ resultado es None")
+                if cursor:
+                    cursor.close()
+                if con:
+                    con.close()
+                return False, 'No se obtuvo respuesta de la base de datos'
+                
         except Exception as e:
+            print(f"💥 EXCEPCIÓN: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            
+            if con:
+                try:
+                    con.rollback()
+                    print("🔄 Rollback realizado")
+                except:
+                    pass
+            
+            if cursor:
+                try:
+                    cursor.close()
+                except:
+                    pass
+            
+            if con:
+                try:
+                    con.close()
+                except:
+                    pass
+            
             return False, f"Error: {str(e)}"
     
     def eliminar(self, id_usuario, id_tarjeta):
@@ -77,6 +176,9 @@ class Tarjeta:
             else:
                 return False, 'Error al eliminar tarjeta'
         except Exception as e:
+            print(f"❌ Error en eliminar: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False, f"Error: {str(e)}"
     
     def establecer_principal(self, id_usuario, id_tarjeta):
@@ -97,4 +199,7 @@ class Tarjeta:
             else:
                 return False, 'Error al establecer tarjeta principal'
         except Exception as e:
+            print(f"❌ Error en establecer_principal: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False, f"Error: {str(e)}"
