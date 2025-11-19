@@ -60,27 +60,9 @@ class Tarjeta:
             cursor = con.cursor()
             print("✅ Conexión abierta")
             
-            # Verificar primero si la tarjeta ya existe
-            print("🔍 Verificando si la tarjeta ya existe...")
-            cursor.execute("""
-                SELECT id_tarjeta FROM tarjeta 
-                WHERE id_usuario = %s 
-                AND numero = %s 
-                AND estado = TRUE
-            """, [id_usuario, numero])
-            
-            existe = cursor.fetchone()
-            if existe:
-                print(f"⚠️ La tarjeta ya existe con ID: {existe['id_tarjeta']}")
-                cursor.close()
-                con.close()
-                return False, 'La tarjeta ya está registrada'
-            
-            print("✅ La tarjeta no existe, procediendo a insertar...")
-            
-            # Llamar a la función
+            # ✅ CORRECCIÓN: Agregar ::DATE al casting
             print("📡 Ejecutando fn_agregar_tarjeta...")
-            sql = "SELECT fn_agregar_tarjeta(%s, %s, %s, %s, %s, %s, %s) as id_tarjeta"
+            sql = "SELECT fn_agregar_tarjeta(%s, %s, %s, %s::DATE, %s, %s, %s) as id_tarjeta"
             params = [id_usuario, numero, titular, fecha_vencimiento, cvv, tipo_tarjeta, es_principal]
             
             print(f"   SQL: {sql}")
@@ -89,30 +71,28 @@ class Tarjeta:
             cursor.execute(sql, params)
             
             resultado = cursor.fetchone()
-            print(f"📊 Resultado RAW: {resultado}")
+            print(f"📊 Resultado: {resultado}")
             
             if resultado:
                 id_tarjeta_result = resultado['id_tarjeta']
-                print(f"🔢 ID Tarjeta retornado: {id_tarjeta_result} (tipo: {type(id_tarjeta_result)})")
+                print(f"🔢 ID Tarjeta: {id_tarjeta_result}")
                 
                 if id_tarjeta_result and id_tarjeta_result > 0:
-                    print("✅ Tarjeta creada exitosamente")
+                    print(f"✅ Tarjeta creada con ID: {id_tarjeta_result}")
                     con.commit()
-                    print("✅ Commit realizado")
                     cursor.close()
                     con.close()
-                    print("🔌 Conexión cerrada")
                     return True, id_tarjeta_result
                     
                 elif id_tarjeta_result == -2:
-                    print("⚠️ Código -2: La tarjeta ya está registrada")
+                    print("⚠️ La tarjeta ya está registrada")
                     con.rollback()
                     cursor.close()
                     con.close()
                     return False, 'La tarjeta ya está registrada'
                     
                 elif id_tarjeta_result == -1:
-                    print("❌ Código -1: Error en validación")
+                    print("❌ Error en validación")
                     con.rollback()
                     cursor.close()
                     con.close()
@@ -140,7 +120,6 @@ class Tarjeta:
             if con:
                 try:
                     con.rollback()
-                    print("🔄 Rollback realizado")
                 except:
                     pass
             
