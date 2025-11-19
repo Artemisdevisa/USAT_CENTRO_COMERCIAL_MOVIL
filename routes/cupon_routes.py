@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from models.cupon import Cupon
+from conexionBD import Conexion
 
 ws_cupon = Blueprint('ws_cupon', __name__)
 
