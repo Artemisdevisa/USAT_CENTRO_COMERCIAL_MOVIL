@@ -169,3 +169,75 @@ def eliminar_cupon(id_cupon):
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
+    
+@ws_cupon.route('/cupones/mejor-descuento', methods=['GET'])
+def obtener_mejor_descuento():
+    """Obtener el cupón con mayor descuento activo de todas las sucursales"""
+    try:
+        print("🔍 Buscando cupón con mayor descuento...")
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # Buscar el cupón con mayor descuento que esté activo y vigente
+        cursor.execute("""
+            SELECT 
+                id_cupon,
+                codigo,
+                descripcion,
+                porcentaje_descuento,
+                monto_minimo,
+                fecha_inicio,
+                fecha_fin,
+                cantidad_total,
+                cantidad_usada,
+                id_sucursal,
+                id_categoria
+            FROM cupon
+            WHERE estado = TRUE
+                AND fecha_inicio <= NOW()
+                AND fecha_fin >= NOW()
+                AND cantidad_usada < cantidad_total
+            ORDER BY porcentaje_descuento DESC
+            LIMIT 1
+        """)
+        
+        resultado = cursor.fetchone()
+        cursor.close()
+        con.close()
+        
+        if resultado:
+            cupon = {
+                'id_cupon': resultado['id_cupon'],
+                'codigo': resultado['codigo'],
+                'descripcion': resultado['descripcion'],
+                'porcentaje_descuento': float(resultado['porcentaje_descuento']),
+                'monto_minimo': float(resultado['monto_minimo']),
+                'fecha_inicio': resultado['fecha_inicio'].isoformat() if resultado['fecha_inicio'] else None,
+                'fecha_fin': resultado['fecha_fin'].isoformat() if resultado['fecha_fin'] else None,
+                'cantidad_disponible': resultado['cantidad_total'] - resultado['cantidad_usada']
+            }
+            
+            print(f"✅ Mejor cupón encontrado: {cupon['codigo']} - {cupon['porcentaje_descuento']}%")
+            
+            return jsonify({
+                'status': True,
+                'data': cupon
+            }), 200
+        else:
+            print("⚠️ No hay cupones disponibles")
+            return jsonify({
+                'status': False,
+                'data': None,
+                'message': 'No hay cupones disponibles'
+            }), 200
+        
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'data': None,
+            'message': f'Error: {str(e)}'
+        }), 500
