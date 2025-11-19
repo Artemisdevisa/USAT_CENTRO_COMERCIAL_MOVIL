@@ -343,3 +343,38 @@ def estadisticas_categorias():
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
+    
+
+@ws_categoria_producto.route('/categorias/listar-activas', methods=['GET'])
+def listar_categorias_activas():
+    """Listar solo categorías ACTIVAS para selectores en formularios"""
+    try:
+        categoria = CategoriaProducto()
+        exito, resultado = categoria.listar_categorias()  # Usa el método existente
+        
+        if exito:
+            # Transformar a formato simple para el select
+            categorias_select = []
+            for cat in resultado:
+                categorias_select.append({
+                    'id_categoria': cat['idCategoriaProducto'],
+                    'nombre': cat['nombreCategoria']
+                })
+            
+            return jsonify({
+                'status': True,
+                'data': categorias_select
+            }), 200
+        else:
+            return jsonify({
+                'status': False,
+                'data': [],
+                'message': resultado
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'status': False,
+            'data': [],
+            'message': f'Error interno: {str(e)}'
+        }), 500

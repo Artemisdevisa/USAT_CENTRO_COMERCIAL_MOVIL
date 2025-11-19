@@ -320,17 +320,23 @@
         // Load categorias
         async function cargarCategorias() {
             try {
-                const res = await fetch(`${API}/categorias/listar`);
+                const res = await fetch(`${API}/categorias/listar-activas`);
                 const data = await res.json();
                 
-                if (data.status) {
+                console.log('📦 Categorías recibidas:', data);
+                
+                if (data.status && data.data) {
                     categorias = data.data;
                     const select = document.getElementById('categoria');
                     select.innerHTML = '<option value="">Todas las categorías</option>' +
                         categorias.map(c => `<option value="${c.id_categoria}">${c.nombre}</option>`).join('');
+                    
+                    console.log('✅ Categorías cargadas:', categorias.length);
+                } else {
+                    console.warn('⚠️ No hay categorías disponibles');
                 }
             } catch (e) {
-                console.error('Error al cargar categorías:', e);
+                console.error('❌ Error al cargar categorías:', e);
             }
         }
 
