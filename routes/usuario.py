@@ -1014,3 +1014,122 @@ def login_google():
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
+    
+
+@ws_usuario.route('/api/usuario/registrar-simple', methods=['POST'])
+def registrar_simple():
+    """Registrar usuario simplificado"""
+    try:
+        data = request.get_json()
+        
+        nombres = data.get('nombres')
+        apellidos = data.get('apellidos')
+        email = data.get('email')
+        password = data.get('password')
+        google_id = data.get('google_id')
+        img_logo = data.get('img_logo')
+        
+        # Validar campos obligatorios
+        if not all([nombres, apellidos, email]):
+            return jsonify({
+                'status': False,
+                'message': 'Nombres, apellidos y email son requeridos'
+            }), 400
+        
+        # Validar password si NO hay google_id
+        if not google_id and not password:
+            return jsonify({
+                'status': False,
+                'message': 'Contraseña requerida para registro normal'
+            }), 400
+        
+        # Registrar usuario
+        exito, resultado = usuario_model.registrar_simplificado(
+            nombres, apellidos, email, password, google_id, img_logo
+        )
+        
+        if exito and resultado.get('success'):
+            user_data = resultado['data']
+            
+            # Generar token JWT
+            token = jwt.encode({
+                'id_usuario': user_data['id_usuario'],
+                'email': user_data['email'],
+                'exp': datetime.utcnow() + timedelta(days=7)
+            }, SECRET_KEY, algorithm='HS256')
+            
+            return jsonify({
+                'status': True,
+                'message': resultado['message'],
+                'token': token,
+                'user': user_data
+            }), 201
+        else:
+            return jsonify({
+                'status': False,
+                'message': resultado.get('message', 'Error al registrar')
+            }), 400
+            
+    except Exception as e:
+        print(f"Error en registrar_simple: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+
+@ws_usuario.route('/api/usuario/google/registro-simple', methods=['POST'])
+def registro_google_simple():
+    """Registrar con Google simplificado"""
+    try:
+        data = request.get_json()
+        
+        google_id = data.get('google_id')
+        email = data.get('email')
+        nombres = data.get('nombres', '').strip()
+        apellidos = data.get('apellidos', '').strip()
+        img_logo = data.get('img_logo')
+        
+        if not all([google_id, email, nombres, apellidos]):
+            return jsonify({
+                'status': False,
+                'message': 'Datos de Google incompletos'
+            }), 400
+        
+        # Registrar con google_id
+        exito, resultado = usuario_model.registrar_simplificado(
+            nombres, apellidos, email, None, google_id, img_logo
+        )
+        
+        if exito and resultado.get('success'):
+            user_data = resultado['data']
+            
+            # Generar token JWT
+            token = jwt.encode({
+                'id_usuario': user_data['id_usuario'],
+                'email': user_data['email'],
+                'exp': datetime.utcnow() + timedelta(days=7)
+            }, SECRET_KEY, algorithm='HS256')
+            
+            return jsonify({
+                'status': True,
+                'message': resultado['message'],
+                'token': token,
+                'user': user_data
+            }), 200
+        else:
+            return jsonify({
+                'status': False,
+                'message': resultado.get('message', 'Error al registrar con Google')
+            }), 400
+            
+    except Exception as e:
+        print(f"Error en registro_google_simple: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500

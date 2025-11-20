@@ -45,7 +45,6 @@ CORS(app, resources={
     }
 })
 
-# ✅ MANEJAR PREFLIGHT (OPTIONS)
 @app.before_request
 def handle_preflight():
     if request.method == "OPTIONS":
@@ -69,7 +68,6 @@ def add_header(response):
     response.headers['Expires'] = '-1'
     return response
 
-# Configuración de SECRET_KEY
 app.secret_key = Config.SECRET_KEY
 app.config['SECRET_KEY'] = Config.SECRET_KEY
 
@@ -103,14 +101,12 @@ app.register_blueprint(ws_tipo_modelo)
 app.register_blueprint(ws_empresa)
 app.register_blueprint(ws_rol)
 
-# ==================== ARCHIVOS ESTÁTICOS ====================
 @app.route('/uploads/<path:filename>')
 def serve_uploads(filename):
     """Servir archivos desde /uploads"""
     uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads')
     return send_from_directory(uploads_dir, filename)
 
-# ==================== RUTAS PÚBLICAS ====================
 @app.route('/')
 def index():
     """Página principal"""
@@ -131,7 +127,6 @@ def carrito():
     """Carrito de compras"""
     return render_template('carrito.html')
 
-# ==================== DASHBOARD (SIN AUTENTICACIÓN) ====================
 @app.route('/dashboard')
 def dashboard():
     """Dashboard principal - ACCESO LIBRE"""
@@ -234,7 +229,6 @@ def registro_page():
     """Página de registro"""
     return render_template('registro.html')
 
-# ==================== API INFO ====================
 @app.route('/api/info')
 def api_info():
     """Información de la API y configuración de Cloudinary"""
@@ -252,7 +246,6 @@ def api_info():
         }
     }
 
-# ==================== INICIAR SERVIDOR ====================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3007))
     print(f"\n🚀 Servidor iniciado en puerto {port}")

@@ -306,3 +306,31 @@ class Usuario:
                 
         except Exception as e:
             return False, f"Error al cambiar contraseña: {str(e)}"
+        
+
+    def registrar_simplificado(self, nombres, apellidos, email, password=None, google_id=None, img_logo=None):
+        """Registrar usuario con datos mínimos"""
+        try:
+            con = Conexion().open
+            cursor = con.cursor()
+            
+            # Hash de password solo si existe
+            password_hash = None
+            if password:
+                password_hash = self.ph.hash(password)
+            
+            sql = """
+                SELECT fn_usuario_registrar_simplificado(%s, %s, %s, %s, %s, %s) as resultado
+            """
+            
+            cursor.execute(sql, [nombres, apellidos, email, password_hash, google_id, img_logo])
+            resultado = cursor.fetchone()['resultado']
+            
+            con.commit()
+            cursor.close()
+            con.close()
+            
+            return True, resultado
+                
+        except Exception as e:
+            return False, f"Error al registrar: {str(e)}"
