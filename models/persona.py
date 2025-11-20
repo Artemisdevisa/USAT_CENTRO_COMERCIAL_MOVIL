@@ -29,22 +29,45 @@ class Persona:
             return False, f"Error al crear persona: {str(e)}"
     
     def actualizar(self, id_persona, nombres, apellidos, telefono, direccion, fecha_nacimiento):
-        """Actualizar datos de persona"""
+        """Actualizar datos de persona - SIMPLIFICADO"""
         try:
             con = Conexion().open
             cursor = con.cursor()
             
+            # ✅ SIMPLIFICADO: UPDATE directo sin COALESCE
             sql = """
                 UPDATE persona 
                 SET nombres = %s, 
-                    apellidos = %s, 
-                    telefono = COALESCE(%s, telefono),
-                    direccion = COALESCE(%s, direccion),
-                    fecha_nacimiento = COALESCE(%s::DATE, fecha_nacimiento)
-                WHERE id_persona = %s AND estado = TRUE
+                    apellidos = %s
             """
             
-            cursor.execute(sql, [nombres, apellidos, telefono, direccion, fecha_nacimiento, id_persona])
+            params = [nombres, apellidos]
+            
+            # ✅ Solo actualizar si los campos tienen valor
+            if telefono and telefono.strip():
+                sql += ", telefono = %s"
+                params.append(telefono)
+            
+            if direccion and direccion.strip():
+                sql += ", direccion = %s"
+                params.append(direccion)
+            
+            if fecha_nacimiento and fecha_nacimiento.strip():
+                sql += ", fecha_nacimiento = %s"
+                params.append(fecha_nacimiento)
+            
+            sql += " WHERE id_persona = %s AND estado = TRUE"
+            params.append(id_persona)
+            
+            print(f"📋 SQL: {sql}")
+            print(f"📦 Params: {params}")
+            
+            cursor.execute(sql, params)
+            
+            if cursor.rowcount == 0:
+                cursor.close()
+                con.close()
+                return False, 'Persona no encontrada'
             
             con.commit()
             cursor.close()
@@ -53,6 +76,9 @@ class Persona:
             return True, 'Persona actualizada correctamente'
                 
         except Exception as e:
+            print(f"💥 ERROR SQL: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False, f"Error al actualizar persona: {str(e)}"
     
     def obtener_por_id(self, id_persona):

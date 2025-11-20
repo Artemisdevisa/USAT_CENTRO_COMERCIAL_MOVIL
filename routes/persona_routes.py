@@ -9,16 +9,9 @@ persona_model = Persona()
 def obtener_persona(id_persona):
     """Obtener datos de persona por ID"""
     try:
-        print("\n" + "="*80)
-        print("📥 GET PERSONA")
-        print("="*80)
-        print(f"🆔 ID Persona: {id_persona}")
-        
         exito, resultado = persona_model.obtener_por_id(id_persona)
         
         if exito:
-            print("✅ Persona encontrada")
-            print("="*80 + "\n")
             return jsonify({
                 'status': True,
                 'data': {
@@ -37,18 +30,12 @@ def obtener_persona(id_persona):
                 }
             }), 200
         else:
-            print(f"❌ Error: {resultado}")
-            print("="*80 + "\n")
             return jsonify({
                 'status': False,
                 'message': resultado
             }), 404
             
     except Exception as e:
-        print(f"💥 ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        print("="*80 + "\n")
         return jsonify({
             'status': False,
             'message': f'Error: {str(e)}'
@@ -62,36 +49,23 @@ def actualizar_persona(id_persona):
         data = request.get_json()
         
         print("\n" + "="*80)
-        print("📝 ACTUALIZAR PERSONA - INICIO")
+        print("📝 ACTUALIZAR PERSONA")
         print("="*80)
-        print(f"🆔 ID Persona recibido: {id_persona}")
-        print(f"📦 Body completo: {data}")
+        print(f"🆔 ID Persona: {id_persona}")
+        print(f"📦 Body: {data}")
         print("="*80)
         
         nombres = data.get('nombres')
         apellidos = data.get('apellidos')
-        telefono = data.get('telefono')
-        direccion = data.get('direccion')
-        fecha_nacimiento = data.get('fecha_nacimiento')
+        telefono = data.get('telefono', '')
+        direccion = data.get('direccion', '')
+        fecha_nacimiento = data.get('fecha_nacimiento', '')
         
-        print(f"👤 Nombres: '{nombres}'")
-        print(f"👤 Apellidos: '{apellidos}'")
-        print(f"📞 Teléfono: '{telefono}'")
-        print(f"📍 Dirección: '{direccion}'")
-        print(f"📅 Fecha Nacimiento: '{fecha_nacimiento}'")
-        print("="*80)
-        
-        # Validaciones
-        if not nombres or nombres.strip() == '':
+        # Validaciones básicas
+        if not nombres or not apellidos:
             return jsonify({
                 'status': False,
-                'message': 'Nombres es requerido'
-            }), 400
-        
-        if not apellidos or apellidos.strip() == '':
-            return jsonify({
-                'status': False,
-                'message': 'Apellidos es requerido'
+                'message': 'Nombres y apellidos son requeridos'
             }), 400
         
         # Llamar al modelo
@@ -100,25 +74,22 @@ def actualizar_persona(id_persona):
         )
         
         if exito:
-            print("✅ ACTUALIZACIÓN EXITOSA")
-            print("="*80 + "\n")
+            print("✅ ACTUALIZACIÓN EXITOSA\n")
             return jsonify({
                 'status': True,
                 'message': mensaje
             }), 200
         else:
-            print(f"❌ Error: {mensaje}")
-            print("="*80 + "\n")
+            print(f"❌ Error: {mensaje}\n")
             return jsonify({
                 'status': False,
                 'message': mensaje
             }), 400
             
     except Exception as e:
-        print(f"💥 ERROR CRÍTICO: {str(e)}")
+        print(f"💥 ERROR: {str(e)}\n")
         import traceback
         traceback.print_exc()
-        print("="*80 + "\n")
         return jsonify({
             'status': False,
             'message': f'Error: {str(e)}'
