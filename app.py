@@ -8,7 +8,7 @@ from routes.sucursal import ws_sucursal
 from routes.pregunta_frecuente import ws_pregunta_frecuente
 from routes.departamento import ws_departamento
 from routes.favorito import ws_favorito
-from routes.ws_tipo_documento import ws_tipo_documento
+from routes.tipo_documento import ws_tipo_documento
 from routes.carrito import ws_carrito
 from routes.rol import ws_rol
 from routes.cupon_routes import ws_cupon
