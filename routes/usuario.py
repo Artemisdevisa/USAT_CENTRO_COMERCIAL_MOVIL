@@ -1141,59 +1141,127 @@ def actualizar_persona(id_persona):
     try:
         data = request.get_json()
         
+        print("\n" + "="*80)
+        print("📝 ACTUALIZAR PERSONA - INICIO")
+        print("="*80)
+        print(f"🆔 ID Persona recibido: {id_persona}")
+        print(f"📦 Body completo: {data}")
+        print("="*80)
+        
         nombres = data.get('nombres')
         apellidos = data.get('apellidos')
         telefono = data.get('telefono')
         direccion = data.get('direccion')
         fecha_nacimiento = data.get('fecha_nacimiento')
         
-        print("\n" + "="*60)
-        print("📝 ACTUALIZANDO PERSONA")
-        print("="*60)
-        print(f"ID Persona: {id_persona}")
-        print(f"Nombres: {nombres}")
-        print(f"Apellidos: {apellidos}")
-        print(f"Teléfono: {telefono}")
-        print(f"Dirección: {direccion}")
-        print(f"Fecha Nac: {fecha_nacimiento}")
-        print("="*60)
+        print(f"👤 Nombres: '{nombres}' (tipo: {type(nombres)})")
+        print(f"👤 Apellidos: '{apellidos}' (tipo: {type(apellidos)})")
+        print(f"📞 Teléfono: '{telefono}' (tipo: {type(telefono)})")
+        print(f"📍 Dirección: '{direccion}' (tipo: {type(direccion)})")
+        print(f"📅 Fecha Nacimiento: '{fecha_nacimiento}' (tipo: {type(fecha_nacimiento)})")
+        print("="*80)
         
         # Validaciones
-        if not all([nombres, apellidos]):
+        if not nombres or nombres.strip() == '':
+            print("❌ ERROR: Nombres vacío")
             return jsonify({
                 'status': False,
-                'message': 'Nombres y apellidos son requeridos'
+                'message': 'Nombres es requerido'
             }), 400
+        
+        if not apellidos or apellidos.strip() == '':
+            print("❌ ERROR: Apellidos vacío")
+            return jsonify({
+                'status': False,
+                'message': 'Apellidos es requerido'
+            }), 400
+        
+        print("✅ Validaciones pasadas")
+        print("🔌 Abriendo conexión a BD...")
         
         con = Conexion().open
         cursor = con.cursor()
         
-        # ✅ UPDATE con todos los campos
-        cursor.execute("""
+        print("✅ Conexión abierta")
+        
+        # Construir SQL dinámicamente
+        sql = """
             UPDATE persona 
             SET nombres = %s, 
-                apellidos = %s, 
-                telefono = COALESCE(%s, telefono),
-                direccion = COALESCE(%s, direccion),
-                fecha_nacimiento = COALESCE(%s::DATE, fecha_nacimiento)
-            WHERE id_persona = %s AND estado = TRUE
-        """, [nombres, apellidos, telefono, direccion, fecha_nacimiento, id_persona])
+                apellidos = %s
+        """
+        params = [nombres, apellidos]
         
-        if cursor.rowcount == 0:
+        # Agregar campos opcionales solo si tienen valor
+        if telefono and telefono.strip():
+            sql += ", telefono = %s"
+            params.append(telefono)
+            print(f"✅ Agregando teléfono: {telefono}")
+        
+        if direccion and direccion.strip():
+            sql += ", direccion = %s"
+            params.append(direccion)
+            print(f"✅ Agregando dirección: {direccion}")
+        
+        if fecha_nacimiento and fecha_nacimiento.strip():
+            sql += ", fecha_nacimiento = %s::DATE"
+            params.append(fecha_nacimiento)
+            print(f"✅ Agregando fecha: {fecha_nacimiento}")
+        
+        sql += " WHERE id_persona = %s AND estado = TRUE"
+        params.append(id_persona)
+        
+        print("\n" + "-"*80)
+        print("📝 SQL A EJECUTAR:")
+        print(sql)
+        print("\n📦 PARÁMETROS:")
+        print(params)
+        print("-"*80 + "\n")
+        
+        cursor.execute(sql, params)
+        
+        filas_afectadas = cursor.rowcount
+        print(f"📊 Filas afectadas: {filas_afectadas}")
+        
+        if filas_afectadas == 0:
+            print(f"❌ ERROR: No se encontró persona con ID {id_persona}")
             cursor.close()
             con.close()
             return jsonify({
                 'status': False,
-                'message': 'Persona no encontrada'
+                'message': f'Persona con ID {id_persona} no encontrada'
             }), 404
         
-        # ✅ HACER COMMIT
+        print("✅ UPDATE ejecutado correctamente")
+        print("💾 Haciendo COMMIT...")
+        
         con.commit()
         
-        print(f"✅ Persona actualizada: {cursor.rowcount} filas afectadas")
+        print("✅ COMMIT exitoso")
+        
+        # Verificar que se guardó
+        cursor.execute("SELECT nombres, apellidos, telefono, direccion, fecha_nacimiento FROM persona WHERE id_persona = %s", [id_persona])
+        verificacion = cursor.fetchone()
+        
+        print("\n" + "-"*80)
+        print("🔍 VERIFICACIÓN - DATOS EN BD:")
+        if verificacion:
+            print(f"   Nombres: {verificacion['nombres']}")
+            print(f"   Apellidos: {verificacion['apellidos']}")
+            print(f"   Teléfono: {verificacion['telefono']}")
+            print(f"   Dirección: {verificacion['direccion']}")
+            print(f"   Fecha Nac: {verificacion['fecha_nacimiento']}")
+        else:
+            print("   ⚠️ No se encontró el registro")
+        print("-"*80 + "\n")
         
         cursor.close()
         con.close()
+        
+        print("✅ Conexión cerrada")
+        print("="*80)
+        print("✅ ACTUALIZACIÓN COMPLETADA CON ÉXITO")
+        print("="*80 + "\n")
         
         return jsonify({
             'status': True,
@@ -1201,9 +1269,16 @@ def actualizar_persona(id_persona):
         }), 200
         
     except Exception as e:
-        print(f"💥 ERROR en actualizar_persona: {str(e)}")
+        print("\n" + "="*80)
+        print("💥 ERROR CRÍTICO EN actualizar_persona")
+        print("="*80)
+        print(f"❌ Tipo de error: {type(e).__name__}")
+        print(f"❌ Mensaje: {str(e)}")
+        print("\n📍 TRACEBACK COMPLETO:")
         import traceback
         traceback.print_exc()
+        print("="*80 + "\n")
+        
         return jsonify({
             'status': False,
             'message': f'Error: {str(e)}'
