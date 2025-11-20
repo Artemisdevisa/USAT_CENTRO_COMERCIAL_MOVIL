@@ -10,6 +10,7 @@ from routes.departamento import ws_departamento
 from routes.favorito import ws_favorito
 from routes.tipo_documento import ws_tipo_documento
 from routes.carrito import ws_carrito
+from routes.persona_routes import ws_persona
 from routes.rol import ws_rol
 from routes.cupon_routes import ws_cupon
 from routes.temporada_routes import ws_temporada
@@ -100,6 +101,7 @@ app.register_blueprint(ws_distrito)
 app.register_blueprint(ws_tipo_modelo)
 app.register_blueprint(ws_empresa)
 app.register_blueprint(ws_rol)
+app.register_blueprint(ws_persona)
 
 @app.route('/uploads/<path:filename>')
 def serve_uploads(filename):
