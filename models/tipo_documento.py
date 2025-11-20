@@ -1,23 +1,40 @@
-import json
 from conexionBD import Conexion
 
 class TipoDocumento:
     def listar_tipo_documento(self):
-        con = cur = None
+        """Listar tipos de documento activos"""
         try:
+            print("🔍 Ejecutando consulta en BD...")
             con = Conexion().open
-            cur = con.cursor()
-            cur.execute("SELECT fn_tipo_documento_listar() AS data;")
-            fila = cur.fetchone()
-            data = fila.get("data") if isinstance(fila, dict) else (fila[0] if fila else None)
-            if isinstance(data, str):
-                data = json.loads(data or "[]")
-            return True, data or [], "OK"
+            cursor = con.cursor()
+            
+            sql = """
+                SELECT id_tipodoc, nombre, estado 
+                FROM tipo_documento 
+                WHERE estado = TRUE 
+                ORDER BY nombre
+            """
+            
+            cursor.execute(sql)
+            resultados = cursor.fetchall()
+            
+            print(f"📊 Registros encontrados: {len(resultados)}")
+            
+            data = []
+            for row in resultados:
+                data.append({
+                    'id_tipodoc': row['id_tipodoc'],
+                    'nombre': row['nombre'],
+                    'estado': row['estado']
+                })
+            
+            cursor.close()
+            con.close()
+            
+            return True, data, "Tipos de documento obtenidos correctamente"
+            
         except Exception as e:
-            return False, None, f"Error al listar los tipos de documentos: {e}"
-        finally:
-            try:
-                if cur: cur.close()
-                if con: con.close()
-            except:
-                pass
+            print(f"💥 ERROR en BD: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return False, [], f"Error al obtener tipos de documento: {str(e)}"
