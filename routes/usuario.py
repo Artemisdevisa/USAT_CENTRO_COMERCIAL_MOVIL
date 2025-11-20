@@ -1133,3 +1133,78 @@ def registro_google_simple():
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
+    
+
+@ws_usuario.route('/api/persona/<int:id_persona>', methods=['PUT'])
+def actualizar_persona(id_persona):
+    """Actualizar datos de persona"""
+    try:
+        data = request.get_json()
+        
+        nombres = data.get('nombres')
+        apellidos = data.get('apellidos')
+        telefono = data.get('telefono')
+        direccion = data.get('direccion')
+        fecha_nacimiento = data.get('fecha_nacimiento')
+        
+        print("\n" + "="*60)
+        print("📝 ACTUALIZANDO PERSONA")
+        print("="*60)
+        print(f"ID Persona: {id_persona}")
+        print(f"Nombres: {nombres}")
+        print(f"Apellidos: {apellidos}")
+        print(f"Teléfono: {telefono}")
+        print(f"Dirección: {direccion}")
+        print(f"Fecha Nac: {fecha_nacimiento}")
+        print("="*60)
+        
+        # Validaciones
+        if not all([nombres, apellidos]):
+            return jsonify({
+                'status': False,
+                'message': 'Nombres y apellidos son requeridos'
+            }), 400
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # ✅ UPDATE con todos los campos
+        cursor.execute("""
+            UPDATE persona 
+            SET nombres = %s, 
+                apellidos = %s, 
+                telefono = COALESCE(%s, telefono),
+                direccion = COALESCE(%s, direccion),
+                fecha_nacimiento = COALESCE(%s::DATE, fecha_nacimiento)
+            WHERE id_persona = %s AND estado = TRUE
+        """, [nombres, apellidos, telefono, direccion, fecha_nacimiento, id_persona])
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            con.close()
+            return jsonify({
+                'status': False,
+                'message': 'Persona no encontrada'
+            }), 404
+        
+        # ✅ HACER COMMIT
+        con.commit()
+        
+        print(f"✅ Persona actualizada: {cursor.rowcount} filas afectadas")
+        
+        cursor.close()
+        con.close()
+        
+        return jsonify({
+            'status': True,
+            'message': 'Datos actualizados correctamente'
+        }), 200
+        
+    except Exception as e:
+        print(f"💥 ERROR en actualizar_persona: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
