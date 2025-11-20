@@ -448,8 +448,19 @@ def registrar_completo():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        # Validar campos obligatorios
-        if not all([nombres, apellidos, tipo_doc, documento, fecha_nacimiento, telefono, id_dist, direccion, nomusuario, email, password]):
+        # ✅ AGREGAR: google_id opcional
+        google_id = request.form.get('google_id')  # Nuevo
+        
+        # ✅ MODIFICAR: Validar password solo si NO hay google_id
+        if not google_id and not password:
+            return jsonify({
+                'status': False,
+                'message': 'Contraseña es requerida para registro normal'
+            }), 400
+        
+        # Validar campos obligatorios (sin password si hay google_id)
+        campos_requeridos = [nombres, apellidos, tipo_doc, documento, fecha_nacimiento, telefono, id_dist, direccion, nomusuario, email]
+        if not all(campos_requeridos):
             return jsonify({
                 'status': False,
                 'message': 'Todos los campos obligatorios son requeridos'
@@ -482,27 +493,40 @@ def registrar_completo():
             if file and file.filename and allowed_file(file.filename):
                 img_logo_url = subir_a_cloudinary(file, 'usuarios')
         
-        # 3. Crear usuario con rol Cliente (id_rol = 3)
-        exito, id_usuario = usuario_model.registrar(
-            nomusuario, email, password, id_persona, 
-            id_rol=3,  # Cliente
-            id_empresa=None
-        )
+        # 3. ✅ MODIFICAR: Hash de password solo si NO hay google_id
+        password_hash = None
+        if password and not google_id:
+            password_hash = usuario_model.ph.hash(password)
         
-        if not exito:
+        # 4. ✅ MODIFICAR: Crear usuario con fn_usuario_crear (ya acepta google_id)
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        cursor.execute("""
+            SELECT fn_usuario_crear(%s, %s, %s, %s, %s, %s, %s, %s) as id_usuario
+        """, [
+            nomusuario,      # p_nomusuario
+            id_persona,      # p_id_persona
+            email,           # p_email
+            password_hash,   # p_password_hash (puede ser NULL)
+            3,               # p_id_rol (Cliente)
+            img_logo_url,    # p_img_logo
+            None,            # p_id_empresa
+            google_id        # p_google_id (NUEVO)
+        ])
+        
+        resultado = cursor.fetchone()
+        id_usuario = resultado['id_usuario'] if resultado else -1
+        
+        con.commit()
+        cursor.close()
+        con.close()
+        
+        if id_usuario <= 0:
             return jsonify({
                 'status': False,
-                'message': f'Error al crear usuario: {id_usuario}'
+                'message': 'Error al crear usuario'
             }), 400
-        
-        # 4. Actualizar imagen si existe
-        if img_logo_url:
-            con = Conexion().open
-            cursor = con.cursor()
-            cursor.execute("UPDATE usuario SET img_logo = %s WHERE id_usuario = %s", [img_logo_url, id_usuario])
-            con.commit()
-            cursor.close()
-            con.close()
         
         # 5. Crear dirección del cliente
         con = Conexion().open
@@ -845,6 +869,147 @@ def obtener_persona(id_persona):
         
     except Exception as e:
         print(f"💥 ERROR en obtener_persona: {str(e)}")
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+    
+
+# ✅ AGREGAR ESTOS ENDPOINTS AL FINAL DEL ARCHIVO
+
+@ws_usuario.route('/api/usuario/google/registro', methods=['POST'])
+def registro_google():
+    """Registrar o login con Google Sign-In"""
+    try:
+        data = request.get_json()
+        
+        google_id = data.get('google_id')
+        email = data.get('email')
+        nombres = data.get('nombres', '').strip()
+        apellidos = data.get('apellidos', '').strip()
+        img_logo = data.get('img_logo')
+        
+        print("\n" + "="*60)
+        print("🔵 REGISTRO/LOGIN CON GOOGLE")
+        print("="*60)
+        print(f"📧 Email: {email}")
+        print(f"🆔 Google ID: {google_id}")
+        print(f"👤 Nombre: {nombres} {apellidos}")
+        print("="*60)
+        
+        # Validar datos obligatorios
+        if not all([google_id, email, nombres, apellidos]):
+            return jsonify({
+                'status': False,
+                'message': 'Datos de Google incompletos'
+            }), 400
+        
+        # Llamar a función SQL
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        cursor.execute("""
+            SELECT fn_usuario_registrar_google(%s, %s, %s, %s, %s) as resultado
+        """, [google_id, email, nombres, apellidos, img_logo])
+        
+        resultado = cursor.fetchone()['resultado']
+        
+        cursor.close()
+        con.close()
+        
+        print(f"📊 Resultado SQL: {resultado}")
+        
+        if resultado['success']:
+            user_data = resultado['data']
+            
+            # Generar token JWT
+            token = jwt.encode({
+                'id_usuario': user_data['id_usuario'],
+                'email': user_data['email'],
+                'exp': datetime.utcnow() + timedelta(days=7)
+            }, SECRET_KEY, algorithm='HS256')
+            
+            print(f"✅ Google Sign-In exitoso")
+            print(f"🎟️ Token generado")
+            print("="*60 + "\n")
+            
+            return jsonify({
+                'status': True,
+                'message': resultado['message'],
+                'token': token,
+                'user': user_data
+            }), 200
+        else:
+            print(f"❌ Error: {resultado['message']}")
+            return jsonify({
+                'status': False,
+                'message': resultado['message']
+            }), 400
+            
+    except Exception as e:
+        print(f"\n💥 ERROR EN GOOGLE SIGN-IN: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+
+@ws_usuario.route('/api/usuario/google/login', methods=['POST'])
+def login_google():
+    """Login con Google ID"""
+    try:
+        data = request.get_json()
+        google_id = data.get('google_id')
+        
+        if not google_id:
+            return jsonify({
+                'status': False,
+                'message': 'Google ID no proporcionado'
+            }), 400
+        
+        print(f"\n🔵 LOGIN CON GOOGLE ID: {google_id}")
+        
+        # Llamar a función SQL
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        cursor.execute("""
+            SELECT fn_usuario_login_google(%s) as resultado
+        """, [google_id])
+        
+        resultado = cursor.fetchone()['resultado']
+        
+        cursor.close()
+        con.close()
+        
+        if resultado['success']:
+            user_data = resultado['data']
+            
+            # Generar token JWT
+            token = jwt.encode({
+                'id_usuario': user_data['id_usuario'],
+                'email': user_data['email'],
+                'exp': datetime.utcnow() + timedelta(days=7)
+            }, SECRET_KEY, algorithm='HS256')
+            
+            print(f"✅ Login Google exitoso\n")
+            
+            return jsonify({
+                'status': True,
+                'message': resultado['message'],
+                'token': token,
+                'user': user_data
+            }), 200
+        else:
+            return jsonify({
+                'status': False,
+                'message': resultado['message']
+            }), 404
+            
+    except Exception as e:
+        print(f"💥 ERROR: {str(e)}")
         return jsonify({
             'status': False,
             'message': f'Error: {str(e)}'

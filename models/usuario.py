@@ -12,13 +12,13 @@ class Usuario:
             con = Conexion().open
             cursor = con.cursor()
             
-            # ✅ CORRECCIÓN: Ya NO existe id_rol en usuario
             sql = """
                 SELECT 
                     u.id_usuario, 
                     u.nomusuario, 
                     u.email, 
                     u.password_hash,
+                    u.google_id,
                     u.id_empresa,
                     u.img_logo,
                     p.nombres,
@@ -37,11 +37,23 @@ class Usuario:
                 con.close()
                 return False, 'Usuario no encontrado'
             
+            # ✅ Validar cuenta de Google
+            if resultado['google_id'] and not resultado['password_hash']:
+                cursor.close()
+                con.close()
+                return False, 'Esta cuenta está vinculada con Google. Use "Continuar con Google"'
+            
+            # ✅ Validar password_hash existe
+            if not resultado['password_hash']:
+                cursor.close()
+                con.close()
+                return False, 'Cuenta sin contraseña configurada'
+            
             try:
                 # Verificar password con Argon2
                 self.ph.verify(resultado['password_hash'], password)
                 
-                # ✅ Obtener roles desde usuario_rol
+                # Obtener roles desde usuario_rol
                 sql_roles = """
                     SELECT r.id_rol, r.nombre
                     FROM usuario_rol ur
@@ -56,11 +68,9 @@ class Usuario:
                 cursor.close()
                 con.close()
                 
-                # Si no tiene roles activos, no permitir login
                 if not roles:
                     return False, 'Usuario sin roles asignados'
                 
-                # Retornar datos del usuario con roles
                 return True, {
                     'id_usuario': resultado['id_usuario'],
                     'nomusuario': resultado['nomusuario'],
@@ -81,28 +91,31 @@ class Usuario:
         except Exception as e:
             return False, f"Error en login: {str(e)}"
     
-    def registrar(self, nomusuario, email, password, id_persona, id_rol, id_empresa=None):
+    def registrar(self, nomusuario, email, password, id_persona, id_rol, id_empresa=None, google_id=None):
         """Registrar nuevo usuario - USA fn_usuario_crear"""
         try:
             con = Conexion().open
             cursor = con.cursor()
             
-            # Hash de password con Argon2
-            password_hash = self.ph.hash(password)
+            # Hash de password solo si existe
+            password_hash = None
+            if password:
+                password_hash = self.ph.hash(password)
             
-            # Usar función de PostgreSQL
+            # Usar función de PostgreSQL (8 parámetros)
             sql = """
-                SELECT fn_usuario_crear(%s, %s, %s, %s, %s, %s, %s) as id_usuario
+                SELECT fn_usuario_crear(%s, %s, %s, %s, %s, %s, %s, %s) as id_usuario
             """
             
             cursor.execute(sql, [
                 nomusuario, 
                 id_persona, 
                 email, 
-                password_hash, 
-                id_rol,  # Se usará para asignar en usuario_rol
-                None,    # img_logo
-                id_empresa
+                password_hash,
+                id_rol,
+                None,        # img_logo
+                id_empresa,
+                google_id
             ])
             
             resultado = cursor.fetchone()
@@ -118,6 +131,55 @@ class Usuario:
                 
         except Exception as e:
             return False, f"Error al registrar: {str(e)}"
+    
+    def registrar_google(self, google_id, email, nombres, apellidos, img_logo=None):
+        """Registrar usuario con Google Sign-In"""
+        try:
+            con = Conexion().open
+            cursor = con.cursor()
+            
+            sql = """
+                SELECT fn_usuario_registrar_google(%s, %s, %s, %s, %s) as resultado
+            """
+            
+            cursor.execute(sql, [google_id, email, nombres, apellidos, img_logo])
+            resultado = cursor.fetchone()
+            
+            con.commit()
+            cursor.close()
+            con.close()
+            
+            if resultado and resultado['resultado']:
+                return True, resultado['resultado']
+            else:
+                return False, 'Error al registrar con Google'
+                
+        except Exception as e:
+            return False, f"Error en registro Google: {str(e)}"
+    
+    def login_google(self, google_id):
+        """Login con Google ID"""
+        try:
+            con = Conexion().open
+            cursor = con.cursor()
+            
+            sql = """
+                SELECT fn_usuario_login_google(%s) as resultado
+            """
+            
+            cursor.execute(sql, [google_id])
+            resultado = cursor.fetchone()
+            
+            cursor.close()
+            con.close()
+            
+            if resultado and resultado['resultado']:
+                return True, resultado['resultado']
+            else:
+                return False, 'Usuario no encontrado'
+                
+        except Exception as e:
+            return False, f"Error en login Google: {str(e)}"
     
     def validar_email(self, email):
         """Verificar si el email ya existe"""
@@ -172,7 +234,6 @@ class Usuario:
                 con.close()
                 return False, 'Usuario no encontrado'
             
-            # Obtener roles
             sql_roles = """
                 SELECT r.id_rol, r.nombre
                 FROM usuario_rol ur
@@ -216,7 +277,6 @@ class Usuario:
             con = Conexion().open
             cursor = con.cursor()
             
-            # Obtener password actual
             sql = "SELECT password_hash FROM usuario WHERE id_usuario = %s"
             cursor.execute(sql, [id_usuario])
             resultado = cursor.fetchone()
@@ -227,13 +287,9 @@ class Usuario:
                 return False, 'Usuario no encontrado'
             
             try:
-                # Verificar password actual
                 self.ph.verify(resultado['password_hash'], password_actual)
-                
-                # Hash nueva password
                 nuevo_hash = self.ph.hash(password_nueva)
                 
-                # Actualizar password
                 sql_update = "UPDATE usuario SET password_hash = %s WHERE id_usuario = %s"
                 cursor.execute(sql_update, [nuevo_hash, id_usuario])
                 
