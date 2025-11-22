@@ -45,7 +45,7 @@ class CategoriaProducto:
             return False, f"Error al listar categorías: {str(e)}"
     
     def listar_productos_por_categoria(self, id_categoria):
-        """Lista productos de una categoría específica"""
+        """Lista TODOS los productos_color de una categoría (sin DISTINCT)"""
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -64,15 +64,15 @@ class CategoriaProducto:
                     pc.id_prod_color,
                     pc.talla,
                     col.nombre as color
-                FROM producto_sucursal ps
-                INNER JOIN producto_color pc ON ps.id_prod_sucursal = pc.id_prod_sucursal
+                FROM producto_color pc
+                INNER JOIN producto_sucursal ps ON pc.id_prod_sucursal = ps.id_prod_sucursal
                 LEFT JOIN marca m ON ps.id_marca = m.id_marca
                 LEFT JOIN categoria_producto cat ON ps.id_categoria = cat.id_categoria
                 LEFT JOIN color col ON pc.id_color = col.id_color
                 WHERE ps.id_categoria = %s 
                     AND ps.estado = TRUE 
                     AND pc.estado = TRUE
-                ORDER BY ps.id_prod_sucursal, pc.talla
+                ORDER BY ps.id_prod_sucursal, pc.talla, pc.id_prod_color
             """
             
             cursor.execute(sql, (id_categoria,))
