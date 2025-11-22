@@ -231,6 +231,11 @@ def registro_page():
     """Página de registro"""
     return render_template('registro.html')
 
+@app.route('/dashboard/usuarios')
+def dashboard_usuarios():
+    """Gestión de usuarios - ACCESO LIBRE"""
+    return render_template('usuario/lista.html')
+
 @app.route('/api/info')
 def api_info():
     """Información de la API y configuración de Cloudinary"""

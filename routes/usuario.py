@@ -1070,4 +1070,56 @@ def registro_google_simple():
             'message': f'Error: {str(e)}'
         }), 500
     
+@ws_usuario.route('/api/usuarios/listar', methods=['GET'])
+def listar_usuarios():
+    """Listar todos los usuarios con sus datos de persona"""
+    try:
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        sql = """
+            SELECT 
+                u.id_usuario,
+                u.nomusuario,
+                u.email,
+                u.img_logo,
+                u.estado,
+                p.nombres,
+                p.apellidos,
+                p.telefono,
+                COALESCE(
+                    (
+                        SELECT jsonb_agg(
+                            jsonb_build_object('id_rol', r.id_rol, 'nombre', r.nombre)
+                        )
+                        FROM usuario_rol ur
+                        INNER JOIN rol r ON ur.id_rol = r.id_rol
+                        WHERE ur.id_usuario = u.id_usuario AND ur.estado = TRUE
+                    ),
+                    '[]'::jsonb
+                ) as roles
+            FROM usuario u
+            INNER JOIN persona p ON u.id_persona = p.id_persona
+            ORDER BY u.created_at DESC
+        """
+        
+        cursor.execute(sql)
+        usuarios = cursor.fetchall()
+        
+        cursor.close()
+        con.close()
+        
+        return jsonify({
+            'status': True,
+            'data': usuarios
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+
+    
 
