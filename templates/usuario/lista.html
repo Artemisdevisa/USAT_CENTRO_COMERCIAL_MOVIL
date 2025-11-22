@@ -129,11 +129,9 @@
                             <thead>
                                 <tr>
                                     <th>FOTO</th>
-                                    <th>USUARIO</th>
                                     <th>NOMBRE COMPLETO</th>
                                     <th>EMAIL</th>
                                     <th>ROLES</th>
-                                    <th>ESTADO</th>
                                     <th style="text-align:center">ACCIONES</th>
                                 </tr>
                             </thead>
@@ -174,7 +172,8 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Nombre de Usuario</label>
-                            <input type="text" class="form-control" id="nomusuario" maxlength="50" required>
+                            <input type="text" class="form-control" id="nomusuario" disabled>
+                            <small class="text-muted">El nombre de usuario no se puede modificar</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Email</label>
@@ -212,7 +211,7 @@
                     
                     <div class="alert alert-warning">
                         <i class="bi bi-info-circle"></i> 
-                        <strong>Nota:</strong> El email y la contraseña no se pueden modificar desde aquí por seguridad.
+                        <strong>Nota:</strong> El nombre de usuario, email y contraseña no se pueden modificar desde aquí por seguridad.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -287,14 +286,14 @@
                 console.log('✅ Respuesta:', data);
                 
                 if (!data.status) {
-                    document.getElementById('tabla').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:3rem">Error al cargar usuarios</td></tr>';
+                    document.getElementById('tabla').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:3rem">Error al cargar usuarios</td></tr>';
                     return toast(data.message, 'error');
                 }
                 
                 renderizar(data.data);
             } catch (e) {
                 console.error('❌ Error:', e);
-                document.getElementById('tabla').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:3rem">Error de conexión</td></tr>';
+                document.getElementById('tabla').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:3rem">Error de conexión</td></tr>';
                 toast('Error al cargar usuarios: ' + e.message, 'error');
             }
         }
@@ -303,23 +302,20 @@
             const tbody = document.getElementById('tabla');
             
             if (!data || !data.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay usuarios registrados</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay usuarios registrados</td></tr>';
                 return;
             }
             
             tbody.innerHTML = data.map(u => {
                 const imgUrl = u.img_logo || '/static/images/user-placeholder.png';
                 const roles = u.roles ? u.roles.map(r => `<span class="badge badge-blue"><i class="bi bi-person-badge"></i>${r.nombre}</span>`).join(' ') : '';
-                const estado = u.estado ? '<span class="badge badge-green"><i class="bi bi-check-circle"></i>Activo</span>' : '<span class="badge badge-red"><i class="bi bi-x-circle"></i>Inactivo</span>';
                 
                 return `
                     <tr>
                         <td><img src="${imgUrl}" class="user-avatar" alt="Avatar" onerror="this.src='/static/images/user-placeholder.png'"></td>
-                        <td class="font-bold">${u.nomusuario}</td>
-                        <td>${u.nombres} ${u.apellidos}</td>
+                        <td class="font-bold">${u.nombres} ${u.apellidos}</td>
                         <td>${u.email}</td>
                         <td>${roles}</td>
-                        <td>${estado}</td>
                         <td style="text-align:center">
                             <button class="btn-icon btn-edit" onclick="editar(${u.id_usuario})" title="Editar"><i class="bi bi-pencil"></i></button>
                             <button class="btn-icon btn-delete" onclick="eliminar(${u.id_usuario}, '${u.nomusuario}')" title="Eliminar"><i class="bi bi-trash"></i></button>
@@ -339,6 +335,8 @@
                 if (!data.status) return toast(data.message, 'error');
                 
                 const user = data.data;
+                
+                console.log('👤 Datos del usuario:', user);
                 
                 document.getElementById('id_usuario').value = user.id_usuario;
                 document.getElementById('id_persona').value = user.persona.id_persona;
@@ -388,15 +386,14 @@
         async function guardarCambios() {
             const id_usuario = document.getElementById('id_usuario').value;
             const id_persona = document.getElementById('id_persona').value;
-            const nomusuario = document.getElementById('nomusuario').value.trim();
             const nombres = document.getElementById('nombres').value.trim();
             const apellidos = document.getElementById('apellidos').value.trim();
             const telefono = document.getElementById('telefono').value.trim();
             const direccion = document.getElementById('direccion').value.trim();
             const fecha_nacimiento = document.getElementById('fecha_nacimiento').value;
             
-            if (!nombres || !apellidos || !nomusuario) {
-                return toast('Nombres, apellidos y usuario son requeridos', 'warning');
+            if (!nombres || !apellidos) {
+                return toast('Nombres y apellidos son requeridos', 'warning');
             }
             
             try {
@@ -413,20 +410,7 @@
                     return toast(dataPersona.message, 'error');
                 }
                 
-                // 2. Actualizar nombre de usuario
-                const resUsuario = await fetch(`${API}/api/usuario/actualizar-nombre/${id_usuario}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nomusuario })
-                });
-                
-                const dataUsuario = await resUsuario.json();
-                
-                if (!dataUsuario.status) {
-                    return toast(dataUsuario.message, 'error');
-                }
-                
-                // 3. Si hay foto, subirla
+                // 2. Si hay foto, subirla
                 if (fotoSeleccionada) {
                     const formData = new FormData();
                     formData.append('foto', fotoSeleccionada);
