@@ -48,46 +48,65 @@ def actualizar_persona(id_persona):
     try:
         data = request.get_json()
         
-        print("\n" + "="*80)
-        print("📝 ACTUALIZAR PERSONA")
-        print("="*80)
-        print(f"🆔 ID Persona: {id_persona}")
-        print(f"📦 Body: {data}")
-        print("="*80)
-        
         nombres = data.get('nombres')
         apellidos = data.get('apellidos')
         telefono = data.get('telefono', '')
         direccion = data.get('direccion', '')
-        fecha_nacimiento = data.get('fecha_nacimiento', '')
+        fecha_nacimiento = data.get('fecha_nacimiento')
         
-        # Validaciones básicas
-        if not nombres or not apellidos:
+        if not all([nombres, apellidos]):
             return jsonify({
                 'status': False,
                 'message': 'Nombres y apellidos son requeridos'
             }), 400
         
-        # Llamar al modelo
-        exito, mensaje = persona_model.actualizar(
-            id_persona, nombres, apellidos, telefono, direccion, fecha_nacimiento
-        )
+        print("\n" + "="*80)
+        print("📝 ACTUALIZAR PERSONA")
+        print("="*80)
+        print(f"🆔 ID: {id_persona}")
+        print(f"👤 Nombres: {nombres}")
+        print(f"👤 Apellidos: {apellidos}")
+        print(f"📞 Teléfono: {telefono}")
+        print(f"📍 Dirección: {direccion}")
+        print(f"📅 Fecha Nac: {fecha_nacimiento}")
+        print("="*80 + "\n")
         
-        if exito:
-            print("✅ ACTUALIZACIÓN EXITOSA\n")
-            return jsonify({
-                'status': True,
-                'message': mensaje
-            }), 200
-        else:
-            print(f"❌ Error: {mensaje}\n")
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        sql = """
+            UPDATE persona 
+            SET nombres = %s, 
+                apellidos = %s,
+                telefono = %s,
+                direccion = %s,
+                fecha_nacimiento = %s
+            WHERE id_persona = %s AND estado = TRUE
+        """
+        
+        cursor.execute(sql, [nombres, apellidos, telefono, direccion, fecha_nacimiento, id_persona])
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            con.close()
             return jsonify({
                 'status': False,
-                'message': mensaje
-            }), 400
-            
+                'message': 'No se pudo actualizar. Persona no encontrada.'
+            }), 404
+        
+        con.commit()
+        cursor.close()
+        con.close()
+        
+        print("✅ Persona actualizada correctamente\n")
+        
+        return jsonify({
+            'status': True,
+            'message': 'Persona actualizada correctamente'
+        }), 200
+        
     except Exception as e:
-        print(f"💥 ERROR: {str(e)}\n")
+        print(f"💥 ERROR en actualizar_persona: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({

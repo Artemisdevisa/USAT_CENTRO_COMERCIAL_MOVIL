@@ -200,11 +200,12 @@ class Usuario:
             return False
     
     def obtener_por_id(self, id_usuario):
-        """Obtener datos completos del usuario por ID - CORREGIDO para usuario_rol"""
+        """Obtener datos completos del usuario por ID - CORREGIDO"""
         try:
             con = Conexion().open
             cursor = con.cursor()
             
+            # ✅ CRÍTICO: Añadir direccion y fecha_nacimiento
             sql = """
                 SELECT 
                     u.id_usuario,
@@ -217,6 +218,8 @@ class Usuario:
                     p.apellidos,
                     p.documento,
                     p.telefono,
+                    p.direccion,
+                    p.fecha_nacimiento,
                     e.ruc,
                     e.razon_social,
                     e.nombre_comercial
@@ -233,6 +236,15 @@ class Usuario:
                 cursor.close()
                 con.close()
                 return False, 'Usuario no encontrado'
+            
+            # ✅ LOG PARA DEBUG
+            print("\n" + "="*80)
+            print(f"📋 OBTENER USUARIO ID: {id_usuario}")
+            print("="*80)
+            print(f"👤 Nombres: {resultado['nombres']} {resultado['apellidos']}")
+            print(f"📍 Dirección: {resultado['direccion']}")
+            print(f"📅 Fecha Nac: {resultado['fecha_nacimiento']}")
+            print("="*80 + "\n")
             
             sql_roles = """
                 SELECT r.id_rol, r.nombre
@@ -257,7 +269,9 @@ class Usuario:
                     'nombres': resultado['nombres'],
                     'apellidos': resultado['apellidos'],
                     'documento': resultado['documento'],
-                    'telefono': resultado['telefono']
+                    'telefono': resultado['telefono'],
+                    'direccion': resultado['direccion'],              # ✅ AÑADIDO
+                    'fecha_nacimiento': resultado['fecha_nacimiento']  # ✅ AÑADIDO
                 },
                 'roles': [{'id_rol': r['id_rol'], 'nombre': r['nombre']} for r in roles],
                 'empresa': {
@@ -269,6 +283,9 @@ class Usuario:
             }
                 
         except Exception as e:
+            print(f"💥 ERROR en obtener_por_id: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False, f"Error al obtener usuario: {str(e)}"
     
     def cambiar_password(self, id_usuario, password_actual, password_nueva):
