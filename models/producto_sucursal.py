@@ -17,6 +17,7 @@ class ProductoSucursal:
             sql = """
                 SELECT DISTINCT ON (ps.id_prod_sucursal)
                     ps.id_prod_sucursal,
+                    ps.id_temporada,
                     ps.nombre,
                     ps.material,
                     ps.genero,
@@ -63,6 +64,7 @@ class ProductoSucursal:
                 
                 producto = {
                     "id_prod_sucursal": row['id_prod_sucursal'],
+                    "id_temporada": row['id_temporada'],
                     "idProducto": row['id_prod_sucursal'],           # ✅ AGREGAR
                     "id_prod_color": row['id_prod_color'] if row['id_prod_color'] else None,
                     "idProdColor": row['id_prod_color'] if row['id_prod_color'] else None,  # ✅ AGREGAR

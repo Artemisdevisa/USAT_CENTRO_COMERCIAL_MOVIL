@@ -536,6 +536,101 @@ def listar_modelos_activos():
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
+    
+@ws_producto_sucursal.route('/productos/por-temporada/<int:id_temporada>', methods=['GET'])
+def productos_por_temporada(id_temporada):
+    """Listar productos filtrados por temporada"""
+    try:
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # ✅ DETECTAR ENTORNO
+        user_agent = request.headers.get('User-Agent', '').lower()
+        is_android = 'okhttp' in user_agent or 'android' in user_agent
+        
+        import os
+        if os.environ.get('RENDER'):
+            base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
+        else:
+            base_url = "http://10.0.2.2:3007" if is_android else ""
+        
+        sql = """
+            SELECT DISTINCT ON (ps.id_prod_sucursal)
+                ps.id_prod_sucursal,
+                ps.id_temporada,
+                ps.nombre,
+                ps.material,
+                ps.genero,
+                m.nombre as marca,
+                c.nombre as categoria,
+                pc.id_prod_color,
+                pc.talla,
+                pc.precio,
+                pc.stock,
+                pc.url_img,
+                col.nombre as color
+            FROM producto_sucursal ps
+            LEFT JOIN marca m ON ps.id_marca = m.id_marca
+            LEFT JOIN categoria_producto c ON ps.id_categoria = c.id_categoria
+            LEFT JOIN producto_color pc ON ps.id_prod_sucursal = pc.id_prod_sucursal AND pc.estado = TRUE
+            LEFT JOIN color col ON pc.id_color = col.id_color
+            WHERE ps.estado = TRUE 
+              AND ps.id_temporada = %s
+            ORDER BY ps.id_prod_sucursal, pc.talla, pc.id_prod_color
+        """
+        
+        cursor.execute(sql, (id_temporada,))
+        resultados = cursor.fetchall()
+        
+        productos = []
+        for row in resultados:
+            url_img = row['url_img'] if row['url_img'] else ''
+            
+            # ✅ AGREGAR BASE_URL PARA ANDROID
+            if url_img and is_android:
+                if not url_img.startswith('http'):
+                    if not url_img.startswith('/'):
+                        url_img = '/' + url_img
+                    url_img = base_url + url_img
+            
+            producto = {
+                "id_prod_sucursal": row['id_prod_sucursal'],
+                "idProducto": row['id_prod_sucursal'],
+                "id_temporada": row['id_temporada'],
+                "id_prod_color": row['id_prod_color'] if row['id_prod_color'] else None,
+                "idProdColor": row['id_prod_color'] if row['id_prod_color'] else None,
+                "nombre": row['nombre'],
+                "nombreProducto": row['nombre'],
+                "talla": row['talla'] if row['talla'] else '',
+                "material": row['material'] if row['material'] else '',
+                "url_img": url_img,
+                "urlImg": url_img,
+                "imagen": url_img,
+                "genero": row['genero'] if row['genero'] else 'Sin definir',
+                "precio": float(row['precio']) if row['precio'] else 0.0,
+                "stock": row['stock'] if row['stock'] else 0,
+                "marca": row['marca'] if row['marca'] else '',
+                "categoria": row['categoria'] if row['categoria'] else '',
+                "nombreCategoria": row['categoria'] if row['categoria'] else '',
+                "color": row['color'] if row['color'] else 'Sin color'
+            }
+            productos.append(producto)
+        
+        cursor.close()
+        con.close()
+        
+        return jsonify({
+            'status': True,
+            'data': productos,
+            'message': f'Se encontraron {len(productos)} productos'
+        }), 200
+            
+    except Exception as e:
+        return jsonify({
+            'status': False,
+            'data': [],
+            'message': f'Error interno: {str(e)}'
+        }), 500
 
 
 
