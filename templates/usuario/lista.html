@@ -45,6 +45,7 @@
         .font-bold { font-weight: 600; color: #1f2937; }
         
         .user-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; }
+        .avatar-preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #e5e7eb; margin: 0 auto; display: block; }
         
         .btn { padding: 0.625rem 1.25rem; border-radius: 0.5rem; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; }
         .btn-primary { background: #dc2626; color: white; box-shadow: 0 1px 3px rgba(220,38,38,0.3); }
@@ -86,6 +87,11 @@
         .confirm-buttons .btn { flex: 1; justify-content: center; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .upload-btn { position: relative; overflow: hidden; display: inline-block; cursor: pointer; }
+        .upload-btn input[type=file] { position: absolute; left: -9999px; }
+        .upload-btn label { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; background: #3b82f6; color: white; border-radius: 0.5rem; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .upload-btn label:hover { background: #2563eb; }
     </style>
 </head>
 <body>
@@ -126,7 +132,6 @@
                                     <th>USUARIO</th>
                                     <th>NOMBRE COMPLETO</th>
                                     <th>EMAIL</th>
-                                    <th>TELÉFONO</th>
                                     <th>ROLES</th>
                                     <th>ESTADO</th>
                                     <th style="text-align:center">ACCIONES</th>
@@ -152,6 +157,32 @@
                     <input type="hidden" id="id_usuario">
                     <input type="hidden" id="id_persona">
                     
+                    <!-- Foto de Perfil -->
+                    <div class="text-center mb-4">
+                        <img id="imgPreview" src="/static/images/user-placeholder.png" class="avatar-preview" alt="Foto de perfil">
+                        <div class="mt-3">
+                            <div class="upload-btn">
+                                <label for="fileInput">
+                                    <i class="bi bi-camera"></i>
+                                    Cambiar Foto
+                                </label>
+                                <input type="file" id="fileInput" accept="image/*" onchange="previewImage(event)">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Nombre de Usuario</label>
+                            <input type="text" class="form-control" id="nomusuario" maxlength="50" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Email</label>
+                            <input type="email" class="form-control" id="email" disabled>
+                            <small class="text-muted">El email no se puede modificar</small>
+                        </div>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Nombres *</label>
@@ -165,23 +196,23 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Email</label>
-                            <input type="email" class="form-control" id="email" disabled>
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Teléfono</label>
                             <input type="text" class="form-control" id="telefono" maxlength="15">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" id="fecha_nacimiento">
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Dirección</label>
-                        <input type="text" class="form-control" id="direccion">
+                        <input type="text" class="form-control" id="direccion" maxlength="250">
                     </div>
                     
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Fecha de Nacimiento</label>
-                        <input type="date" class="form-control" id="fecha_nacimiento">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Nota:</strong> El email y la contraseña no se pueden modificar desde aquí por seguridad.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -199,6 +230,7 @@
         const API = window.CONFIG.API_URL;
         
         let modalEditar = null;
+        let fotoSeleccionada = null;
 
         function toast(msg, type = 'success') {
             const container = document.getElementById('toastContainer');
@@ -255,14 +287,14 @@
                 console.log('✅ Respuesta:', data);
                 
                 if (!data.status) {
-                    document.getElementById('tabla').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:3rem">Error al cargar usuarios</td></tr>';
+                    document.getElementById('tabla').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:3rem">Error al cargar usuarios</td></tr>';
                     return toast(data.message, 'error');
                 }
                 
                 renderizar(data.data);
             } catch (e) {
                 console.error('❌ Error:', e);
-                document.getElementById('tabla').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:3rem">Error de conexión</td></tr>';
+                document.getElementById('tabla').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:3rem">Error de conexión</td></tr>';
                 toast('Error al cargar usuarios: ' + e.message, 'error');
             }
         }
@@ -271,7 +303,7 @@
             const tbody = document.getElementById('tabla');
             
             if (!data || !data.length) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay usuarios registrados</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay usuarios registrados</td></tr>';
                 return;
             }
             
@@ -286,7 +318,6 @@
                         <td class="font-bold">${u.nomusuario}</td>
                         <td>${u.nombres} ${u.apellidos}</td>
                         <td>${u.email}</td>
-                        <td>${u.telefono || 'N/A'}</td>
                         <td>${roles}</td>
                         <td>${estado}</td>
                         <td style="text-align:center">
@@ -311,12 +342,24 @@
                 
                 document.getElementById('id_usuario').value = user.id_usuario;
                 document.getElementById('id_persona').value = user.persona.id_persona;
+                document.getElementById('nomusuario').value = user.nomusuario;
                 document.getElementById('nombres').value = user.persona.nombres;
                 document.getElementById('apellidos').value = user.persona.apellidos;
                 document.getElementById('email').value = user.email;
                 document.getElementById('telefono').value = user.persona.telefono || '';
                 document.getElementById('direccion').value = user.persona.direccion || '';
-                document.getElementById('fecha_nacimiento').value = user.persona.fecha_nacimiento || '';
+                
+                // Fecha de nacimiento
+                if (user.persona.fecha_nacimiento) {
+                    const fecha = user.persona.fecha_nacimiento.split('T')[0];
+                    document.getElementById('fecha_nacimiento').value = fecha;
+                }
+                
+                // Imagen
+                const imgUrl = user.img_logo || '/static/images/user-placeholder.png';
+                document.getElementById('imgPreview').src = imgUrl;
+                
+                fotoSeleccionada = null;
                 
                 modalEditar.show();
             } catch (e) {
@@ -325,32 +368,80 @@
             }
         }
 
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    toast('La imagen no debe superar 2MB', 'warning');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imgPreview').src = e.target.result;
+                    fotoSeleccionada = file;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         async function guardarCambios() {
+            const id_usuario = document.getElementById('id_usuario').value;
             const id_persona = document.getElementById('id_persona').value;
+            const nomusuario = document.getElementById('nomusuario').value.trim();
             const nombres = document.getElementById('nombres').value.trim();
             const apellidos = document.getElementById('apellidos').value.trim();
             const telefono = document.getElementById('telefono').value.trim();
             const direccion = document.getElementById('direccion').value.trim();
             const fecha_nacimiento = document.getElementById('fecha_nacimiento').value;
             
-            if (!nombres || !apellidos) return toast('Nombres y apellidos son requeridos', 'warning');
+            if (!nombres || !apellidos || !nomusuario) {
+                return toast('Nombres, apellidos y usuario son requeridos', 'warning');
+            }
             
             try {
-                const res = await fetch(`${API}/api/persona/${id_persona}`, {
+                // 1. Actualizar datos de persona
+                const resPersona = await fetch(`${API}/api/persona/${id_persona}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nombres, apellidos, telefono, direccion, fecha_nacimiento })
                 });
                 
-                const data = await res.json();
+                const dataPersona = await resPersona.json();
                 
-                if (data.status) {
-                    toast('✓ Usuario actualizado correctamente', 'success');
-                    modalEditar.hide();
-                    await cargar();
-                } else {
-                    toast(data.message, 'error');
+                if (!dataPersona.status) {
+                    return toast(dataPersona.message, 'error');
                 }
+                
+                // 2. Actualizar nombre de usuario
+                const resUsuario = await fetch(`${API}/api/usuario/actualizar-nombre/${id_usuario}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nomusuario })
+                });
+                
+                const dataUsuario = await resUsuario.json();
+                
+                if (!dataUsuario.status) {
+                    return toast(dataUsuario.message, 'error');
+                }
+                
+                // 3. Si hay foto, subirla
+                if (fotoSeleccionada) {
+                    const formData = new FormData();
+                    formData.append('foto', fotoSeleccionada);
+                    formData.append('id_usuario', id_usuario);
+                    
+                    await fetch(`${API}/api/usuario/actualizar-foto`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                
+                toast('✓ Usuario actualizado correctamente', 'success');
+                modalEditar.hide();
+                await cargar();
+                
             } catch (e) {
                 console.error('Error:', e);
                 toast('Error al guardar cambios', 'error');

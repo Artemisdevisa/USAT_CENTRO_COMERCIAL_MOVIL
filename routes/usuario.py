@@ -1119,6 +1119,43 @@ def listar_usuarios():
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
+    
+@ws_usuario.route('/api/usuario/actualizar-nombre/<int:id_usuario>', methods=['PUT'])
+def actualizar_nombre_usuario(id_usuario):
+    """Actualizar nombre de usuario"""
+    try:
+        data = request.get_json()
+        nomusuario = data.get('nomusuario')
+        
+        if not nomusuario:
+            return jsonify({
+                'status': False,
+                'message': 'Nombre de usuario requerido'
+            }), 400
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        cursor.execute("""
+            UPDATE usuario 
+            SET nomusuario = %s 
+            WHERE id_usuario = %s
+        """, [nomusuario, id_usuario])
+        
+        con.commit()
+        cursor.close()
+        con.close()
+        
+        return jsonify({
+            'status': True,
+            'message': 'Nombre de usuario actualizado'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
 
 
     
