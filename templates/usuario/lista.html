@@ -337,6 +337,7 @@
                 const user = data.data;
                 
                 console.log('👤 Datos del usuario:', user);
+                console.log('📅 Fecha nacimiento:', user.persona.fecha_nacimiento);
                 
                 document.getElementById('id_usuario').value = user.id_usuario;
                 document.getElementById('id_persona').value = user.persona.id_persona;
@@ -347,10 +348,14 @@
                 document.getElementById('telefono').value = user.persona.telefono || '';
                 document.getElementById('direccion').value = user.persona.direccion || '';
                 
-                // Fecha de nacimiento
+                // ✅ CRÍTICO: Formatear fecha correctamente
                 if (user.persona.fecha_nacimiento) {
+                    // Si viene "2025-11-14T00:00:00", extraer solo "2025-11-14"
                     const fecha = user.persona.fecha_nacimiento.split('T')[0];
                     document.getElementById('fecha_nacimiento').value = fecha;
+                    console.log('✅ Fecha asignada:', fecha);
+                } else {
+                    document.getElementById('fecha_nacimiento').value = '';
                 }
                 
                 // Imagen
@@ -361,7 +366,7 @@
                 
                 modalEditar.show();
             } catch (e) {
-                console.error('Error:', e);
+                console.error('💥 Error:', e);
                 toast('Error al cargar datos del usuario', 'error');
             }
         }
@@ -396,6 +401,9 @@
                 return toast('Nombres y apellidos son requeridos', 'warning');
             }
             
+            console.log('💾 Guardando cambios...');
+            console.log('📦 Datos a enviar:', { nombres, apellidos, telefono, direccion, fecha_nacimiento });
+            
             try {
                 // 1. Actualizar datos de persona
                 const resPersona = await fetch(`${API}/api/persona/${id_persona}`, {
@@ -406,20 +414,31 @@
                 
                 const dataPersona = await resPersona.json();
                 
+                console.log('📊 Respuesta persona:', dataPersona);
+                
                 if (!dataPersona.status) {
                     return toast(dataPersona.message, 'error');
                 }
                 
                 // 2. Si hay foto, subirla
                 if (fotoSeleccionada) {
+                    console.log('📸 Subiendo foto...');
+                    
                     const formData = new FormData();
                     formData.append('foto', fotoSeleccionada);
                     formData.append('id_usuario', id_usuario);
                     
-                    await fetch(`${API}/api/usuario/actualizar-foto`, {
+                    const resFoto = await fetch(`${API}/api/usuario/actualizar-foto`, {
                         method: 'POST',
                         body: formData
                     });
+                    
+                    const dataFoto = await resFoto.json();
+                    console.log('📊 Respuesta foto:', dataFoto);
+                    
+                    if (!dataFoto.status) {
+                        console.warn('⚠️ Error al subir foto:', dataFoto.message);
+                    }
                 }
                 
                 toast('✓ Usuario actualizado correctamente', 'success');
@@ -427,7 +446,7 @@
                 await cargar();
                 
             } catch (e) {
-                console.error('Error:', e);
+                console.error('💥 Error:', e);
                 toast('Error al guardar cambios', 'error');
             }
         }

@@ -48,13 +48,13 @@ def actualizar_persona(id_persona):
     try:
         data = request.get_json()
         
-        nombres = data.get('nombres')
-        apellidos = data.get('apellidos')
-        telefono = data.get('telefono', '')
-        direccion = data.get('direccion', '')
+        nombres = data.get('nombres', '').strip()
+        apellidos = data.get('apellidos', '').strip()
+        telefono = data.get('telefono', '').strip()
+        direccion = data.get('direccion', '').strip()
         fecha_nacimiento = data.get('fecha_nacimiento')
         
-        if not all([nombres, apellidos]):
+        if not nombres or not apellidos:
             return jsonify({
                 'status': False,
                 'message': 'Nombres y apellidos son requeridos'
@@ -69,7 +69,7 @@ def actualizar_persona(id_persona):
         print(f"📞 Teléfono: {telefono}")
         print(f"📍 Dirección: {direccion}")
         print(f"📅 Fecha Nac: {fecha_nacimiento}")
-        print("="*80 + "\n")
+        print("="*80)
         
         con = Conexion().open
         cursor = con.cursor()
@@ -106,7 +106,7 @@ def actualizar_persona(id_persona):
         }), 200
         
     except Exception as e:
-        print(f"💥 ERROR en actualizar_persona: {str(e)}")
+        print(f"💥 ERROR: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({

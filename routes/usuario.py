@@ -1157,6 +1157,80 @@ def actualizar_nombre_usuario(id_usuario):
             'message': f'Error: {str(e)}'
         }), 500
 
+@ws_usuario.route('/api/usuario/actualizar-foto', methods=['POST'])
+def actualizar_foto():
+    """Actualizar foto de perfil con Cloudinary"""
+    try:
+        if 'foto' not in request.files:
+            return jsonify({
+                'status': False,
+                'message': 'No se envió ninguna imagen'
+            }), 400
+        
+        file = request.files['foto']
+        id_usuario = request.form.get('id_usuario')
+        
+        if not id_usuario:
+            return jsonify({
+                'status': False,
+                'message': 'ID de usuario no proporcionado'
+            }), 400
+        
+        if file.filename == '':
+            return jsonify({
+                'status': False,
+                'message': 'Archivo sin nombre'
+            }), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({
+                'status': False,
+                'message': 'Formato no permitido. Use: png, jpg, jpeg, gif, webp'
+            }), 400
+        
+        print(f"\n📸 Subiendo foto para usuario ID: {id_usuario}")
+        
+        # Subir a Cloudinary
+        img_logo_url = subir_a_cloudinary(file, 'usuarios')
+        
+        if not img_logo_url:
+            return jsonify({
+                'status': False,
+                'message': 'Error al subir la imagen a Cloudinary'
+            }), 500
+        
+        print(f"✅ URL Cloudinary: {img_logo_url}")
+        
+        # Actualizar en BD
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        cursor.execute("""
+            UPDATE usuario 
+            SET img_logo = %s 
+            WHERE id_usuario = %s
+        """, [img_logo_url, id_usuario])
+        
+        con.commit()
+        cursor.close()
+        con.close()
+        
+        print(f"✅ Foto actualizada en BD\n")
+        
+        return jsonify({
+            'status': True,
+            'message': 'Foto actualizada correctamente',
+            'img_logo': img_logo_url
+        }), 200
+        
+    except Exception as e:
+        print(f"💥 ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
 
     
 
