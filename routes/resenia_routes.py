@@ -412,10 +412,13 @@ def obtener_estadisticas(id_prod_color):
 def listar_resenias_por_producto_sucursal(id_prod_sucursal):
     """Listar TODAS las reseñas de TODOS los colores de un producto_sucursal"""
     try:
+        print(f"=== LISTAR RESEÑAS ===")
+        print(f"id_prod_sucursal: {id_prod_sucursal}")
+        
         con = Conexion().open
         cursor = con.cursor()
         
-        # ✅ QUERY: Obtener todas las reseñas de todos los colores asociados a este producto
+        # ✅ QUERY CORRECTA: JOIN con producto_color para obtener todas las reseñas
         sql = """
             SELECT 
                 r.id_resenia,
@@ -428,16 +431,18 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
                 u.img_logo as avatar_usuario
             FROM resenia_producto r
             INNER JOIN producto_color pc ON r.id_prod_color = pc.id_prod_color
-            INNER JOIN producto_sucursal ps ON pc.id_prod_sucursal = ps.id_prod_sucursal
             INNER JOIN usuario u ON r.id_usuario = u.id_usuario
             INNER JOIN persona p ON u.id_persona = p.id_persona
-            WHERE ps.id_prod_sucursal = %s 
+            WHERE pc.id_prod_sucursal = %s 
               AND r.estado = TRUE
             ORDER BY r.fecha_resenia DESC
         """
         
+        print(f"Ejecutando SQL...")
         cursor.execute(sql, [id_prod_sucursal])
         resultado = cursor.fetchall()
+        
+        print(f"Total reseñas encontradas: {len(resultado) if resultado else 0}")
         
         cursor.close()
         con.close()
@@ -445,6 +450,7 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
         if resultado:
             resenias = []
             for row in resultado:
+                print(f"  - {row['titulo']} por {row['nombre_completo']}")
                 resenias.append({
                     'id_resenia': row['id_resenia'],
                     'titulo': row['titulo'],
@@ -461,6 +467,7 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
                 'data': resenias
             }), 200
         else:
+            print("No hay reseñas")
             return jsonify({
                 'status': True,
                 'message': 'No hay reseñas para este producto',
@@ -468,11 +475,16 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
             }), 200
             
     except Exception as e:
+        print(f"💥 ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'status': False,
             'message': f'Error en el servidor: {str(e)}',
             'data': []
         }), 500
+
     
 # ✅ AGREGAR ESTE ENDPOINT EN routes/resenia_routes.py
 
