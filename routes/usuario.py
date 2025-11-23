@@ -1157,3 +1157,100 @@ def actualizar_nombre_usuario(id_usuario):
             'message': f'Error: {str(e)}'
         }), 500
 
+
+# ============================================
+# AGREGAR ESTE ENDPOINT A routes/usuario.py
+# ============================================
+
+@ws_usuario.route('/api/usuario/registrar-token', methods=['POST'])
+def registrar_token():
+    """
+    Registra el token FCM de un dispositivo para envío de notificaciones push
+    """
+    try:
+        data = request.get_json()
+        
+        id_usuario = data.get('id_usuario')
+        dispositivo = data.get('dispositivo')
+        token = data.get('token')
+        
+        # Validaciones
+        if not all([id_usuario, dispositivo, token]):
+            return jsonify({
+                'status': False,
+                'message': 'Faltan datos obligatorios (id_usuario, dispositivo, token)'
+            }), 400
+        
+        print(f"\n{'='*60}")
+        print(f"📱 REGISTRANDO TOKEN FCM")
+        print(f"{'='*60}")
+        print(f"   ID Usuario: {id_usuario}")
+        print(f"   Dispositivo: {dispositivo}")
+        print(f"   Token: {token[:20]}...")
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        try:
+            # Verificar si el token ya existe para este usuario y dispositivo
+            cursor.execute("""
+                SELECT COUNT(*) as cantidad 
+                FROM usuario_fcm 
+                WHERE id_usuario = %s AND dispositivo = %s AND token = %s
+            """, [id_usuario, dispositivo, token])
+            
+            existe = cursor.fetchone()['cantidad']
+            
+            if existe == 0:
+                # Desactivar tokens antiguos del mismo dispositivo
+                cursor.execute("""
+                    UPDATE usuario_fcm 
+                    SET estado = FALSE 
+                    WHERE id_usuario = %s AND dispositivo = %s AND estado = TRUE
+                """, [id_usuario, dispositivo])
+                
+                print(f"   ⚠️  Tokens antiguos desactivados")
+                
+                # Insertar el nuevo token
+                cursor.execute("""
+                    INSERT INTO usuario_fcm (id_usuario, dispositivo, token, estado)
+                    VALUES (%s, %s, %s, TRUE)
+                """, [id_usuario, dispositivo, token])
+                
+                con.commit()
+                print(f"   ✅ Nuevo token registrado")
+                print(f"{'='*60}\n")
+                
+                cursor.close()
+                con.close()
+                
+                return jsonify({
+                    'status': True,
+                    'message': 'Token registrado correctamente'
+                }), 200
+            else:
+                print(f"   ℹ️  Token ya existe y está activo")
+                print(f"{'='*60}\n")
+                
+                cursor.close()
+                con.close()
+                
+                return jsonify({
+                    'status': True,
+                    'message': 'Token ya registrado'
+                }), 200
+        
+        except Exception as e:
+            con.rollback()
+            cursor.close()
+            con.close()
+            raise e
+            
+    except Exception as e:
+        print(f"❌ Error al registrar token: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500

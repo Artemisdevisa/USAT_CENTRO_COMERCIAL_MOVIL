@@ -42,3 +42,56 @@ Thumbs.db
 
 # Flask instance
 instance/
+
+
+# ============================================
+# FIREBASE CREDENTIALS (CRÍTICO - NO SUBIR)
+# ============================================
+firebase/*.json
+firebase/*-firebase-adminsdk-*.json
+elias-aguirre-firebase-adminsdk-*.json
+
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtualenvs
+.venv/
+venv/
+ENV/
+.env/
+.envrc
+.env.*
+*.env
+
+# Packaging
+build/
+dist/
+eggs/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.spec
+*.manifest
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flask instance
+instance/

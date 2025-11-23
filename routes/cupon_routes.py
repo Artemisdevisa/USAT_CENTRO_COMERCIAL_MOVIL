@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from models.cupon import Cupon
 from conexionBD import Conexion
+import firebase.fcm as fcm
 
 ws_cupon = Blueprint('ws_cupon', __name__)
 
@@ -53,7 +54,7 @@ def listar_por_sucursal(id_sucursal):
 
 @ws_cupon.route('/cupones/crear', methods=['POST'])
 def crear_cupon():
-    """Crear un nuevo cupón"""
+    """Crear un nuevo cupón y notificar a todos los usuarios"""
     try:
         data = request.get_json()
         
@@ -83,10 +84,45 @@ def crear_cupon():
         )
         
         if resultado > 0:
+            # ✅ ENVIAR NOTIFICACIÓN PUSH A TODOS LOS USUARIOS
+            try:
+                print("\n" + "="*60)
+                print("🔔 ENVIANDO NOTIFICACIONES PUSH")
+                print("="*60)
+                
+                # Obtener nombre de la sucursal
+                con = Conexion().open
+                cursor = con.cursor()
+                cursor.execute("SELECT nombre FROM sucursal WHERE id_sucursal = %s", [data['id_sucursal']])
+                sucursal = cursor.fetchone()
+                nombre_sucursal = sucursal['nombre'] if sucursal else "Centro Comercial"
+                cursor.close()
+                con.close()
+                
+                # Obtener todos los tokens FCM activos
+                tokens_enviados = enviar_notificacion_nuevo_cupon(
+                    codigo=data['codigo'],
+                    descripcion=data['descripcion'],
+                    porcentaje=float(data['porcentaje_descuento']),
+                    nombre_sucursal=nombre_sucursal
+                )
+                
+                print(f"✅ Notificaciones enviadas: {tokens_enviados}")
+                print("="*60 + "\n")
+                
+            except Exception as e:
+                print(f"⚠️ Error al enviar notificaciones: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                # No fallar la creación del cupón si falla el envío de notificaciones
+            
             return jsonify({
                 'status': True,
                 'message': 'Cupón creado correctamente',
-                'data': {'id_cupon': resultado}
+                'data': {
+                    'id_cupon': resultado,
+                    'notificaciones_enviadas': tokens_enviados if 'tokens_enviados' in locals() else 0
+                }
             }), 201
         else:
             return jsonify({
@@ -102,6 +138,78 @@ def crear_cupon():
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
+
+
+def enviar_notificacion_nuevo_cupon(codigo, descripcion, porcentaje, nombre_sucursal):
+    """
+    Envía notificación push a todos los usuarios activos sobre un nuevo cupón
+    
+    Args:
+        codigo (str): Código del cupón
+        descripcion (str): Descripción del cupón
+        porcentaje (float): Porcentaje de descuento
+        nombre_sucursal (str): Nombre de la sucursal
+    
+    Returns:
+        int: Cantidad de notificaciones enviadas exitosamente
+    """
+    try:
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # Obtener todos los tokens FCM activos
+        cursor.execute("""
+            SELECT DISTINCT uf.token, uf.id_usuario
+            FROM usuario_fcm uf
+            INNER JOIN usuario u ON uf.id_usuario = u.id_usuario
+            WHERE uf.estado = TRUE AND u.estado = TRUE
+        """)
+        
+        tokens = cursor.fetchall()
+        cursor.close()
+        con.close()
+        
+        if not tokens:
+            print("⚠️ No hay usuarios con tokens FCM activos")
+            return 0
+        
+        print(f"📱 Usuarios con FCM activos: {len(tokens)}")
+        
+        # Preparar mensaje de notificación
+        titulo = f"🎉 ¡Nuevo Cupón {porcentaje}% OFF!"
+        cuerpo = f"Usa el código {codigo} en {nombre_sucursal}. {descripcion}"
+        
+        # Enviar notificaciones
+        exitosas = 0
+        for row in tokens:
+            token = row['token']
+            id_usuario = row['id_usuario']
+            
+            try:
+                resultado = fcm.notificar(
+                    device_token=token,
+                    title=titulo,
+                    body=cuerpo
+                )
+                
+                if resultado:
+                    exitosas += 1
+                    print(f"   ✅ Notificación enviada al usuario {id_usuario}")
+                else:
+                    print(f"   ❌ Error al enviar a usuario {id_usuario}")
+                    
+            except Exception as e:
+                print(f"   ❌ Error al notificar usuario {id_usuario}: {str(e)}")
+                continue
+        
+        print(f"\n📊 Resultado: {exitosas}/{len(tokens)} notificaciones exitosas")
+        return exitosas
+        
+    except Exception as e:
+        print(f"❌ Error en enviar_notificacion_nuevo_cupon: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return 0
 
 
 @ws_cupon.route('/cupones/modificar/<int:id_cupon>', methods=['PUT'])
