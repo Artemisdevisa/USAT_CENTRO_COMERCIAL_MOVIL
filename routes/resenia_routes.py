@@ -5,11 +5,11 @@ from conexionBD import Conexion
 ws_resenia = Blueprint('ws_resenia', __name__)
 
 # ============================================
-# LISTAR RESEÑAS POR PRODUCTO
+# LISTAR RESEÑAS POR PRODUCTO_COLOR
 # ============================================
-@ws_resenia.route('/resenias/producto/<int:id_prod_color>', methods=['GET'])
+@ws_resenia.route('/resenias/producto-color/<int:id_prod_color>', methods=['GET'])
 def listar_resenias_producto(id_prod_color):
-    """Listar todas las reseñas de un producto específico"""
+    """Listar todas las reseñas de un producto_color específico"""
     try:
         resenia = Resenia()
         exito, resultado = resenia.listar_por_producto(id_prod_color)
@@ -404,21 +404,22 @@ def obtener_estadisticas(id_prod_color):
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
-    
 
-# ✅ AGREGAR ESTE ENDPOINT EN routes/resenia_routes.py
 
-@ws_resenia.route('/resenias/producto/<int:id_prod_sucursal>', methods=['GET'])
+# ============================================
+# ✅ LISTAR RESEÑAS POR PRODUCTO_SUCURSAL (CAMBIO DE RUTA)
+# ============================================
+@ws_resenia.route('/resenias/producto-sucursal/<int:id_prod_sucursal>', methods=['GET'])
 def listar_resenias_por_producto_sucursal(id_prod_sucursal):
     """Listar TODAS las reseñas de TODOS los colores de un producto_sucursal"""
     try:
-        print(f"=== LISTAR RESEÑAS ===")
-        print(f"id_prod_sucursal: {id_prod_sucursal}")
+        print(f"=== LISTAR RESEÑAS POR PRODUCTO_SUCURSAL ===")
+        print(f"id_prod_sucursal recibido: {id_prod_sucursal}")
         
         con = Conexion().open
         cursor = con.cursor()
         
-        # ✅ QUERY CORRECTA: JOIN con producto_color para obtener todas las reseñas
+        # ✅ QUERY CORRECTA: JOIN con producto_color
         sql = """
             SELECT 
                 r.id_resenia,
@@ -438,11 +439,11 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
             ORDER BY r.fecha_resenia DESC
         """
         
-        print(f"Ejecutando SQL...")
+        print(f"Ejecutando SQL con id_prod_sucursal = {id_prod_sucursal}")
         cursor.execute(sql, [id_prod_sucursal])
         resultado = cursor.fetchall()
         
-        print(f"Total reseñas encontradas: {len(resultado) if resultado else 0}")
+        print(f"Filas obtenidas: {len(resultado) if resultado else 0}")
         
         cursor.close()
         con.close()
@@ -450,7 +451,7 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
         if resultado:
             resenias = []
             for row in resultado:
-                print(f"  - {row['titulo']} por {row['nombre_completo']}")
+                print(f"  ✅ Reseña: {row['titulo']} por {row['nombre_completo']}")
                 resenias.append({
                     'id_resenia': row['id_resenia'],
                     'titulo': row['titulo'],
@@ -461,13 +462,15 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
                     'nombre_completo': row['nombre_completo'],
                     'avatar_usuario': row['avatar_usuario'] if row['avatar_usuario'] else None
                 })
+            
+            print(f"Total reseñas devueltas: {len(resenias)}")
             return jsonify({
                 'status': True,
                 'message': 'Reseñas obtenidas correctamente',
                 'data': resenias
             }), 200
         else:
-            print("No hay reseñas")
+            print("❌ No hay reseñas para este producto_sucursal")
             return jsonify({
                 'status': True,
                 'message': 'No hay reseñas para este producto',
@@ -485,9 +488,10 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
             'data': []
         }), 500
 
-    
-# ✅ AGREGAR ESTE ENDPOINT EN routes/resenia_routes.py
 
+# ============================================
+# OBTENER ID_DETALLE_VENTA
+# ============================================
 @ws_resenia.route('/resenias/obtener-id-det-vent', methods=['POST'])
 def obtener_id_det_vent():
     """Obtener el id_detalle_venta de la última compra del usuario con un producto_color"""
@@ -538,7 +542,7 @@ def obtener_id_det_vent():
                 'status': True,
                 'message': 'Detalle de venta encontrado',
                 'data': {
-                    'id_det_vent': id_det_vent  # Se devuelve como id_det_vent para compatibilidad
+                    'id_det_vent': id_det_vent
                 }
             }), 200
         else:
@@ -557,94 +561,3 @@ def obtener_id_det_vent():
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

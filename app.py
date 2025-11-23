@@ -238,6 +238,19 @@ def dashboard_usuarios():
     """Gestión de usuarios - ACCESO LIBRE"""
     return render_template('usuario/lista.html')
 
+
+@app.route('/debug/routes')
+def list_routes():
+    """Listar todas las rutas registradas"""
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append({
+            'endpoint': rule.endpoint,
+            'methods': list(rule.methods),
+            'path': str(rule)
+        })
+    return {'routes': sorted(routes, key=lambda x: x['path'])}
+
 @app.route('/api/info')
 def api_info():
     """Información de la API y configuración de Cloudinary"""
