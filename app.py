@@ -10,6 +10,7 @@ from routes.departamento import ws_departamento
 from routes.favorito import ws_favorito
 from routes.tipo_documento import ws_tipo_documento
 from routes.carrito import ws_carrito
+from routes.resenia_routes import ws_resenia
 from routes.persona_routes import ws_persona
 from routes.rol import ws_rol
 from routes.cupon_routes import ws_cupon
@@ -87,6 +88,7 @@ app.register_blueprint(ws_tipo_documento)
 app.register_blueprint(ws_tipo_producto)
 app.register_blueprint(ws_tarjeta)
 app.register_blueprint(ws_venta)
+app.register_blueprint(ws_resenia)
 app.register_blueprint(ws_color)
 app.register_blueprint(ws_horario_sucursal)
 app.register_blueprint(ws_cupon)
