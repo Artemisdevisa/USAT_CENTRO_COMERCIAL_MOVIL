@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from models.resenia import Resenia
+from conexionBD import Conexion
 
 ws_resenia = Blueprint('ws_resenia', __name__)
 
@@ -477,11 +478,15 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
 
 @ws_resenia.route('/resenias/obtener-id-det-vent', methods=['POST'])
 def obtener_id_det_vent():
-    """Obtener el id_det_vent de la última compra del usuario con un producto"""
+    """Obtener el id_detalle_venta de la última compra del usuario con un producto_color"""
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')
         id_prod_color = data.get('id_prod_color')
+        
+        print(f"=== OBTENER ID_DET_VENT ===")
+        print(f"id_usuario: {id_usuario}")
+        print(f"id_prod_color: {id_prod_color}")
         
         if not id_usuario or not id_prod_color:
             return jsonify({
@@ -492,40 +497,142 @@ def obtener_id_det_vent():
         con = Conexion().open
         cursor = con.cursor()
         
-        # ✅ Obtener el último detalle de venta del usuario con este producto_color
+        # ✅ SQL CORRECTO: Usar nombres reales de columnas
         sql = """
-            SELECT dv.id_det_vent
+            SELECT dv.id_detalle_venta
             FROM detalle_venta dv
             INNER JOIN venta v ON dv.id_venta = v.id_venta
             WHERE v.id_usuario = %s 
               AND dv.id_prod_color = %s
               AND v.estado = TRUE
-            ORDER BY v.fecha_venta DESC
+            ORDER BY v.created_at DESC
             LIMIT 1
         """
         
+        print(f"Ejecutando SQL...")
         cursor.execute(sql, [id_usuario, id_prod_color])
         resultado = cursor.fetchone()
+        
+        print(f"Resultado: {resultado}")
         
         cursor.close()
         con.close()
         
         if resultado:
+            id_det_vent = resultado['id_detalle_venta']
+            print(f"✅ id_detalle_venta encontrado: {id_det_vent}")
+            
             return jsonify({
                 'status': True,
                 'message': 'Detalle de venta encontrado',
                 'data': {
-                    'id_det_vent': resultado['id_det_vent']
+                    'id_det_vent': id_det_vent  # Se devuelve como id_det_vent para compatibilidad
                 }
             }), 200
         else:
+            print(f"❌ No se encontró compra del usuario {id_usuario} con producto_color {id_prod_color}")
             return jsonify({
                 'status': False,
                 'message': 'No has comprado este producto aún'
             }), 400
             
     except Exception as e:
+        print(f"💥 ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
