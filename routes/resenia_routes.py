@@ -403,3 +403,129 @@ def obtener_estadisticas(id_prod_color):
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
+    
+
+# ✅ AGREGAR ESTE ENDPOINT EN routes/resenia_routes.py
+
+@ws_resenia.route('/resenias/producto/<int:id_prod_sucursal>', methods=['GET'])
+def listar_resenias_por_producto_sucursal(id_prod_sucursal):
+    """Listar TODAS las reseñas de TODOS los colores de un producto_sucursal"""
+    try:
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # ✅ QUERY: Obtener todas las reseñas de todos los colores asociados a este producto
+        sql = """
+            SELECT 
+                r.id_resenia,
+                r.titulo,
+                r.comentario,
+                r.calificacion,
+                TO_CHAR(r.fecha_resenia, 'YYYY-MM-DD HH24:MI') as fecha_resenia,
+                u.nomusuario as usuario,
+                p.nombres || ' ' || p.apellidos as nombre_completo,
+                u.img_logo as avatar_usuario
+            FROM resenia_producto r
+            INNER JOIN producto_color pc ON r.id_prod_color = pc.id_prod_color
+            INNER JOIN producto_sucursal ps ON pc.id_prod_sucursal = ps.id_prod_sucursal
+            INNER JOIN usuario u ON r.id_usuario = u.id_usuario
+            INNER JOIN persona p ON u.id_persona = p.id_persona
+            WHERE ps.id_prod_sucursal = %s 
+              AND r.estado = TRUE
+            ORDER BY r.fecha_resenia DESC
+        """
+        
+        cursor.execute(sql, [id_prod_sucursal])
+        resultado = cursor.fetchall()
+        
+        cursor.close()
+        con.close()
+        
+        if resultado:
+            resenias = []
+            for row in resultado:
+                resenias.append({
+                    'id_resenia': row['id_resenia'],
+                    'titulo': row['titulo'],
+                    'comentario': row['comentario'],
+                    'calificacion': row['calificacion'],
+                    'fecha_resenia': row['fecha_resenia'],
+                    'usuario': row['usuario'],
+                    'nombre_completo': row['nombre_completo'],
+                    'avatar_usuario': row['avatar_usuario'] if row['avatar_usuario'] else None
+                })
+            return jsonify({
+                'status': True,
+                'message': 'Reseñas obtenidas correctamente',
+                'data': resenias
+            }), 200
+        else:
+            return jsonify({
+                'status': True,
+                'message': 'No hay reseñas para este producto',
+                'data': []
+            }), 200
+            
+    except Exception as e:
+        return jsonify({
+            'status': False,
+            'message': f'Error en el servidor: {str(e)}',
+            'data': []
+        }), 500
+    
+# ✅ AGREGAR ESTE ENDPOINT EN routes/resenia_routes.py
+
+@ws_resenia.route('/resenias/obtener-id-det-vent', methods=['POST'])
+def obtener_id_det_vent():
+    """Obtener el id_det_vent de la última compra del usuario con un producto"""
+    try:
+        data = request.get_json()
+        id_usuario = data.get('id_usuario')
+        id_prod_color = data.get('id_prod_color')
+        
+        if not id_usuario or not id_prod_color:
+            return jsonify({
+                'status': False,
+                'message': 'Faltan parámetros: id_usuario o id_prod_color'
+            }), 400
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # ✅ Obtener el último detalle de venta del usuario con este producto_color
+        sql = """
+            SELECT dv.id_det_vent
+            FROM detalle_venta dv
+            INNER JOIN venta v ON dv.id_venta = v.id_venta
+            WHERE v.id_usuario = %s 
+              AND dv.id_prod_color = %s
+              AND v.estado = TRUE
+            ORDER BY v.fecha_venta DESC
+            LIMIT 1
+        """
+        
+        cursor.execute(sql, [id_usuario, id_prod_color])
+        resultado = cursor.fetchone()
+        
+        cursor.close()
+        con.close()
+        
+        if resultado:
+            return jsonify({
+                'status': True,
+                'message': 'Detalle de venta encontrado',
+                'data': {
+                    'id_det_vent': resultado['id_det_vent']
+                }
+            }), 200
+        else:
+            return jsonify({
+                'status': False,
+                'message': 'No has comprado este producto aún'
+            }), 400
+            
+    except Exception as e:
+        return jsonify({
+            'status': False,
+            'message': f'Error en el servidor: {str(e)}'
+        }), 500
