@@ -1,5 +1,4 @@
-from config import get_db_connection
-from datetime import datetime
+from conexionBD import Conexion
 
 class Conversacion:
     def __init__(self):
@@ -8,43 +7,46 @@ class Conversacion:
     @staticmethod
     def buscar_o_crear(id_usuario, id_sucursal):
         """Busca una conversación existente o la crea"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
         try:
+            con = Conexion().open
+            cursor = con.cursor()
+            
             # Llamar función PostgreSQL
             cursor.execute("""
                 SELECT fn_iniciar_conversacion(%s, %s)
             """, (id_usuario, id_sucursal))
             
             resultado = cursor.fetchone()[0]
-            conn.commit()
+            con.commit()
+            
+            cursor.close()
+            con.close()
             
             return resultado
             
         except Exception as e:
-            conn.rollback()
             print(f"❌ Error al iniciar conversación: {e}")
             return {
                 'success': False,
                 'message': str(e)
             }
-        finally:
-            cursor.close()
-            conn.close()
     
     @staticmethod
     def listar_por_usuario(id_usuario):
         """Lista todas las conversaciones de un usuario"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
         try:
+            con = Conexion().open
+            cursor = con.cursor()
+            
             cursor.execute("""
                 SELECT fn_listar_conversaciones_usuario(%s)
             """, (id_usuario,))
             
             resultado = cursor.fetchone()[0]
+            
+            cursor.close()
+            con.close()
+            
             return resultado
             
         except Exception as e:
@@ -53,17 +55,14 @@ class Conversacion:
                 'success': False,
                 'message': str(e)
             }
-        finally:
-            cursor.close()
-            conn.close()
     
     @staticmethod
     def obtener_por_id(id_conversacion):
         """Obtiene una conversación específica"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
         try:
+            con = Conexion().open
+            cursor = con.cursor()
+            
             cursor.execute("""
                 SELECT 
                     c.id_conversacion,
@@ -82,51 +81,51 @@ class Conversacion:
             """, (id_conversacion,))
             
             row = cursor.fetchone()
+            
+            cursor.close()
+            con.close()
+            
             if row:
                 return {
-                    'id_conversacion': row[0],
-                    'id_usuario': row[1],
-                    'id_sucursal': row[2],
-                    'ultimo_mensaje': row[3],
-                    'fecha_ultimo_mensaje': row[4].isoformat() if row[4] else None,
-                    'mensajes_no_leidos_usuario': row[5],
-                    'mensajes_no_leidos_sucursal': row[6],
-                    'estado': row[7],
-                    'nombre_sucursal': row[8],
-                    'logo_sucursal': row[9]
+                    'id_conversacion': row['id_conversacion'],
+                    'id_usuario': row['id_usuario'],
+                    'id_sucursal': row['id_sucursal'],
+                    'ultimo_mensaje': row['ultimo_mensaje'],
+                    'fecha_ultimo_mensaje': row['fecha_ultimo_mensaje'].isoformat() if row['fecha_ultimo_mensaje'] else None,
+                    'mensajes_no_leidos_usuario': row['mensajes_no_leidos_usuario'],
+                    'mensajes_no_leidos_sucursal': row['mensajes_no_leidos_sucursal'],
+                    'estado': row['estado'],
+                    'nombre_sucursal': row['nombre_sucursal'],
+                    'logo_sucursal': row['logo_sucursal']
                 }
             return None
             
         except Exception as e:
             print(f"❌ Error al obtener conversación: {e}")
             return None
-        finally:
-            cursor.close()
-            conn.close()
     
     @staticmethod
     def archivar(id_conversacion, id_usuario):
         """Archiva una conversación"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
         try:
+            con = Conexion().open
+            cursor = con.cursor()
+            
             cursor.execute("""
                 SELECT fn_archivar_conversacion(%s, %s)
             """, (id_conversacion, id_usuario))
             
             resultado = cursor.fetchone()[0]
-            conn.commit()
+            con.commit()
+            
+            cursor.close()
+            con.close()
             
             return resultado
             
         except Exception as e:
-            conn.rollback()
             print(f"❌ Error al archivar conversación: {e}")
             return {
                 'success': False,
                 'message': str(e)
             }
-        finally:
-            cursor.close()
-            conn.close()
