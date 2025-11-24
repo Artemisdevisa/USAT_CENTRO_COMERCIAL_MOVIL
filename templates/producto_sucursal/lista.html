@@ -333,18 +333,32 @@
     }
 
     // Initialize - SIN VALIDACIÓN DE AUTENTICACIÓN
+    // ✅ INICIALIZAR CON EMPRESA DEL USUARIO
     (async () => {
         console.log('✅ Módulo de productos cargado');
+        console.log('🔧 API URL:', API);
         
         // ✅ OBTENER EMPRESA DEL USUARIO LOGUEADO
         const userStr = localStorage.getItem('user');
-        if (userStr) {
+        
+        if (!userStr) {
+            console.error('❌ No hay usuario en localStorage');
+            toast('⚠️ No se encontró sesión activa', 'warning');
+        } else {
             try {
                 const user = JSON.parse(userStr);
+                console.log('👤 Usuario completo:', user);
+                
                 ID_EMPRESA = user.id_empresa;
-                console.log('🏢 ID Empresa del usuario:', ID_EMPRESA);
+                console.log('🏢 ID Empresa extraído:', ID_EMPRESA);
+                
+                if (!ID_EMPRESA) {
+                    console.warn('⚠️ El usuario no tiene id_empresa asociado');
+                    toast('⚠️ Este usuario no tiene empresa asociada', 'warning');
+                }
             } catch (e) {
                 console.error('❌ Error al parsear usuario:', e);
+                toast('❌ Error al cargar datos de usuario', 'error');
             }
         }
         
@@ -425,15 +439,28 @@
 
     async function cargar() {
         try {
-            // ✅ AGREGAR id_empresa A LAS REQUESTS
-            const queryEmpresa = ID_EMPRESA ? `?id_empresa=${ID_EMPRESA}` : '';
+            console.log('=' .repeat(60));
+            console.log('📡 INICIANDO CARGA DE PRODUCTOS');
+            console.log('=' .repeat(60));
+            console.log('🏢 ID_EMPRESA actual:', ID_EMPRESA);
             
-            console.log('📡 Cargando productos desde:', `${API}/productos-sucursal/listar${queryEmpresa}`);
+            // ✅ CONSTRUIR QUERY PARAM
+            const queryEmpresa = ID_EMPRESA ? `?id_empresa=${ID_EMPRESA}` : '';
+            console.log('🔗 Query param:', queryEmpresa);
+            
+            const url1 = `${API}/productos-sucursal/listar${queryEmpresa}`;
+            const url2 = `${API}/productos-sucursal/estadisticas${queryEmpresa}`;
+            
+            console.log('📡 URL 1:', url1);
+            console.log('📡 URL 2:', url2);
             
             const [r1, r2] = await Promise.all([
-                fetch(`${API}/productos-sucursal/listar${queryEmpresa}`),
-                fetch(`${API}/productos-sucursal/estadisticas${queryEmpresa}`)
+                fetch(url1),
+                fetch(url2)
             ]);
+            
+            console.log('📥 Status respuesta 1:', r1.status);
+            console.log('📥 Status respuesta 2:', r2.status);
             
             if (!r1.ok || !r2.ok) {
                 throw new Error(`HTTP error! status: ${r1.status}, ${r2.status}`);
@@ -443,9 +470,18 @@
             const d2 = await r2.json();
             
             console.log('✅ Productos recibidos:', d1);
+            console.log('✅ Total productos:', d1.data?.length || 0);
             console.log('✅ Estadísticas recibidas:', d2);
+            console.log('=' .repeat(60));
             
-            if (!d1.status) return toast(d1.message, 'error');
+            if (!d1.status) {
+                toast(d1.message, 'error');
+                return;
+            }
+            
+            if (!d1.data || d1.data.length === 0) {
+                toast('ℹ️ No hay productos para esta empresa', 'info');
+            }
             
             stats = d2.status ? d2.data : [];
             renderizar(d1.data);

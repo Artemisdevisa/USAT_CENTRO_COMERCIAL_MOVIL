@@ -58,7 +58,7 @@ def dashboard_page():
 
 @ws_usuario.route('/api/login', methods=['POST'])
 def login():
-    """Login de usuario - CORREGIDO"""
+    """Login de usuario - INCLUYE id_empresa"""
     try:
         print("\n" + "="*60)
         print("🔐 INICIANDO PROCESO DE LOGIN")
@@ -78,7 +78,7 @@ def login():
                 'message': 'Email y contraseña son requeridos'
             }), 400
         
-        # Usar el modelo Usuario que YA maneja usuario_rol
+        # Llamar al modelo
         print("🔍 Llamando a usuario_model.login()...")
         exito, resultado = usuario_model.login(email, password)
         
@@ -91,11 +91,12 @@ def login():
                 'message': resultado
             }), 401
         
-        # Si llegamos aquí, el login fue exitoso
+        # ✅ AGREGAR id_empresa AL USER_DATA
         user_data = resultado
         print("✅ Login exitoso!")
         print(f"👤 Usuario: {user_data.get('nomusuario')}")
         print(f"🎭 Roles: {[r['nombre'] for r in user_data.get('roles', [])]}")
+        print(f"🏢 ID Empresa: {user_data.get('id_empresa', 'None')}")
         
         # Generar token JWT
         token = jwt.encode({
@@ -113,7 +114,7 @@ def login():
             'status': True,
             'message': 'Login exitoso',
             'token': token,
-            'user': user_data
+            'user': user_data  # ✅ Ya debe incluir id_empresa desde el modelo
         }), 200
         
     except Exception as e:

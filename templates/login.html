@@ -111,6 +111,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     
+    console.log('🔐 INICIANDO LOGIN...');
+    console.log('📧 Email:', email);
+    
     mostrarMensaje('⏳ Iniciando sesión...', 'info');
     btnLogin.disabled = true;
     btnLogin.innerHTML = '<i class="bi bi-hourglass-split"></i> Iniciando...';
@@ -127,25 +130,38 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         
         const data = await response.json();
         
+        console.log('📥 Respuesta del servidor:', data);
+        
         if (data.status) {
             mostrarMensaje('✅ Login exitoso!', 'success');
+            
+            // ✅ GUARDAR TOKEN Y USER
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            
+            // ✅ VERIFICAR QUE id_empresa SE GUARDÓ
+            console.log('💾 Usuario guardado en localStorage:', data.user);
+            console.log('🏢 ID Empresa:', data.user.id_empresa);
             
             const roles = data.user.roles || [];
             const tieneAccesoDashboard = roles.some(r => 
                 r.nombre === 'Empresa' || r.nombre === 'Administrador'
             );
             
+            console.log('🎭 Roles del usuario:', roles.map(r => r.nombre));
+            console.log('🚪 Redirigiendo a:', tieneAccesoDashboard ? '/dashboard' : '/');
+            
             setTimeout(() => {
                 window.location.href = tieneAccesoDashboard ? '/dashboard' : '/';
             }, 1000);
         } else {
+            console.error('❌ Error en login:', data.message);
             mostrarMensaje('❌ ' + data.message, 'error');
             btnLogin.disabled = false;
             btnLogin.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión';
         }
     } catch (error) {
+        console.error('💥 Error crítico:', error);
         mostrarMensaje('💥 Error: ' + error.message, 'error');
         btnLogin.disabled = false;
         btnLogin.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión';
