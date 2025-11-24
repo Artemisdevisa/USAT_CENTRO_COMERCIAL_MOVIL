@@ -15,31 +15,44 @@ class Conversacion:
             con = Conexion().open
             cursor = con.cursor()
             
-            print(f"🔍 Buscando/creando conversación | Usuario: {id_usuario} | Sucursal: {id_sucursal}")
+            print(f"🔍 Ejecutando fn_iniciar_conversacion({id_usuario}, {id_sucursal})")
             
-            # Llamar a la función PostgreSQL
+            # ✅ SOLUCIÓN: Llamar función y obtener resultado como tupla
             cursor.execute(
                 "SELECT fn_iniciar_conversacion(%s, %s)", 
                 (id_usuario, id_sucursal)
             )
             
-            resultado = cursor.fetchone()
+            row = cursor.fetchone()
             
-            # ✅ CORRECCIÓN: Verificar correctamente el resultado
-            if resultado is None or resultado[0] is None:
-                con.rollback()
-                print("❌ La función no devolvió datos")
+            if row is None or row[0] is None:
+                print("❌ fetchone() devolvió None o sin datos")
+                if con:
+                    con.rollback()
                 return {
                     'success': False,
-                    'message': 'No se pudo iniciar la conversación'
+                    'message': 'No se obtuvo respuesta de la base de datos'
                 }
             
-            # Obtener el JSONB (puede ser dict o str)
-            conversacion_data = resultado[0]
+            # ✅ Obtener el JSONB de la tupla (índice 0)
+            resultado_jsonb = row[0]
+            
+            print(f"📦 Resultado type: {type(resultado_jsonb)}")
+            print(f"📦 Resultado value: {resultado_jsonb}")
             
             # Si es string, convertir a dict
-            if isinstance(conversacion_data, str):
-                conversacion_data = json.loads(conversacion_data)
+            if isinstance(resultado_jsonb, str):
+                conversacion_data = json.loads(resultado_jsonb)
+            elif isinstance(resultado_jsonb, dict):
+                conversacion_data = resultado_jsonb
+            else:
+                print(f"❌ Tipo inesperado: {type(resultado_jsonb)}")
+                if con:
+                    con.rollback()
+                return {
+                    'success': False,
+                    'message': 'Formato de respuesta inválido'
+                }
             
             con.commit()
             
@@ -52,6 +65,8 @@ class Conversacion:
                 
         except Exception as e:
             print(f"❌ Error en buscar_o_crear: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
             
             if con:
                 con.rollback()
@@ -98,21 +113,40 @@ class Conversacion:
                 ORDER BY c.fecha_ultimo_mensaje DESC NULLS LAST
             """, (id_usuario,))
             
+            rows = cursor.fetchall()
             conversaciones = []
-            for row in cursor.fetchall():
-                conversaciones.append({
-                    'id_conversacion': row['id_conversacion'],
-                    'id_usuario': row['id_usuario'],
-                    'id_sucursal': row['id_sucursal'],
-                    'ultimo_mensaje': row['ultimo_mensaje'],
-                    'fecha_ultimo_mensaje': row['fecha_ultimo_mensaje'].isoformat() if row['fecha_ultimo_mensaje'] else None,
-                    'mensajes_no_leidos': row['mensajes_no_leidos_usuario'],
-                    'created_at': row['created_at'].isoformat() if row['created_at'] else None,
-                    'sucursal': {
-                        'nombre': row['sucursal_nombre'],
-                        'logo': row['sucursal_logo']
-                    }
-                })
+            
+            for row in rows:
+                # Manejar tanto dict como tuple
+                if isinstance(row, dict):
+                    conversaciones.append({
+                        'id_conversacion': row['id_conversacion'],
+                        'id_usuario': row['id_usuario'],
+                        'id_sucursal': row['id_sucursal'],
+                        'ultimo_mensaje': row['ultimo_mensaje'],
+                        'fecha_ultimo_mensaje': row['fecha_ultimo_mensaje'].isoformat() if row['fecha_ultimo_mensaje'] else None,
+                        'mensajes_no_leidos': row['mensajes_no_leidos_usuario'],
+                        'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                        'sucursal': {
+                            'nombre': row['sucursal_nombre'],
+                            'logo': row['sucursal_logo']
+                        }
+                    })
+                else:
+                    # Si es tupla
+                    conversaciones.append({
+                        'id_conversacion': row[0],
+                        'id_usuario': row[1],
+                        'id_sucursal': row[2],
+                        'ultimo_mensaje': row[3],
+                        'fecha_ultimo_mensaje': row[4].isoformat() if row[4] else None,
+                        'mensajes_no_leidos': row[5],
+                        'created_at': row[6].isoformat() if row[6] else None,
+                        'sucursal': {
+                            'nombre': row[7],
+                            'logo': row[8]
+                        }
+                    })
             
             return {
                 'success': True,
@@ -169,25 +203,46 @@ class Conversacion:
             row = cursor.fetchone()
             
             if row:
-                return {
-                    'id_conversacion': row['id_conversacion'],
-                    'id_usuario': row['id_usuario'],
-                    'id_sucursal': row['id_sucursal'],
-                    'ultimo_mensaje': row['ultimo_mensaje'],
-                    'fecha_ultimo_mensaje': row['fecha_ultimo_mensaje'].isoformat() if row['fecha_ultimo_mensaje'] else None,
-                    'mensajes_no_leidos_usuario': row['mensajes_no_leidos_usuario'],
-                    'mensajes_no_leidos_sucursal': row['mensajes_no_leidos_sucursal'],
-                    'estado': row['estado'],
-                    'created_at': row['created_at'].isoformat() if row['created_at'] else None,
-                    'usuario': {
-                        'nombre': row['nomusuario'],
-                        'img': row['usuario_img']
-                    },
-                    'sucursal': {
-                        'nombre': row['sucursal_nombre'],
-                        'logo': row['sucursal_logo']
+                if isinstance(row, dict):
+                    return {
+                        'id_conversacion': row['id_conversacion'],
+                        'id_usuario': row['id_usuario'],
+                        'id_sucursal': row['id_sucursal'],
+                        'ultimo_mensaje': row['ultimo_mensaje'],
+                        'fecha_ultimo_mensaje': row['fecha_ultimo_mensaje'].isoformat() if row['fecha_ultimo_mensaje'] else None,
+                        'mensajes_no_leidos_usuario': row['mensajes_no_leidos_usuario'],
+                        'mensajes_no_leidos_sucursal': row['mensajes_no_leidos_sucursal'],
+                        'estado': row['estado'],
+                        'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                        'usuario': {
+                            'nombre': row['nomusuario'],
+                            'img': row['usuario_img']
+                        },
+                        'sucursal': {
+                            'nombre': row['sucursal_nombre'],
+                            'logo': row['sucursal_logo']
+                        }
                     }
-                }
+                else:
+                    return {
+                        'id_conversacion': row[0],
+                        'id_usuario': row[1],
+                        'id_sucursal': row[2],
+                        'ultimo_mensaje': row[3],
+                        'fecha_ultimo_mensaje': row[4].isoformat() if row[4] else None,
+                        'mensajes_no_leidos_usuario': row[5],
+                        'mensajes_no_leidos_sucursal': row[6],
+                        'estado': row[7],
+                        'created_at': row[8].isoformat() if row[8] else None,
+                        'usuario': {
+                            'nombre': row[9],
+                            'img': row[10]
+                        },
+                        'sucursal': {
+                            'nombre': row[11],
+                            'logo': row[12]
+                        }
+                    }
             
             return None
             
