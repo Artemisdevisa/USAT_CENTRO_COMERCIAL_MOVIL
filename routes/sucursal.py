@@ -166,23 +166,67 @@ def crear_sucursal():
 
 @ws_sucursal.route('/sucursales/listar', methods=['GET'])
 def listar_sucursales():
-    """Listar todas las sucursales activas"""
+    """Listar sucursales con filtro opcional por empresa"""
     try:
-        sucursal = Sucursal()
-        exito, resultado = sucursal.listar_sucursales()
+        # ✅ OBTENER id_empresa DEL QUERY PARAM
+        id_empresa = request.args.get('id_empresa', type=int)
         
-        if exito:
-            return jsonify({
-                'status': True,
-                'data': resultado,
-                'message': 'Sucursales listadas correctamente'
-            }), 200
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        sql = """
+            SELECT 
+                s.id_sucursal,
+                s.nombre,
+                s.direccion,
+                s.telefono,
+                s.img_logo,
+                s.img_banner,
+                s.latitud,
+                s.longitud,
+                e.nombre_comercial as empresa,
+                d.nombre as distrito,
+                s.estado
+            FROM sucursal s
+            LEFT JOIN empresa e ON s.id_empresa = e.id_empresa
+            LEFT JOIN distrito d ON s.id_dist = d.id_dist
+            WHERE s.estado = TRUE
+        """
+        
+        # ✅ FILTRAR POR EMPRESA SI SE PROPORCIONA
+        if id_empresa:
+            sql += " AND s.id_empresa = %s"
+            cursor.execute(sql + " ORDER BY s.nombre", [id_empresa])
         else:
-            return jsonify({
-                'status': False,
-                'data': None,
-                'message': resultado
-            }), 500
+            cursor.execute(sql + " ORDER BY s.nombre")
+        
+        resultados = cursor.fetchall()
+        
+        sucursales = []
+        for row in resultados:
+            sucursal = {
+                "id_sucursal": row['id_sucursal'],
+                "nombre": row['nombre'],
+                "direccion": row['direccion'],
+                "telefono": row['telefono'],
+                "img_logo": row['img_logo'] or '',
+                "img_banner": row['img_banner'] or '',
+                "latitud": str(row['latitud']) if row['latitud'] else None,
+                "longitud": str(row['longitud']) if row['longitud'] else None,
+                "empresa": row['empresa'] or '',
+                "distrito": row['distrito'] or '',
+                "estado": row['estado']
+            }
+            sucursales.append(sucursal)
+        
+        cursor.close()
+        con.close()
+        
+        return jsonify({
+            'status': True,
+            'data': sucursales,
+            'message': 'Sucursales listadas correctamente'
+        }), 200
             
     except Exception as e:
         return jsonify({
