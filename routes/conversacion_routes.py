@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from models.conversacion import Conversacion
 from models.mensaje import Mensaje
+from conexionBD import Conexion
+from config import Config
 
 ws_conversacion = Blueprint('conversacion', __name__)
 

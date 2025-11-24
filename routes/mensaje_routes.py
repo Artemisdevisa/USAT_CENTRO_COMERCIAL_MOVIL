@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models.mensaje import Mensaje
-
+from conexionBD import Conexion
+from config import Config
 ws_mensaje = Blueprint('mensaje', __name__)
 
 # =====================================================
