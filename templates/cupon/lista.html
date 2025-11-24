@@ -34,6 +34,9 @@
         .page-title { font-size: 1.75rem; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 0.625rem; }
         .page-title i { color: #dc2626; }
         
+        /* ✅ HEADER ACTIONS - Para botones y dropdown */
+        .header-actions { display: flex; align-items: center; gap: 1rem; }
+        
         /* Main */
         .main-content { padding: 2rem; }
         .card { background: white; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
@@ -73,6 +76,44 @@
         /* Input */
         .input { padding: 0.625rem 1rem; border: 1.5px solid #d1d5db; border-radius: 0.5rem; outline: none; font-size: 0.9375rem; transition: all 0.2s; width: 280px; }
         .input:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.1); }
+        
+        /* ✅ DROPDOWN DE SUCURSALES */
+        .sucursal-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .sucursal-dropdown select {
+            padding: 0.625rem 2.5rem 0.625rem 1rem;
+            border: 1.5px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: white;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            min-width: 200px;
+        }
+        
+        .sucursal-dropdown select:hover {
+            border-color: #dc2626;
+        }
+        
+        .sucursal-dropdown select:focus {
+            outline: none;
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
+        }
+        
+        .sucursal-dropdown i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #6b7280;
+        }
         
         /* Toast */
         .toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; }
@@ -125,7 +166,21 @@
         <main id="content">
             <header class="page-header">
                 <h1 class="page-title"><i class="bi bi-ticket-perforated"></i>Mantenimiento de Cupones</h1>
-                <button class="btn btn-primary" onclick="abrirModal()"><i class="bi bi-plus-circle"></i>Nuevo Cupón</button>
+                
+                <!-- ✅ HEADER ACTIONS: Dropdown + Botón -->
+                <div class="header-actions">
+                    <!-- ✅ DROPDOWN DE SUCURSALES -->
+                    <div class="sucursal-dropdown">
+                        <select id="filtroSucursal" onchange="filtrarPorSucursal()">
+                            <option value="">Todas las sucursales</option>
+                        </select>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="abrirModal()">
+                        <i class="bi bi-plus-circle"></i>Nuevo Cupón
+                    </button>
+                </div>
             </header>
             
             <div class="main-content">
@@ -156,7 +211,7 @@
         </main>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal (sin cambios) -->
     <div class="modal fade" id="modal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -248,6 +303,8 @@
         let sucursales = [];
         let categorias = [];
         let cupones = [];
+        let cuponesCompletos = []; // ✅ GUARDAR TODOS LOS CUPONES
+        let ID_EMPRESA = null; // ✅ ID DE LA EMPRESA LOGUEADA
 
         // Toast notification
         function toast(msg, type = 'success') {
@@ -288,10 +345,45 @@
             });
         }
 
-        // Initialize
+        // ✅ INITIALIZE
         (async () => {
-            console.log('✅ Módulo de cupones cargado');
-            console.log('🔧 Inicializando con API:', API);
+            console.log('%c='.repeat(60), 'color: blue; font-weight: bold');
+            console.log('%c🎫 MÓDULO DE CUPONES CARGADO', 'color: blue; font-weight: bold; font-size: 14px');
+            console.log('%c='.repeat(60), 'color: blue; font-weight: bold');
+            
+            // ✅ OBTENER EMPRESA DEL USUARIO LOGUEADO
+            const userStr = localStorage.getItem('user');
+            
+            if (!userStr) {
+                console.error('%c❌ NO HAY USUARIO EN LOCALSTORAGE', 'color: red; font-weight: bold');
+                toast('⚠️ No se encontró sesión activa', 'warning');
+                setTimeout(() => window.location.href = '/login', 2000);
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userStr);
+                
+                console.log('%c👤 USUARIO:', 'color: green; font-weight: bold');
+                console.table({
+                    'ID Usuario': user.id_usuario,
+                    'Email': user.email,
+                    'ID Empresa': user.id_empresa || 'NULL',
+                    'Roles': user.roles?.map(r => r.nombre).join(', ') || 'Sin roles'
+                });
+                
+                ID_EMPRESA = user.id_empresa;
+                
+                if (!ID_EMPRESA) {
+                    console.warn('%c⚠️ USUARIO SIN EMPRESA', 'color: orange; font-weight: bold');
+                    toast('⚠️ Este usuario no tiene empresa asociada', 'warning');
+                }
+                
+            } catch (e) {
+                console.error('%c❌ ERROR AL PARSEAR USUARIO:', 'color: red; font-weight: bold', e);
+            }
+            
+            console.log('%c='.repeat(60), 'color: blue; font-weight: bold');
             
             modalInstance = new bootstrap.Modal(document.getElementById('modal'));
             
@@ -300,20 +392,36 @@
             await cargar();
         })();
 
-        // Load sucursales
+        // ✅ CARGAR SUCURSALES CON FILTRO POR EMPRESA
         async function cargarSucursales() {
             try {
-                const res = await fetch(`${API}/sucursales/listar`);
+                // ✅ AGREGAR FILTRO POR EMPRESA
+                const queryEmpresa = ID_EMPRESA ? `?id_empresa=${ID_EMPRESA}` : '';
+                
+                const res = await fetch(`${API}/sucursales/listar${queryEmpresa}`);
                 const data = await res.json();
                 
-                if (data.status) {
+                console.log('🏪 Sucursales recibidas:', data);
+                
+                if (data.status && data.data) {
                     sucursales = data.data;
-                    const select = document.getElementById('sucursal');
-                    select.innerHTML = '<option value="">Seleccione una sucursal</option>' +
+                    
+                    // ✅ LLENAR SELECT DEL MODAL
+                    const selectModal = document.getElementById('sucursal');
+                    selectModal.innerHTML = '<option value="">Seleccione una sucursal</option>' +
                         sucursales.map(s => `<option value="${s.id_sucursal}">${s.nombre}</option>`).join('');
+                    
+                    // ✅ LLENAR DROPDOWN DE FILTRO
+                    const selectFiltro = document.getElementById('filtroSucursal');
+                    selectFiltro.innerHTML = '<option value="">Todas las sucursales</option>' +
+                        sucursales.map(s => `<option value="${s.id_sucursal}">${s.nombre}</option>`).join('');
+                    
+                    console.log('✅ Sucursales cargadas:', sucursales.length);
+                } else {
+                    console.warn('⚠️ No hay sucursales disponibles');
                 }
             } catch (e) {
-                console.error('Error al cargar sucursales:', e);
+                console.error('❌ Error al cargar sucursales:', e);
             }
         }
 
@@ -323,41 +431,57 @@
                 const res = await fetch(`${API}/categorias/listar-activas`);
                 const data = await res.json();
                 
-                console.log('📦 Categorías recibidas:', data);
-                
                 if (data.status && data.data) {
                     categorias = data.data;
                     const select = document.getElementById('categoria');
                     select.innerHTML = '<option value="">Todas las categorías</option>' +
                         categorias.map(c => `<option value="${c.id_categoria}">${c.nombre}</option>`).join('');
-                    
-                    console.log('✅ Categorías cargadas:', categorias.length);
-                } else {
-                    console.warn('⚠️ No hay categorías disponibles');
                 }
             } catch (e) {
                 console.error('❌ Error al cargar categorías:', e);
             }
         }
 
-        // Load data
+        // ✅ CARGAR CUPONES CON FILTRO POR EMPRESA
         async function cargar() {
             try {
-                console.log('📡 Cargando cupones desde:', `${API}/cupones/listar`);
+                // ✅ AGREGAR FILTRO POR EMPRESA
+                const queryEmpresa = ID_EMPRESA ? `?id_empresa=${ID_EMPRESA}` : '';
                 
-                const res = await fetch(`${API}/cupones/listar`);
+                console.log('📡 Cargando cupones desde:', `${API}/cupones/listar${queryEmpresa}`);
+                
+                const res = await fetch(`${API}/cupones/listar${queryEmpresa}`);
                 const data = await res.json();
                 
                 console.log('✅ Cupones recibidos:', data);
                 
                 if (!data.status) return toast(data.message, 'error');
                 
-                cupones = data.data || [];
+                cuponesCompletos = data.data || [];
+                cupones = cuponesCompletos; // ✅ MOSTRAR TODOS INICIALMENTE
                 renderizar(cupones);
             } catch (e) {
                 console.error('❌ Error al cargar cupones:', e);
                 toast('Error al cargar los cupones: ' + e.message, 'error');
             }
+        }
+
+        // ✅ FILTRAR POR SUCURSAL
+        function filtrarPorSucursal() {
+            const idSucursal = document.getElementById('filtroSucursal').value;
+            
+            console.log('🔍 Filtrando por sucursal:', idSucursal || 'Todas');
+            
+            if (!idSucursal) {
+                // Mostrar todos los cupones
+                cupones = cuponesCompletos;
+            } else {
+                // Filtrar por sucursal
+                cupones = cuponesCompletos.filter(c => c.id_sucursal == idSucursal);
+            }
+            
+            console.log('✅ Cupones filtrados:', cupones.length);
+            renderizar(cupones);
         }
 
         // Render table
@@ -428,7 +552,7 @@
         // Edit
         async function editar(id) {
             try {
-                const cupon = cupones.find(c => c.id_cupon === id);
+                const cupon = cuponesCompletos.find(c => c.id_cupon === id);
                 if (!cupon) return toast('Cupón no encontrado', 'error');
                 
                 document.getElementById('modalTitle').textContent = 'Editar Cupón';

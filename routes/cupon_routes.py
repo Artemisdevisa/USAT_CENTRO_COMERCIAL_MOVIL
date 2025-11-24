@@ -7,9 +7,23 @@ ws_cupon = Blueprint('ws_cupon', __name__)
 
 @ws_cupon.route('/cupones/listar', methods=['GET'])
 def listar_cupones():
-    """Listar todos los cupones"""
+    """Listar cupones con filtro opcional por empresa"""
     try:
-        cupones = Cupon.listar()
+        # ✅ OBTENER id_empresa DEL QUERY PARAM
+        id_empresa = request.args.get('id_empresa', type=int)
+        
+        print(f"\n{'='*60}")
+        print(f"📋 LISTANDO CUPONES")
+        if id_empresa:
+            print(f"🏢 Filtrando por empresa: {id_empresa}")
+        else:
+            print(f"📊 Sin filtro de empresa (todos)")
+        print(f"{'='*60}")
+        
+        cupones = Cupon.listar(id_empresa)
+        
+        print(f"✅ Cupones encontrados: {len(cupones)}")
+        print(f"{'='*60}\n")
         
         return jsonify({
             'status': True,

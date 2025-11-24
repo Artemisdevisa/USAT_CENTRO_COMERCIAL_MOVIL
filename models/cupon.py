@@ -2,13 +2,13 @@ from conexionBD import Conexion
 
 class Cupon:
     @staticmethod
-    def listar():
-        """Listar todos los cupones"""
+    def listar(id_empresa=None):
+        """Listar todos los cupones con filtro opcional por empresa"""
         try:
             con = Conexion().open
             cursor = con.cursor()
             
-            cursor.execute("""
+            sql = """
                 SELECT 
                     c.id_cupon,
                     c.codigo,
@@ -27,8 +27,14 @@ class Cupon:
                 FROM cupon c
                 INNER JOIN sucursal s ON c.id_sucursal = s.id_sucursal
                 LEFT JOIN categoria_producto cat ON c.id_categoria = cat.id_categoria
-                ORDER BY c.fecha_inicio DESC
-            """)
+            """
+            
+            # ✅ FILTRAR POR EMPRESA
+            if id_empresa:
+                sql += " WHERE s.id_empresa = %s"
+                cursor.execute(sql + " ORDER BY c.fecha_inicio DESC", [id_empresa])
+            else:
+                cursor.execute(sql + " ORDER BY c.fecha_inicio DESC")
             
             resultado = cursor.fetchall()
             cursor.close()
@@ -52,7 +58,6 @@ class Cupon:
             print(f"🔍 BUSCANDO CUPONES PARA SUCURSAL {id_sucursal}")
             print(f"{'='*60}")
             
-            # ✅ CONSULTA DIRECTA
             cursor.execute("""
                 SELECT 
                     c.id_cupon,
@@ -64,7 +69,7 @@ class Cupon:
                     c.fecha_fin,
                     (c.cantidad_total - c.cantidad_usada) as cantidad_disponible,
                     cat.nombre as categoria,
-                    c.id_sucursal  -- ✅ AGREGAR ESTE CAMPO
+                    c.id_sucursal
                 FROM cupon c
                 LEFT JOIN categoria_producto cat ON c.id_categoria = cat.id_categoria
                 WHERE c.id_sucursal = %s 
@@ -95,7 +100,7 @@ class Cupon:
                         'fecha_fin': row['fecha_fin'].isoformat() if row['fecha_fin'] else None,
                         'cantidad_disponible': row['cantidad_disponible'],
                         'categoria': row['categoria'],
-                        'id_sucursal': row['id_sucursal']  # ✅ AGREGAR ESTE CAMPO
+                        'id_sucursal': row['id_sucursal']
                     }
                     cupones.append(cupon)
                     print(f"   📦 Cupón: {cupon['codigo']} - {cupon['porcentaje_descuento']}% - Sucursal: {cupon['id_sucursal']}")
