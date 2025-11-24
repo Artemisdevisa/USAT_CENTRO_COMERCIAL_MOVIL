@@ -16,6 +16,8 @@ from routes.rol import ws_rol
 from routes.cupon_routes import ws_cupon
 from routes.temporada_routes import ws_temporada
 from routes.marca_routes import ws_marca
+from routes.conversacion_routes import ws_conversacion
+from routes.mensaje_routes import ws_mensaje
 from routes.tipo_producto_routes import ws_tipo_producto
 from routes.tipo_modelo_producto_routes import ws_tipo_modelo
 from routes.color_routes import ws_color
@@ -86,6 +88,8 @@ app.register_blueprint(ws_producto_sucursal)
 app.register_blueprint(ws_producto_color)
 app.register_blueprint(ws_tipo_documento)
 app.register_blueprint(ws_tipo_producto)
+app.register_blueprint(ws_conversacion)
+app.register_blueprint(ws_mensaje)
 app.register_blueprint(ws_tarjeta)
 app.register_blueprint(ws_venta)
 app.register_blueprint(ws_resenia)
