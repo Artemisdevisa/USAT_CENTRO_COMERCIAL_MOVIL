@@ -386,7 +386,6 @@
                 if (data && data.address) {
                     const { road, suburb, city, county, state, town, village, city_district } = data.address;
                     
-                    // Autocompletar dirección
                     let direccion = '';
                     if (road) direccion += road;
                     if (suburb) direccion += (direccion ? ', ' : '') + suburb;
@@ -394,16 +393,12 @@
                         document.getElementById('direccion').value = direccion;
                     }
                     
-                    // Normalizar nombre del distrito
                     const nombreDistrito = (city || county || town || village || city_district || '').toLowerCase().trim();
                     
                     console.log('🔍 Buscando distrito:', nombreDistrito);
-                    console.log('📍 Ubicación OSM:', data.address);
                     
-                    // Buscar coincidencia exacta
                     let match = distritosPeru[nombreDistrito];
                     
-                    // Si no hay coincidencia exacta, buscar coincidencia parcial
                     if (!match) {
                         const distritosKeys = Object.keys(distritosPeru);
                         const matchKey = distritosKeys.find(key => 
@@ -412,12 +407,10 @@
                         
                         if (matchKey) {
                             match = distritosPeru[matchKey];
-                            console.log('✅ Coincidencia parcial encontrada:', matchKey);
                         }
                     }
                     
                     if (match) {
-                        // ✅ Distrito encontrado en BD
                         document.getElementById('id_dist').value = match.id_dist;
                         document.getElementById('txt_distrito').value = match.distrito;
                         document.getElementById('txt_provincia').value = match.provincia;
@@ -425,10 +418,7 @@
                         
                         console.log('✅ Distrito cargado:', match);
                     } else {
-                        // ❌ Distrito NO encontrado - Buscar en API
-                        console.warn('⚠️ Distrito no encontrado en BD local, buscando en API...');
-                        
-                        await buscarDistritoEnAPI(nombreDistrito, state);
+                        console.warn('⚠️ Distrito no encontrado');
                     }
                 }
             } catch (error) {
@@ -471,8 +461,13 @@
         }
 
         (async function init() {
+            console.log('='.repeat(60));
+            console.log('🏢 MÓDULO DE SUCURSALES CARGADO');
+            console.log('='.repeat(60));
+            
             const userStr = localStorage.getItem('user');
             if (!userStr) {
+                console.error('❌ No hay usuario en localStorage');
                 window.location.href = '/login';
                 return;
             }
@@ -480,40 +475,67 @@
             const user = JSON.parse(userStr);
             idEmpresa = user.id_empresa;
 
+            console.log('👤 Usuario:', user.email);
+            console.log('🏢 ID Empresa:', idEmpresa);
+
             if (!idEmpresa) {
                 mostrarAlerta('No tienes una empresa asociada', 'error');
                 setTimeout(() => window.location.href = '/dashboard', 2000);
                 return;
             }
 
-            const res = await fetch(`${API}/empresas/obtener-por-usuario/${idEmpresa}`);
-            const data = await res.json();
-            
-            if (data.status && data.data) {
-                document.getElementById('empresaNombre').textContent = data.data.nombre_comercial;
+            // Cargar nombre de empresa
+            try {
+                const res = await fetch(`${API}/empresas/obtener-por-usuario/${idEmpresa}`);
+                const data = await res.json();
+                
+                if (data.status && data.data) {
+                    document.getElementById('empresaNombre').textContent = data.data.nombre_comercial;
+                    console.log('✅ Empresa:', data.data.nombre_comercial);
+                }
+            } catch (e) {
+                console.error('Error al cargar empresa:', e);
             }
 
             modalInstance = new bootstrap.Modal(document.getElementById('modal'));
             await cargarDistritosPeru();
             await cargar();
+            
+            console.log('='.repeat(60));
         })();
 
         async function cargar() {
             try {
+                console.log(`📡 Cargando sucursales de empresa: ${idEmpresa}`);
+                console.log(`   URL: ${API}/sucursales/listar-por-empresa/${idEmpresa}`);
+                
                 const res = await fetch(`${API}/sucursales/listar-por-empresa/${idEmpresa}`);
+                
+                console.log('   Status HTTP:', res.status);
+                
                 const data = await res.json();
                 
+                console.log('   Response:', data);
+                
                 if (data.status) {
+                    console.log(`✅ ${data.data.length} sucursales encontradas`);
                     renderizar(data.data);
+                } else {
+                    console.error('❌ Error en respuesta:', data.message);
+                    mostrarAlerta('Error al cargar sucursales', 'error');
+                    renderizar([]);
                 }
             } catch (e) {
-                console.error('Error:', e);
+                console.error('❌ Error:', e);
                 mostrarAlerta('Error al cargar sucursales', 'error');
+                renderizar([]);
             }
         }
 
         function renderizar(data) {
             const tbody = document.getElementById('tabla');
+            
+            console.log('🎨 Renderizando tabla con', data.length, 'sucursales');
             
             if (!data || !data.length) {
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay sucursales registradas</td></tr>';
@@ -521,8 +543,10 @@
             }
             
             tbody.innerHTML = data.map(s => {
+                console.log('   Sucursal:', s.nombre, '| Logo:', s.img_logo);
+                
                 const logoImg = s.img_logo 
-                    ? `<img src="${s.img_logo}" class="sucursal-img" alt="Logo" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Logo'">`  // ✅ BIEN
+                    ? `<img src="${s.img_logo}" class="sucursal-img" alt="Logo" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Logo'">`
                     : `<img src="https://via.placeholder.com/60x60?text=Sin+Logo" class="sucursal-img" alt="Sin logo">`;
                 
                 const ubicacion = s.distrito ? `${s.distrito}` : 'N/A';
@@ -592,7 +616,6 @@
                     document.getElementById('direccion').value = s.direccion;
                     document.getElementById('id_dist').value = s.id_dist || '';
                     
-                    // ✅ CORRECCIÓN: img_logo e img_banner son URLs completas de Cloudinary
                     if (s.img_logo) {
                         document.getElementById('previewLogo').innerHTML = 
                             `<img src="${s.img_logo}" class="img-preview" alt="Logo actual">`;
