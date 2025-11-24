@@ -181,3 +181,70 @@ def contar_no_leidos(id_usuario):
             'status': False,
             'message': str(e)
         }), 500
+    
+
+# ✅ AGREGAR AL FINAL DEL ARCHIVO
+
+# =====================================================
+# LISTAR CONVERSACIONES POR SUCURSAL (PARA WEB)
+# =====================================================
+@ws_conversacion.route('/conversacion/listar-por-sucursal/<int:id_sucursal>', methods=['GET'])
+def listar_conversaciones_por_sucursal(id_sucursal):
+    """
+    Lista todas las conversaciones de una sucursal específica
+    Para uso en dashboard web
+    """
+    try:
+        print(f"📋 Listando conversaciones de sucursal: {id_sucursal}")
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                c.id_conversacion,
+                c.id_usuario,
+                c.id_sucursal,
+                c.ultimo_mensaje,
+                c.fecha_ultimo_mensaje,
+                c.mensajes_no_leidos_sucursal,
+                c.created_at,
+                u.nomusuario as nombre_usuario,
+                u.img_logo
+            FROM conversacion c
+            INNER JOIN usuario u ON c.id_usuario = u.id_usuario
+            WHERE c.id_sucursal = %s 
+              AND c.estado = TRUE
+            ORDER BY c.fecha_ultimo_mensaje DESC NULLS LAST
+        """, (id_sucursal,))
+        
+        conversaciones = []
+        for row in cursor.fetchall():
+            conversaciones.append({
+                'id_conversacion': row['id_conversacion'],
+                'id_usuario': row['id_usuario'],
+                'id_sucursal': row['id_sucursal'],
+                'ultimo_mensaje': row['ultimo_mensaje'],
+                'fecha_ultimo_mensaje': row['fecha_ultimo_mensaje'].isoformat() if row['fecha_ultimo_mensaje'] else None,
+                'mensajes_no_leidos_sucursal': row['mensajes_no_leidos_sucursal'],
+                'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                'nombre_usuario': row['nombre_usuario'],
+                'img_logo': row['img_logo']
+            })
+        
+        cursor.close()
+        con.close()
+        
+        print(f"✅ {len(conversaciones)} conversaciones encontradas")
+        
+        return jsonify({
+            'status': True,
+            'data': conversaciones
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error en listar_conversaciones_por_sucursal: {e}")
+        return jsonify({
+            'status': False,
+            'message': str(e)
+        }), 500

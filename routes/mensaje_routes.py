@@ -143,3 +143,90 @@ def marcar_leidos():
             'status': False,
             'message': str(e)
         }), 500
+    
+# ✅ AGREGAR AL FINAL DEL ARCHIVO
+
+# =====================================================
+# LISTAR MENSAJES PARA WEB (MARCA COMO LEÍDOS PARA SUCURSAL)
+# =====================================================
+@ws_mensaje.route('/mensaje/listar-web/<int:id_conversacion>/<int:id_sucursal>', methods=['GET'])
+def listar_mensajes_web(id_conversacion, id_sucursal):
+    """
+    Lista mensajes y marca como leídos para la sucursal
+    """
+    try:
+        print(f"📨 Listando mensajes web | Conversación: {id_conversacion} | Sucursal: {id_sucursal}")
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # Obtener mensajes
+        cursor.execute("""
+            SELECT 
+                m.id_mensaje,
+                m.id_emisor,
+                m.tipo_emisor,
+                m.contenido,
+                m.tipo_mensaje,
+                m.url_archivo,
+                m.leido,
+                m.fecha_leido,
+                m.created_at,
+                u.nomusuario as nombre_emisor,
+                u.img_logo as img_emisor
+            FROM mensaje m
+            INNER JOIN usuario u ON m.id_emisor = u.id_usuario
+            WHERE m.id_conversacion = %s
+            ORDER BY m.created_at ASC
+        """, (id_conversacion,))
+        
+        mensajes = []
+        for row in cursor.fetchall():
+            mensajes.append({
+                'id_mensaje': row['id_mensaje'],
+                'id_emisor': row['id_emisor'],
+                'tipo_emisor': row['tipo_emisor'],
+                'contenido': row['contenido'],
+                'tipo_mensaje': row['tipo_mensaje'],
+                'url_archivo': row['url_archivo'],
+                'leido': row['leido'],
+                'fecha_leido': row['fecha_leido'].isoformat() if row['fecha_leido'] else None,
+                'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                'nombre_emisor': row['nombre_emisor'],
+                'img_emisor': row['img_emisor']
+            })
+        
+        # Marcar mensajes de usuario como leídos
+        cursor.execute("""
+            UPDATE mensaje
+            SET leido = TRUE,
+                fecha_leido = DATE_TRUNC('minute', LOCALTIMESTAMP)
+            WHERE id_conversacion = %s
+              AND tipo_emisor = 'USUARIO'
+              AND leido = FALSE
+        """, (id_conversacion,))
+        
+        # Resetear contador
+        cursor.execute("""
+            UPDATE conversacion
+            SET mensajes_no_leidos_sucursal = 0
+            WHERE id_conversacion = %s
+        """, (id_conversacion,))
+        
+        con.commit()
+        cursor.close()
+        con.close()
+        
+        print(f"✅ {len(mensajes)} mensajes encontrados")
+        
+        return jsonify({
+            'status': True,
+            'data': mensajes
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error en listar_mensajes_web: {e}")
+        return jsonify({
+            'status': False,
+            'message': str(e)
+        }), 500

@@ -255,6 +255,18 @@ def list_routes():
         })
     return {'routes': sorted(routes, key=lambda x: x['path'])}
 
+# ✅ AGREGAR ESTAS RUTAS DESPUÉS DE LAS RUTAS EXISTENTES
+
+@app.route('/dashboard/chats')
+def dashboard_chats():
+    """Gestión de chats - ACCESO EMPRESAS"""
+    return render_template('chat/lista.html')
+
+@app.route('/dashboard/chat/<int:id_conversacion>')
+def dashboard_chat_conversacion(id_conversacion):
+    """Vista de conversación individual"""
+    return render_template('chat/conversacion.html')
+
 @app.route('/api/info')
 def api_info():
     """Información de la API y configuración de Cloudinary"""
