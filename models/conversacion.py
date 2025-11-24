@@ -1,4 +1,5 @@
 from conexionBD import Conexion
+import json
 
 class Conversacion:
     
@@ -7,6 +8,9 @@ class Conversacion:
         """
         Busca o crea conversación entre usuario y sucursal
         """
+        con = None
+        cursor = None
+        
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -21,41 +25,47 @@ class Conversacion:
             
             resultado = cursor.fetchone()
             
-            if resultado and resultado[0]:
-                conversacion_data = resultado[0]
-                
-                con.commit()
-                cursor.close()
-                con.close()
-                
-                print(f"✅ Conversación obtenida: {conversacion_data.get('id_conversacion')}")
-                
-                return {
-                    'success': True,
-                    'data': conversacion_data
-                }
-            else:
+            # ✅ CORRECCIÓN: Verificar correctamente el resultado
+            if resultado is None or resultado[0] is None:
                 con.rollback()
-                cursor.close()
-                con.close()
-                
                 print("❌ La función no devolvió datos")
                 return {
                     'success': False,
                     'message': 'No se pudo iniciar la conversación'
                 }
+            
+            # Obtener el JSONB (puede ser dict o str)
+            conversacion_data = resultado[0]
+            
+            # Si es string, convertir a dict
+            if isinstance(conversacion_data, str):
+                conversacion_data = json.loads(conversacion_data)
+            
+            con.commit()
+            
+            print(f"✅ Conversación obtenida: {conversacion_data.get('id_conversacion')}")
+            
+            return {
+                'success': True,
+                'data': conversacion_data
+            }
                 
         except Exception as e:
-            print(f"❌ Error en buscar_o_crear: {e}")
-            if 'con' in locals():
+            print(f"❌ Error en buscar_o_crear: {type(e).__name__}: {str(e)}")
+            
+            if con:
                 con.rollback()
-                cursor.close()
-                con.close()
             
             return {
                 'success': False,
-                'message': str(e)
+                'message': f"{type(e).__name__}: {str(e)}"
             }
+        
+        finally:
+            if cursor:
+                cursor.close()
+            if con:
+                con.close()
     
     
     @staticmethod
@@ -63,6 +73,9 @@ class Conversacion:
         """
         Lista todas las conversaciones activas de un usuario
         """
+        con = None
+        cursor = None
+        
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -101,9 +114,6 @@ class Conversacion:
                     }
                 })
             
-            cursor.close()
-            con.close()
-            
             return {
                 'success': True,
                 'data': conversaciones
@@ -111,14 +121,16 @@ class Conversacion:
             
         except Exception as e:
             print(f"❌ Error en listar_por_usuario: {e}")
-            if 'con' in locals():
-                cursor.close()
-                con.close()
-            
             return {
                 'success': False,
                 'message': str(e)
             }
+        
+        finally:
+            if cursor:
+                cursor.close()
+            if con:
+                con.close()
     
     
     @staticmethod
@@ -126,6 +138,9 @@ class Conversacion:
         """
         Obtiene detalles de una conversación específica
         """
+        con = None
+        cursor = None
+        
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -152,8 +167,6 @@ class Conversacion:
             """, (id_conversacion,))
             
             row = cursor.fetchone()
-            cursor.close()
-            con.close()
             
             if row:
                 return {
@@ -180,10 +193,13 @@ class Conversacion:
             
         except Exception as e:
             print(f"❌ Error en obtener_por_id: {e}")
-            if 'con' in locals():
-                cursor.close()
-                con.close()
             return None
+        
+        finally:
+            if cursor:
+                cursor.close()
+            if con:
+                con.close()
     
     
     @staticmethod
@@ -191,6 +207,9 @@ class Conversacion:
         """
         Archiva una conversación (cambia estado a FALSE)
         """
+        con = None
+        cursor = None
+        
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -207,18 +226,12 @@ class Conversacion:
             
             if resultado:
                 con.commit()
-                cursor.close()
-                con.close()
-                
                 return {
                     'success': True,
                     'message': 'Conversación archivada correctamente'
                 }
             else:
                 con.rollback()
-                cursor.close()
-                con.close()
-                
                 return {
                     'success': False,
                     'message': 'No se pudo archivar la conversación'
@@ -226,12 +239,16 @@ class Conversacion:
                 
         except Exception as e:
             print(f"❌ Error en archivar: {e}")
-            if 'con' in locals():
+            if con:
                 con.rollback()
-                cursor.close()
-                con.close()
             
             return {
                 'success': False,
                 'message': str(e)
             }
+        
+        finally:
+            if cursor:
+                cursor.close()
+            if con:
+                con.close()
