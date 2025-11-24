@@ -3,6 +3,20 @@
 {% block title %}Inicio - Centro Comercial Elías Aguirre{% endblock %}
 
 {% block content %}
+<!-- LOADING SCREEN CON LOGO (SOLO PRIMERA VEZ) -->
+<div id="loadingScreen" class="fixed inset-0 bg-gradient-to-br from-red-600 via-red-700 to-red-800 z-[9999] flex items-center justify-center">
+    <div class="text-center">
+        <img 
+            src="/uploads/fotos/aguirre/logo3.png" 
+            alt="Centro Comercial Elías Aguirre" 
+            class="w-72 h-72 object-contain mx-auto mb-8 animate-logo-entrance">
+        <div class="w-64 h-1.5 bg-red-900/30 rounded-full overflow-hidden mx-auto">
+            <div class="loading-bar h-full bg-white rounded-full shadow-lg"></div>
+        </div>
+        <p class="text-white text-lg font-semibold mt-6 animate-pulse">Cargando experiencia de compra...</p>
+    </div>
+</div>
+
 <!-- HERO SECTION CON IMAGEN DE FONDO -->
 <section class="relative py-32 overflow-hidden">
     <!-- Imagen de fondo con overlay -->
@@ -17,22 +31,22 @@
     <!-- Contenido -->
     <div class="container mx-auto px-4 relative z-10">
         <div class="text-center text-white">
-            <h1 class="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg animate-fade-in-down">
                 Tu Destino de Compras en Chiclayo
             </h1>
-            <p class="text-xl md:text-2xl mb-10 drop-shadow-md">
+            <p class="text-xl md:text-2xl mb-10 drop-shadow-md animate-fade-in-up">
                 Encuentra las mejores marcas y productos en un solo lugar
             </p>
             
-            <!-- Buscador -->
-            <div class="max-w-2xl mx-auto">
-                <div class="flex rounded-full overflow-hidden shadow-2xl bg-white">
+            <!-- Buscador Mejorado -->
+            <div class="max-w-2xl mx-auto animate-fade-in">
+                <div class="flex flex-col sm:flex-row items-stretch rounded-2xl overflow-hidden shadow-2xl bg-white">
                     <input 
                         type="text" 
                         id="searchInput" 
                         placeholder="¿Qué estás buscando?" 
-                        class="flex-1 px-8 py-5 text-gray-800 text-lg focus:outline-none">
-                    <button class="bg-red-600 text-white px-10 py-5 font-bold hover:bg-red-700 transition-all">
+                        class="flex-1 px-6 py-4 text-gray-800 text-base focus:outline-none focus:ring-2 focus:ring-red-500">
+                    <button class="bg-red-600 text-white px-8 py-4 font-bold hover:bg-red-700 transition-all hover:shadow-lg sm:px-10">
                         <i class="bi bi-search"></i> Buscar
                     </button>
                 </div>
@@ -72,7 +86,7 @@
             <i class="bi bi-tags-fill"></i>
             <span>Explora por Categorías</span>
         </h2>
-        <a href="/categorias" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2">
+        <a href="/categorias" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2 transition-all hover:gap-3">
             <span>Ver todas</span>
             <i class="bi bi-arrow-right"></i>
         </a>
@@ -80,6 +94,9 @@
     
     <div id="categorias-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Las categorías se cargarán aquí -->
+        <div class="col-span-full flex justify-center items-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        </div>
     </div>
 </section>
 
@@ -114,7 +131,7 @@
                 <i class="bi bi-star-fill"></i>
                 <span>Productos Destacados</span>
             </h2>
-            <a href="/productos" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2">
+            <a href="/productos" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2 transition-all hover:gap-3">
                 <span>Ver todos</span>
                 <i class="bi bi-arrow-right"></i>
             </a>
@@ -122,6 +139,9 @@
         
         <div id="productos-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Los productos se cargarán aquí -->
+            <div class="col-span-full flex justify-center items-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+            </div>
         </div>
     </div>
 </section>
@@ -166,22 +186,138 @@
     <div class="container mx-auto px-4 text-center">
         <h2 class="text-3xl font-bold mb-4">Suscríbete a Nuestro Newsletter</h2>
         <p class="text-xl mb-8 text-gray-300">Recibe las mejores ofertas y novedades en tu correo</p>
-        <div class="max-w-md mx-auto flex rounded-full overflow-hidden shadow-xl">
+        <div class="max-w-md mx-auto flex flex-col sm:flex-row rounded-2xl overflow-hidden shadow-xl">
             <input 
                 type="email" 
                 placeholder="Tu correo electrónico" 
-                class="flex-1 px-6 py-4 text-gray-800 focus:outline-none">
+                class="flex-1 px-6 py-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
             <button class="bg-red-600 text-white px-8 py-4 font-bold hover:bg-red-700 transition">
                 Suscribirse
             </button>
         </div>
     </div>
 </section>
+
+<style>
+/* ANIMACIONES PERSONALIZADAS */
+@keyframes fade-in-down {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes logo-entrance {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) rotate(-10deg);
+    }
+    50% {
+        transform: scale(1.05) rotate(2deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+@keyframes loading-bar-animation {
+    0% {
+        width: 0%;
+    }
+    100% {
+        width: 100%;
+    }
+}
+
+.animate-fade-in-down {
+    animation: fade-in-down 1s ease-out;
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 1s ease-out 0.3s both;
+}
+
+.animate-fade-in {
+    animation: fade-in 1s ease-out 0.6s both;
+}
+
+.animate-logo-entrance {
+    animation: logo-entrance 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.loading-bar {
+    animation: loading-bar-animation 2s ease-in-out forwards;
+}
+
+/* LOADING SCREEN */
+#loadingScreen {
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+#loadingScreen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
 const API_URL = window.CONFIG.API_URL;
+
+// ==================== LOADING SCREEN (SOLO PRIMERA VEZ) ====================
+const LOADING_SHOWN_KEY = 'loadingScreenShown';
+
+window.addEventListener('DOMContentLoaded', function() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const hasShownLoading = sessionStorage.getItem(LOADING_SHOWN_KEY);
+    
+    if (hasShownLoading) {
+        // Ya se mostró en esta sesión, ocultar inmediatamente
+        console.log('🚀 Loading screen ya se mostró en esta sesión, saltando...');
+        loadingScreen.remove();
+    } else {
+        // Primera vez en esta sesión, mostrar loading
+        console.log('🎬 Mostrando loading screen por primera vez...');
+        
+        setTimeout(() => {
+            loadingScreen.classList.add('fade-out');
+            
+            // Marcar como mostrado en esta sesión
+            sessionStorage.setItem(LOADING_SHOWN_KEY, 'true');
+            
+            setTimeout(() => {
+                loadingScreen.remove();
+                console.log('✅ Loading screen completado');
+            }, 500);
+        }, 2500); // 2.5 segundos
+    }
+});
 
 // ==================== CARGAR CATEGORÍAS ====================
 fetch(`${API_URL}/categorias/listar`)
@@ -192,7 +328,6 @@ fetch(`${API_URL}/categorias/listar`)
         if (data.status && data.data && data.data.length > 0) {
             container.innerHTML = '';
             data.data.forEach(cat => {
-                // ✅ CLOUDINARY: Usar URL directa
                 const imgUrl = cat.imagen || 'https://via.placeholder.com/300x200?text=Sin+Imagen';
                 
                 container.innerHTML += `
@@ -202,7 +337,7 @@ fetch(`${API_URL}/categorias/listar`)
                                 src="${imgUrl}" 
                                 alt="${cat.nombreCategoria}"
                                 class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
-                                onerror="this.src='https://via.placeholder.com/300x200?text=${cat.nombreCategoria}'">
+                                onerror="this.src='https://via.placeholder.com/300x200?text=${encodeURIComponent(cat.nombreCategoria)}'">
                         </div>
                         <div class="p-4 text-center">
                             <h5 class="text-lg font-bold text-red-600 group-hover:text-red-700">${cat.nombreCategoria}</h5>

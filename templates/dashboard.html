@@ -40,17 +40,28 @@
             <nav class="p-4">
                 <ul class="space-y-2">
                     <li><a href="/dashboard" class="sidebar-link active flex items-center space-x-2 p-3 rounded"><i class="bi bi-house-door"></i><span>Inicio</span></a></li>
-                    <li><a href="/dashboard/roles" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-person-badge"></i><span>Roles</span></a></li>
-                    <li><a href="/dashboard/categorias" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-tags"></i><span>Categorías</span></a></li>
-                    <li><a href="/dashboard/empresas" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-building"></i><span>Empresas</span></a></li>
-                    <li><a href="/dashboard/marcas" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-bookmark"></i><span>Marcas</span></a></li>
-                    <li><a href="/dashboard/tipos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-grid"></i><span>Tipos de Producto</span></a></li>
-                    <li><a href="/dashboard/modelos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-layers"></i><span>Modelos</span></a></li>
-                    <li><a href="/dashboard/colores" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-palette"></i><span>Colores</span></a></li>
-                    <li><a href="/dashboard/productos-color" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-grid-3x3-gap"></i><span>Variantes</span></a></li>
-                    <li><a href="/dashboard/productos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-box-seam"></i><span>Productos</span></a></li>
-                    <li><a href="/dashboard/temporadas" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-calendar-event"></i><span>Temporadas</span></a></li>
-                    <li><a href="/dashboard/departamentos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-geo-alt"></i><span>Departamentos</span></a></li>
+                    
+                    <!-- ✅ SOLO PARA ADMIN -->
+                    <li class="link-admin"><a href="/dashboard/roles" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-person-badge"></i><span>Roles</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/categorias" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-tags"></i><span>Categorías</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/empresas" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-building"></i><span>Empresas</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/marcas" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-bookmark"></i><span>Marcas</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/tipos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-grid"></i><span>Tipos de Producto</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/modelos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-layers"></i><span>Modelos</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/colores" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-palette"></i><span>Colores</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/temporadas" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-calendar-event"></i><span>Temporadas</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/departamentos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-geo-alt"></i><span>Departamentos</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/usuarios" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-people"></i><span>Usuarios</span></a></li>
+                    <li class="link-admin"><a href="/dashboard/preguntas-frecuentes" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-question-circle"></i><span>Preguntas Frecuentes</span></a></li>
+                    
+                    <!-- ✅ PARA EMPRESA + CLIENTE -->
+                    <li class="link-empresa"><a href="/dashboard/empresa" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-building"></i><span>Mi Empresa</span></a></li>
+                    <li class="link-empresa"><a href="/dashboard/sucursales" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-shop"></i><span>Sucursales</span></a></li>
+                    <li class="link-empresa"><a href="/dashboard/horarios-sucursal" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-clock-history"></i><span>Horarios</span></a></li>
+                    <li class="link-empresa"><a href="/dashboard/productos" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-box-seam"></i><span>Productos</span></a></li>
+                    <li class="link-empresa"><a href="/dashboard/productos-color" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-grid-3x3-gap"></i><span>Variantes</span></a></li>
+                    <li class="link-empresa"><a href="/dashboard/cupones" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-ticket-perforated"></i><span>Cupones</span></a></li>
+                    
                     <li class="border-t border-red-500 pt-2 mt-2"><a href="/" class="sidebar-link flex items-center space-x-2 p-3 rounded"><i class="bi bi-house"></i><span>Volver al Inicio</span></a></li>
                 </ul>
             </nav>
@@ -101,15 +112,14 @@
                 </div>
 
                 <!-- CATÁLOGOS Y CLASIFICACIONES -->
-                <div class="bg-white rounded-lg shadow-md mb-6">
+                <div class="bg-white rounded-lg shadow-md mb-6 section-admin">
                     <div class="section-header p-4 flex items-center justify-between" onclick="toggleSection('catalogos')">
                         <h3 class="text-xl font-bold text-gray-800 flex items-center"><i class="bi bi-bookmarks text-red-600 mr-3"></i>Catálogos y Clasificaciones</h3>
                         <i class="bi bi-chevron-down text-2xl text-gray-600 rotate-icon" id="icon-catalogos"></i>
                     </div>
                     <div class="section-content active p-6" id="section-catalogos">
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/categorias'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border" onclick="window.location.href='/dashboard/categorias'">
                                 <div class="text-center">
                                     <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-tags text-3xl text-purple-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Categorías</h5>
@@ -118,8 +128,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/marcas'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border" onclick="window.location.href='/dashboard/marcas'">
                                 <div class="text-center">
                                     <div class="bg-cyan-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-bookmark text-3xl text-cyan-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Marcas</h5>
@@ -128,8 +137,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/tipos'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border" onclick="window.location.href='/dashboard/tipos'">
                                 <div class="text-center">
                                     <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-grid text-3xl text-orange-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Tipos de Producto</h5>
@@ -138,8 +146,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/modelos'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border" onclick="window.location.href='/dashboard/modelos'">
                                 <div class="text-center">
                                     <div class="bg-lime-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-layers text-3xl text-lime-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Modelos</h5>
@@ -148,8 +155,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/temporadas'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border" onclick="window.location.href='/dashboard/temporadas'">
                                 <div class="text-center">
                                     <div class="bg-teal-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-calendar-event text-3xl text-teal-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Temporadas</h5>
@@ -169,8 +175,7 @@
                     </div>
                     <div class="section-content active p-6" id="section-productos">
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" onclick="window.location.href='/dashboard/productos'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border" onclick="window.location.href='/dashboard/productos'">
                                 <div class="text-center">
                                     <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-box-seam text-3xl text-green-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Productos</h5>
@@ -179,8 +184,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/colores'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin" onclick="window.location.href='/dashboard/colores'">
                                 <div class="text-center">
                                     <div class="bg-rose-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-palette text-3xl text-rose-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Colores</h5>
@@ -189,8 +193,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" onclick="window.location.href='/dashboard/productos-color'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border" onclick="window.location.href='/dashboard/productos-color'">
                                 <div class="text-center">
                                     <div class="bg-violet-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-grid-3x3-gap text-3xl text-violet-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Variantes</h5>
@@ -199,7 +202,7 @@
                                 </div>
                             </div>
 
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" onclick="window.location.href='/dashboard/cupones'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border" onclick="window.location.href='/dashboard/cupones'">
                                 <div class="text-center">
                                     <div class="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <i class="bi bi-ticket-perforated text-3xl text-yellow-600"></i>
@@ -225,8 +228,7 @@
                     </div>
                     <div class="section-content active p-6" id="section-usuarios">
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/roles'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin" onclick="window.location.href='/dashboard/roles'">
                                 <div class="text-center">
                                     <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-person-badge text-3xl text-red-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Roles</h5>
@@ -235,8 +237,7 @@
                                 </div>
                             </div>
 
-                            <!-- Usuarios -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/usuarios'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin" onclick="window.location.href='/dashboard/usuarios'">
                                 <div class="text-center">
                                     <div class="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <i class="bi bi-people text-3xl text-emerald-600"></i>
@@ -251,8 +252,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" style="display:none" id="cardSucursales" onclick="window.location.href='/dashboard/sucursales'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-empresa" style="display:none" onclick="window.location.href='/dashboard/sucursales'">
                                 <div class="text-center">
                                     <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-shop text-3xl text-indigo-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Mis Sucursales</h5>
@@ -261,8 +261,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" id="cardMiEmpresa" style="display:none" onclick="window.location.href='/dashboard/empresa'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-empresa" style="display:none" onclick="window.location.href='/dashboard/empresa'">
                                 <div class="text-center">
                                     <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <i class="bi bi-building text-3xl text-blue-600"></i>
@@ -277,8 +276,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA ADMIN+EMPRESA -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-cliente-empresa" onclick="window.location.href='/dashboard/horarios-sucursal'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-empresa" style="display:none" onclick="window.location.href='/dashboard/horarios-sucursal'">
                                 <div class="text-center">
                                     <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <i class="bi bi-clock-history text-3xl text-indigo-600"></i>
@@ -293,8 +291,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/preguntas-frecuentes'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin" onclick="window.location.href='/dashboard/preguntas-frecuentes'">
                                 <div class="text-center">
                                     <div class="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <i class="bi bi-question-circle text-3xl text-amber-600"></i>
@@ -309,8 +306,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ OCULTAR PARA EMPRESA+CLIENTE -->
-                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin-empresa" onclick="window.location.href='/dashboard/empresas'">
+                            <div class="module-card bg-white p-6 rounded-lg shadow-md border card-admin" onclick="window.location.href='/dashboard/empresas'">
                                 <div class="text-center">
                                     <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-building text-3xl text-blue-600"></i></div>
                                     <h5 class="text-lg font-bold text-gray-800 mb-2">Empresas</h5>
@@ -345,7 +341,6 @@
             icon.classList.toggle('active');
         }
 
-        // LÍNEA 323 - Reemplazar toda la función cargarDatosEmpresa
         (async function cargarDatosEmpresa() {
             const userStr = localStorage.getItem('user');
             if (!userStr) {
@@ -365,22 +360,82 @@
                 // ✅ LÓGICA DE VISIBILIDAD
                 if (esEmpresa && esCliente) {
                     console.log('👤 Rol: EMPRESA + CLIENTE');
-                    document.querySelectorAll('.card-admin-empresa').forEach(card => {
+                    
+                    // Ocultar secciones de admin en sidebar
+                    document.querySelectorAll('.link-admin').forEach(link => {
+                        link.style.display = 'none';
+                    });
+                    
+                    // Mostrar enlaces de empresa
+                    document.querySelectorAll('.link-empresa').forEach(link => {
+                        link.style.display = 'block';
+                    });
+                    
+                    // Ocultar sección completa de catálogos
+                    document.querySelectorAll('.section-admin').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    
+                    // Ocultar cards de admin
+                    document.querySelectorAll('.card-admin').forEach(card => {
                         card.style.display = 'none';
                     });
-                    document.querySelectorAll('.card-cliente-empresa').forEach(card => {
+                    
+                    // Mostrar cards de empresa
+                    document.querySelectorAll('.card-empresa').forEach(card => {
                         card.style.display = 'block';
                     });
-                    document.getElementById('cardSucursales').style.display = 'block';
-                    document.getElementById('cardMiEmpresa').style.display = 'block';
                     
                 } else if (esAdmin && esEmpresa) {
                     console.log('👨‍💼 Rol: ADMIN + EMPRESA');
-                    document.querySelectorAll('.card-cliente-empresa').forEach(card => {
+                    
+                    // Mostrar todo para admin
+                    document.querySelectorAll('.link-admin').forEach(link => {
+                        link.style.display = 'block';
+                    });
+                    
+                    // Ocultar enlaces específicos de empresa
+                    document.querySelectorAll('.link-empresa').forEach(link => {
+                        link.style.display = 'none';
+                    });
+                    
+                    // Mostrar secciones de admin
+                    document.querySelectorAll('.section-admin').forEach(section => {
+                        section.style.display = 'block';
+                    });
+                    
+                    // Mostrar cards de admin
+                    document.querySelectorAll('.card-admin').forEach(card => {
+                        card.style.display = 'block';
+                    });
+                    
+                    // Ocultar cards de empresa
+                    document.querySelectorAll('.card-empresa').forEach(card => {
                         card.style.display = 'none';
                     });
-                    document.querySelectorAll('.card-admin-empresa').forEach(card => {
+                    
+                } else if (esAdmin && !esEmpresa) {
+                    console.log('👨‍💼 Rol: ADMIN PURO');
+                    
+                    // Mostrar todo para admin
+                    document.querySelectorAll('.link-admin').forEach(link => {
+                        link.style.display = 'block';
+                    });
+                    
+                    document.querySelectorAll('.link-empresa').forEach(link => {
+                        link.style.display = 'none';
+                    });
+                    
+                    document.querySelectorAll('.section-admin').forEach(section => {
+                        section.style.display = 'block';
+                    });
+                    
+                    document.querySelectorAll('.card-admin').forEach(card => {
                         card.style.display = 'block';
+                    });
+                    
+                    document.querySelectorAll('.card-empresa').forEach(card => {
+                        card.style.display = 'none';
                     });
                 }
 
@@ -397,7 +452,6 @@
                         const empresa = data.data;
                         document.getElementById('empresaNombre').textContent = empresa.nombre_comercial || empresa.razon_social;
                         
-                        // ✅ CLOUDINARY: Usar URL directa
                         if (empresa.img_logo) {
                             document.getElementById('empresaLogo').src = empresa.img_logo;
                         }
@@ -405,7 +459,7 @@
                         if (esAdmin && esEmpresa) {
                             document.getElementById('rolBadge').textContent = 'Administrador + Empresa';
                         } else if (esCliente && esEmpresa) {
-                            document.getElementById('rolBadge').textContent = 'Cliente + Empresa';
+                            document.getElementById('rolBadge').textContent = 'Empresa';
                         } else {
                             document.getElementById('rolBadge').textContent = 'Empresa';
                         }
@@ -415,8 +469,6 @@
                 console.error('Error al cargar datos de empresa:', e);
             }
         })();
-    
-    
     </script>
 </body>
 </html>
