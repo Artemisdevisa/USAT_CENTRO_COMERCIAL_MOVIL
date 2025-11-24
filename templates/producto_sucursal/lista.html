@@ -34,6 +34,51 @@
         .page-title { font-size: 1.75rem; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 0.625rem; }
         .page-title i { color: #dc2626; }
         
+        /* Header Actions */
+        .header-actions { 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+        }
+        
+        /* Dropdown de Sucursales */
+        .sucursal-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .sucursal-dropdown select {
+            padding: 0.625rem 2.5rem 0.625rem 1rem;
+            border: 1.5px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: white;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            min-width: 200px;
+        }
+        
+        .sucursal-dropdown select:hover {
+            border-color: #dc2626;
+        }
+        
+        .sucursal-dropdown select:focus {
+            outline: none;
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
+        }
+        
+        .sucursal-dropdown i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #6b7280;
+        }
+        
         /* Main */
         .main-content { padding: 2rem; }
         .card { background: white; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
@@ -134,7 +179,21 @@
         <main id="content">
             <header class="page-header">
                 <h1 class="page-title"><i class="bi bi-box-seam"></i>Mantenimiento de Productos</h1>
-                <button class="btn btn-primary" onclick="abrirModal()"><i class="bi bi-plus-circle"></i>Nuevo Producto</button>
+                
+                <!-- Header Actions: Dropdown + Botón -->
+                <div class="header-actions">
+                    <!-- Dropdown de Sucursales -->
+                    <div class="sucursal-dropdown">
+                        <select id="filtroSucursal" onchange="filtrarPorSucursal()">
+                            <option value="">Todas las sucursales</option>
+                        </select>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="abrirModal()">
+                        <i class="bi bi-plus-circle"></i>Nuevo Producto
+                    </button>
+                </div>
             </header>
             
             <div class="main-content">
@@ -212,6 +271,7 @@
                     <label class="form-label fw-semibold">Modelo del Producto *</label>
                     <select class="form-control mb-3" id="id_tipo_modelo">
                         <option value="">Seleccione un modelo</option>
+                    </select>
                     
                     <label class="form-label fw-semibold">Nombre del Producto *</label>
                     <input type="text" class="form-control mb-3" id="nombre" maxlength="200" placeholder="Ej: Camisa Royal Elegante">
@@ -276,11 +336,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- CARGAR CONFIG PRIMERO -->
     <script src="/static/js/config.js"></script>
-
-    <!-- ✅ AGREGAR UTILS DESPUÉS DE CONFIG -->
     <script src="/static/js/utils.js"></script>
     
     <script>
@@ -294,6 +350,7 @@
     let modelos = [];
     let modalInstance = null;
     let ID_EMPRESA = null;
+    let productosCompletos = [];
 
     function toast(msg, type = 'success') {
         const container = document.getElementById('toastContainer');
@@ -332,35 +389,43 @@
         });
     }
 
-    // Initialize - SIN VALIDACIÓN DE AUTENTICACIÓN
-    // ✅ INICIALIZAR CON EMPRESA DEL USUARIO
     (async () => {
-        console.log('✅ Módulo de productos cargado');
-        console.log('🔧 API URL:', API);
+        console.log('%c='.repeat(60), 'color: blue; font-weight: bold');
+        console.log('%c📦 MÓDULO DE PRODUCTOS CARGADO', 'color: blue; font-weight: bold; font-size: 14px');
+        console.log('%c='.repeat(60), 'color: blue; font-weight: bold');
         
-        // ✅ OBTENER EMPRESA DEL USUARIO LOGUEADO
         const userStr = localStorage.getItem('user');
         
         if (!userStr) {
-            console.error('❌ No hay usuario en localStorage');
+            console.error('%c❌ NO HAY USUARIO EN LOCALSTORAGE', 'color: red; font-weight: bold');
             toast('⚠️ No se encontró sesión activa', 'warning');
-        } else {
-            try {
-                const user = JSON.parse(userStr);
-                console.log('👤 Usuario completo:', user);
-                
-                ID_EMPRESA = user.id_empresa;
-                console.log('🏢 ID Empresa extraído:', ID_EMPRESA);
-                
-                if (!ID_EMPRESA) {
-                    console.warn('⚠️ El usuario no tiene id_empresa asociado');
-                    toast('⚠️ Este usuario no tiene empresa asociada', 'warning');
-                }
-            } catch (e) {
-                console.error('❌ Error al parsear usuario:', e);
-                toast('❌ Error al cargar datos de usuario', 'error');
-            }
+            setTimeout(() => window.location.href = '/login', 2000);
+            return;
         }
+        
+        try {
+            const user = JSON.parse(userStr);
+            
+            console.log('%c👤 USUARIO:', 'color: green; font-weight: bold');
+            console.table({
+                'ID Usuario': user.id_usuario,
+                'Email': user.email,
+                'ID Empresa': user.id_empresa || 'NULL',
+                'Roles': user.roles?.map(r => r.nombre).join(', ') || 'Sin roles'
+            });
+            
+            ID_EMPRESA = user.id_empresa;
+            
+            if (!ID_EMPRESA) {
+                console.warn('%c⚠️ USUARIO SIN EMPRESA', 'color: orange; font-weight: bold');
+                toast('⚠️ Este usuario no tiene empresa asociada', 'warning');
+            }
+            
+        } catch (e) {
+            console.error('%c❌ ERROR AL PARSEAR USUARIO:', 'color: red; font-weight: bold', e);
+        }
+        
+        console.log('%c='.repeat(60), 'color: blue; font-weight: bold');
         
         modalInstance = new bootstrap.Modal(document.getElementById('modal'));
         
@@ -368,10 +433,8 @@
         await cargar();
     })();
 
-
     async function cargarDatosAuxiliares() {
         try {
-            // ✅ AGREGAR id_empresa A LAS REQUESTS
             const queryEmpresa = ID_EMPRESA ? `?id_empresa=${ID_EMPRESA}` : '';
             
             const [r1, r2, r3, r4, r5] = await Promise.all([
@@ -388,13 +451,24 @@
             const d4 = await r4.json();
             const d5 = await r5.json();
             
-            if (d1.status) {
+            console.log('🏪 Sucursales recibidas:', d1);
+            
+            if (d1.status && d1.data) {
                 sucursales = d1.data;
-                const select = document.getElementById('id_sucursal');
-                select.innerHTML = '<option value="">Seleccione una sucursal</option>';
+                
+                const selectModal = document.getElementById('id_sucursal');
+                selectModal.innerHTML = '<option value="">Seleccione una sucursal</option>';
                 sucursales.forEach(s => {
-                    select.innerHTML += `<option value="${s.id_sucursal}">${s.nombre}</option>`;
+                    selectModal.innerHTML += `<option value="${s.id_sucursal}">${s.nombre}</option>`;
                 });
+                
+                const selectFiltro = document.getElementById('filtroSucursal');
+                selectFiltro.innerHTML = '<option value="">Todas las sucursales</option>';
+                sucursales.forEach(s => {
+                    selectFiltro.innerHTML += `<option value="${s.id_sucursal}">${s.nombre}</option>`;
+                });
+                
+                console.log('✅ Sucursales cargadas:', sucursales.length);
             }
             
             if (d2.status) {
@@ -439,28 +513,14 @@
 
     async function cargar() {
         try {
-            console.log('=' .repeat(60));
-            console.log('📡 INICIANDO CARGA DE PRODUCTOS');
-            console.log('=' .repeat(60));
-            console.log('🏢 ID_EMPRESA actual:', ID_EMPRESA);
-            
-            // ✅ CONSTRUIR QUERY PARAM
             const queryEmpresa = ID_EMPRESA ? `?id_empresa=${ID_EMPRESA}` : '';
-            console.log('🔗 Query param:', queryEmpresa);
             
-            const url1 = `${API}/productos-sucursal/listar${queryEmpresa}`;
-            const url2 = `${API}/productos-sucursal/estadisticas${queryEmpresa}`;
-            
-            console.log('📡 URL 1:', url1);
-            console.log('📡 URL 2:', url2);
+            console.log('📡 Cargando productos desde:', `${API}/productos-sucursal/listar${queryEmpresa}`);
             
             const [r1, r2] = await Promise.all([
-                fetch(url1),
-                fetch(url2)
+                fetch(`${API}/productos-sucursal/listar${queryEmpresa}`),
+                fetch(`${API}/productos-sucursal/estadisticas${queryEmpresa}`)
             ]);
-            
-            console.log('📥 Status respuesta 1:', r1.status);
-            console.log('📥 Status respuesta 2:', r2.status);
             
             if (!r1.ok || !r2.ok) {
                 throw new Error(`HTTP error! status: ${r1.status}, ${r2.status}`);
@@ -471,8 +531,6 @@
             
             console.log('✅ Productos recibidos:', d1);
             console.log('✅ Total productos:', d1.data?.length || 0);
-            console.log('✅ Estadísticas recibidas:', d2);
-            console.log('=' .repeat(60));
             
             if (!d1.status) {
                 toast(d1.message, 'error');
@@ -484,11 +542,29 @@
             }
             
             stats = d2.status ? d2.data : [];
-            renderizar(d1.data);
+            productosCompletos = d1.data || [];
+            renderizar(productosCompletos);
         } catch (e) {
             console.error('❌ Error al cargar productos:', e);
             toast('Error al cargar los productos: ' + e.message, 'error');
         }
+    }
+
+    function filtrarPorSucursal() {
+        const idSucursal = document.getElementById('filtroSucursal').value;
+        
+        console.log('🔍 Filtrando por sucursal:', idSucursal || 'Todas');
+        
+        let productosFiltrados;
+        
+        if (!idSucursal) {
+            productosFiltrados = productosCompletos;
+        } else {
+            productosFiltrados = productosCompletos.filter(p => p.id_sucursal == idSucursal);
+        }
+        
+        console.log('✅ Productos filtrados:', productosFiltrados.length);
+        renderizar(productosFiltrados);
     }
 
     function renderizar(data) {
