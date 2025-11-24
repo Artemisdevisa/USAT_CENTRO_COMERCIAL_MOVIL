@@ -13,19 +13,18 @@ ws_conversacion = Blueprint('conversacion', __name__)
 def iniciar_conversacion():
     """
     Iniciar o recuperar conversación entre usuario y sucursal
-    Body: {
-        "id_usuario": 1,
-        "id_sucursal": 3
-    }
     """
     try:
         data = request.json
         id_usuario = data.get('id_usuario')
         id_sucursal = data.get('id_sucursal')
         
-        print(f"📩 Iniciando conversación | Usuario: {id_usuario} | Sucursal: {id_sucursal}")
+        print(f"📩 POST /conversacion/iniciar")
+        print(f"   Usuario: {id_usuario}")
+        print(f"   Sucursal: {id_sucursal}")
         
         if not id_usuario or not id_sucursal:
+            print("❌ Faltan datos requeridos")
             return jsonify({
                 'status': False,
                 'message': 'Faltan datos requeridos'
@@ -33,21 +32,27 @@ def iniciar_conversacion():
         
         resultado = Conversacion.buscar_o_crear(id_usuario, id_sucursal)
         
+        print(f"📤 Resultado Model:")
+        print(f"   Success: {resultado.get('success')}")
+        print(f"   Data: {resultado.get('data')}")
+        
         if resultado.get('success'):
-            print(f"✅ Conversación iniciada: {resultado.get('data', {}).get('id_conversacion')}")
             return jsonify({
                 'status': True,
-                'data': resultado.get('data')
+                'data': resultado.get('data'),
+                'message': 'Conversación iniciada correctamente'
             }), 200
         else:
-            print(f"❌ Error: {resultado.get('message')}")
             return jsonify({
                 'status': False,
                 'message': resultado.get('message')
             }), 400
             
     except Exception as e:
-        print(f"❌ Error en iniciar_conversacion: {e}")
+        print(f"❌ EXCEPTION en route: {e}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'status': False,
             'message': str(e)
