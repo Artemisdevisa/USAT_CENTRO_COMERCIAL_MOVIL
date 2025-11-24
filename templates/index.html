@@ -3,21 +3,6 @@
 {% block title %}Inicio - Centro Comercial Elías Aguirre{% endblock %}
 
 {% block content %}
-<!-- LOADING SCREEN CON LOGO -->
-<div id="loadingScreen" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
-    <div class="text-center">
-        <img 
-            src="/uploads/fotos/aguirre/logo3.png" 
-            alt="Centro Comercial Elías Aguirre" 
-            class="w-64 h-64 object-contain mx-auto animate-pulse-slow">
-        <div class="mt-8">
-            <div class="w-48 h-1 bg-gray-800 rounded-full overflow-hidden mx-auto">
-                <div class="loading-bar h-full bg-red-600 rounded-full"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- HERO SECTION CON IMAGEN DE FONDO -->
 <section class="relative py-32 overflow-hidden">
     <!-- Imagen de fondo con overlay -->
@@ -32,22 +17,22 @@
     <!-- Contenido -->
     <div class="container mx-auto px-4 relative z-10">
         <div class="text-center text-white">
-            <h1 class="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg animate-fade-in-down">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg">
                 Tu Destino de Compras en Chiclayo
             </h1>
-            <p class="text-xl md:text-2xl mb-10 drop-shadow-md animate-fade-in-up">
+            <p class="text-xl md:text-2xl mb-10 drop-shadow-md">
                 Encuentra las mejores marcas y productos en un solo lugar
             </p>
             
             <!-- Buscador -->
-            <div class="max-w-3xl mx-auto animate-fade-in">
-                <div class="flex flex-col sm:flex-row rounded-2xl overflow-hidden shadow-2xl bg-white">
+            <div class="max-w-2xl mx-auto">
+                <div class="flex rounded-full overflow-hidden shadow-2xl bg-white">
                     <input 
                         type="text" 
                         id="searchInput" 
                         placeholder="¿Qué estás buscando?" 
-                        class="flex-1 px-6 py-4 text-gray-800 text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-red-500">
-                    <button class="bg-red-600 text-white px-8 py-4 font-bold hover:bg-red-700 transition-all hover:shadow-lg">
+                        class="flex-1 px-8 py-5 text-gray-800 text-lg focus:outline-none">
+                    <button class="bg-red-600 text-white px-10 py-5 font-bold hover:bg-red-700 transition-all">
                         <i class="bi bi-search"></i> Buscar
                     </button>
                 </div>
@@ -87,7 +72,7 @@
             <i class="bi bi-tags-fill"></i>
             <span>Explora por Categorías</span>
         </h2>
-        <a href="/categorias" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2 transition-all hover:gap-3">
+        <a href="/categorias" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2">
             <span>Ver todas</span>
             <i class="bi bi-arrow-right"></i>
         </a>
@@ -95,9 +80,6 @@
     
     <div id="categorias-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Las categorías se cargarán aquí -->
-        <div class="col-span-full flex justify-center items-center py-12">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-        </div>
     </div>
 </section>
 
@@ -132,7 +114,7 @@
                 <i class="bi bi-star-fill"></i>
                 <span>Productos Destacados</span>
             </h2>
-            <a href="/productos" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2 transition-all hover:gap-3">
+            <a href="/productos" class="text-red-600 hover:text-red-700 font-semibold flex items-center space-x-2">
                 <span>Ver todos</span>
                 <i class="bi bi-arrow-right"></i>
             </a>
@@ -140,9 +122,6 @@
         
         <div id="productos-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Los productos se cargarán aquí -->
-            <div class="col-span-full flex justify-center items-center py-12">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-            </div>
         </div>
     </div>
 </section>
@@ -187,126 +166,22 @@
     <div class="container mx-auto px-4 text-center">
         <h2 class="text-3xl font-bold mb-4">Suscríbete a Nuestro Newsletter</h2>
         <p class="text-xl mb-8 text-gray-300">Recibe las mejores ofertas y novedades en tu correo</p>
-        <div class="max-w-md mx-auto flex flex-col sm:flex-row rounded-2xl overflow-hidden shadow-xl">
+        <div class="max-w-md mx-auto flex rounded-full overflow-hidden shadow-xl">
             <input 
                 type="email" 
                 placeholder="Tu correo electrónico" 
-                class="flex-1 px-6 py-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500">
+                class="flex-1 px-6 py-4 text-gray-800 focus:outline-none">
             <button class="bg-red-600 text-white px-8 py-4 font-bold hover:bg-red-700 transition">
                 Suscribirse
             </button>
         </div>
     </div>
 </section>
-
-<style>
-/* ANIMACIONES PERSONALIZADAS */
-@keyframes fade-in-down {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fade-in-up {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fade-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes loading-bar-animation {
-    0% {
-        width: 0%;
-    }
-    100% {
-        width: 100%;
-    }
-}
-
-@keyframes pulse-slow {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.8;
-        transform: scale(1.05);
-    }
-}
-
-.animate-fade-in-down {
-    animation: fade-in-down 1s ease-out;
-}
-
-.animate-fade-in-up {
-    animation: fade-in-up 1s ease-out 0.3s both;
-}
-
-.animate-fade-in {
-    animation: fade-in 1s ease-out 0.6s both;
-}
-
-.loading-bar {
-    animation: loading-bar-animation 2s ease-in-out forwards;
-}
-
-.animate-pulse-slow {
-    animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* LOADING SCREEN */
-#loadingScreen {
-    transition: opacity 0.5s ease-out;
-}
-
-#loadingScreen.fade-out {
-    opacity: 0;
-    pointer-events: none;
-}
-</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
 const API_URL = window.CONFIG.API_URL;
-
-// ==================== LOADING SCREEN ====================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎬 Iniciando loading screen...');
-    
-    // Ocultar loading después de 2 segundos
-    setTimeout(() => {
-        const loadingScreen = document.getElementById('loadingScreen');
-        if (loadingScreen) {
-            console.log('✅ Ocultando loading screen...');
-            loadingScreen.classList.add('fade-out');
-            
-            // Remover del DOM después de la transición
-            setTimeout(() => {
-                loadingScreen.remove();
-                console.log('✅ Loading screen removido del DOM');
-            }, 500);
-        }
-    }, 2000);
-});
 
 // ==================== CARGAR CATEGORÍAS ====================
 fetch(`${API_URL}/categorias/listar`)
@@ -327,7 +202,7 @@ fetch(`${API_URL}/categorias/listar`)
                                 src="${imgUrl}" 
                                 alt="${cat.nombreCategoria}"
                                 class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
-                                onerror="this.src='https://via.placeholder.com/300x200?text=${encodeURIComponent(cat.nombreCategoria)}'">
+                                onerror="this.src='https://via.placeholder.com/300x200?text=${cat.nombreCategoria}'">
                         </div>
                         <div class="p-4 text-center">
                             <h5 class="text-lg font-bold text-red-600 group-hover:text-red-700">${cat.nombreCategoria}</h5>

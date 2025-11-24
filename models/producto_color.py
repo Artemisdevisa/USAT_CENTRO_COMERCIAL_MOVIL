@@ -6,8 +6,8 @@ class ProductoColor:
     def __init__(self):
         pass
     
-    def listar_todos(self):
-        """Lista TODOS los productos_color con URLs de Cloudinary"""
+    def listar_todos(self, id_empresa=None):
+        """Lista TODOS los productos_color con filtro opcional por empresa"""
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -25,17 +25,26 @@ class ProductoColor:
                     pc.url_img,
                     pc.estado,
                     m.nombre as nombre_marca,
-                    cat.nombre as nombre_categoria
+                    cat.nombre as nombre_categoria,
+                    s.id_sucursal,
+                    s.nombre as nombre_sucursal,
+                    s.id_empresa
                 FROM producto_color pc
                 INNER JOIN producto_sucursal ps ON pc.id_prod_sucursal = ps.id_prod_sucursal
+                INNER JOIN sucursal s ON ps.id_sucursal = s.id_sucursal
                 INNER JOIN color c ON pc.id_color = c.id_color
                 LEFT JOIN marca m ON ps.id_marca = m.id_marca
                 LEFT JOIN categoria_producto cat ON ps.id_categoria = cat.id_categoria
                 WHERE pc.estado = TRUE
-                ORDER BY pc.id_prod_color DESC
             """
             
-            cursor.execute(sql)
+            # ✅ FILTRO POR EMPRESA
+            if id_empresa:
+                sql += " AND s.id_empresa = %s"
+                cursor.execute(sql + " ORDER BY pc.id_prod_color DESC", [id_empresa])
+            else:
+                cursor.execute(sql + " ORDER BY pc.id_prod_color DESC")
+            
             resultado = cursor.fetchall()
             
             cursor.close()
@@ -45,7 +54,6 @@ class ProductoColor:
                 productos_color = []
                 
                 for row in resultado:
-                    # ✅ CLOUDINARY: URL ya viene completa desde la BD
                     url_img = row['url_img'] if row['url_img'] else ''
                     
                     productos_color.append({
@@ -57,10 +65,13 @@ class ProductoColor:
                         'talla': row['talla'],
                         'precio': float(row['precio']) if row['precio'] else 0.0,
                         'stock': row['stock'],
-                        'url_img': url_img,  # URL directa de Cloudinary
+                        'url_img': url_img,
                         'estado': row['estado'],
                         'nombre_marca': row['nombre_marca'] if row['nombre_marca'] else '',
-                        'nombre_categoria': row['nombre_categoria'] if row['nombre_categoria'] else ''
+                        'nombre_categoria': row['nombre_categoria'] if row['nombre_categoria'] else '',
+                        'id_sucursal': row['id_sucursal'],
+                        'nombre_sucursal': row['nombre_sucursal'],
+                        'id_empresa': row['id_empresa']
                     })
                 return True, productos_color
             else:
@@ -320,8 +331,8 @@ class ProductoColor:
     # MÉTODOS AUXILIARES PARA SELECTS
     # ============================================
     
-    def listar_productos_activos(self):
-        """Listar productos_sucursal activos para select"""
+    def listar_productos_activos(self, id_empresa=None):
+        """Listar productos_sucursal activos para select con filtro por empresa"""
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -331,15 +342,22 @@ class ProductoColor:
                     ps.id_prod_sucursal, 
                     ps.nombre,
                     m.nombre as marca,
-                    c.nombre as categoria
+                    c.nombre as categoria,
+                    s.nombre as sucursal
                 FROM producto_sucursal ps
+                INNER JOIN sucursal s ON ps.id_sucursal = s.id_sucursal
                 LEFT JOIN marca m ON ps.id_marca = m.id_marca
                 LEFT JOIN categoria_producto c ON ps.id_categoria = c.id_categoria
                 WHERE ps.estado = TRUE
-                ORDER BY ps.nombre
             """
             
-            cursor.execute(sql)
+            # ✅ FILTRO POR EMPRESA
+            if id_empresa:
+                sql += " AND s.id_empresa = %s"
+                cursor.execute(sql + " ORDER BY ps.nombre", [id_empresa])
+            else:
+                cursor.execute(sql + " ORDER BY ps.nombre")
+            
             resultado = cursor.fetchall()
             
             cursor.close()
@@ -350,7 +368,8 @@ class ProductoColor:
                 for row in resultado:
                     marca = row['marca'] if row['marca'] else ''
                     categoria = row['categoria'] if row['categoria'] else ''
-                    nombre_completo = f"{row['nombre']} - {marca} ({categoria})"
+                    sucursal = row['sucursal'] if row['sucursal'] else ''
+                    nombre_completo = f"{row['nombre']} - {marca} ({categoria}) [{sucursal}]"
                     productos.append({
                         'id_prod_sucursal': row['id_prod_sucursal'],
                         'nombre': row['nombre'],

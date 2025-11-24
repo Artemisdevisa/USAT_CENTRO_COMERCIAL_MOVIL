@@ -38,11 +38,17 @@ def subir_a_cloudinary(file, folder):
 
 @ws_producto_color.route('/productos-color/listar', methods=['GET'])
 def listar_productos_color():
-    """Listar TODOS los productos-color (variantes)"""
+    """Listar productos-color con filtro opcional por empresa"""
     try:
-        exito, resultado = producto_color.listar_todos()
+        # ✅ OBTENER id_empresa DEL QUERY PARAM
+        id_empresa = request.args.get('id_empresa', type=int)
+        
+        print(f"📡 Listando productos-color | id_empresa: {id_empresa}")
+        
+        exito, resultado = producto_color.listar_todos(id_empresa)
         
         if exito:
+            print(f"✅ {len(resultado)} productos-color encontrados")
             return jsonify({
                 'status': True,
                 'message': 'Productos-color obtenidos correctamente',
@@ -342,9 +348,12 @@ def listar_por_producto(id_prod_sucursal):
 
 @ws_producto_color.route('/productos-color/productos-activos', methods=['GET'])
 def listar_productos_activos():
-    """Listar productos activos para el select"""
+    """Listar productos activos para el select con filtro por empresa"""
     try:
-        exito, resultado = producto_color.listar_productos_activos()
+        # ✅ OBTENER id_empresa DEL QUERY PARAM
+        id_empresa = request.args.get('id_empresa', type=int)
+        
+        exito, resultado = producto_color.listar_productos_activos(id_empresa)
         
         if exito:
             return jsonify({
