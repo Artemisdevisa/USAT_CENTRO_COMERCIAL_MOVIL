@@ -202,8 +202,8 @@ class ProductoSucursal:
         except Exception as e:
             return False, f"Error al obtener detalle: {str(e)}"
     
-    def listar_todos(self):
-        """Lista TODOS los productos (activos e inactivos) con información completa para el dashboard"""
+    def listar_todos(self, id_empresa=None):
+        """Lista TODOS los productos con filtro opcional por empresa"""
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -233,10 +233,15 @@ class ProductoSucursal:
                 INNER JOIN categoria_producto c ON ps.id_categoria = c.id_categoria
                 INNER JOIN tipo_modelo_producto tm ON ps.id_tipo_modelo = tm.id_tipo_modelo
                 INNER JOIN tipo_producto tp ON tm.id_tipo_prod = tp.id_tipo_prod
-                ORDER BY ps.id_prod_sucursal DESC
             """
             
-            cursor.execute(sql)
+            # ✅ AGREGAR FILTRO POR EMPRESA
+            if id_empresa:
+                sql += " WHERE s.id_empresa = %s"
+                cursor.execute(sql + " ORDER BY ps.id_prod_sucursal DESC", [id_empresa])
+            else:
+                cursor.execute(sql + " ORDER BY ps.id_prod_sucursal DESC")
+            
             resultado = cursor.fetchall()
             
             cursor.close()
@@ -525,8 +530,8 @@ class ProductoSucursal:
     # MÉTODOS AUXILIARES PARA SELECTS
     # ============================================
     
-    def listar_sucursales_activas(self):
-        """Listar sucursales activas para select"""
+    def listar_sucursales_activas(self, id_empresa=None):
+        """Listar sucursales activas con filtro opcional por empresa"""
         try:
             con = Conexion().open
             cursor = con.cursor()
@@ -535,10 +540,15 @@ class ProductoSucursal:
                 SELECT id_sucursal, nombre
                 FROM sucursal
                 WHERE estado = TRUE
-                ORDER BY nombre
             """
             
-            cursor.execute(sql)
+            # ✅ FILTRO POR EMPRESA
+            if id_empresa:
+                sql += " AND id_empresa = %s"
+                cursor.execute(sql + " ORDER BY nombre", [id_empresa])
+            else:
+                cursor.execute(sql + " ORDER BY nombre")
+            
             resultado = cursor.fetchall()
             
             cursor.close()

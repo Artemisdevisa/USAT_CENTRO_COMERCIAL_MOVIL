@@ -147,9 +147,12 @@ def productos_relacionados(id_categoria, id_actual):
     
 @ws_producto_sucursal.route('/productos-sucursal/listar', methods=['GET'])
 def listar_productos_admin():
-    """Listar TODOS los productos para administración"""
+    """Listar productos con filtro opcional por empresa"""
     try:
-        exito, resultado = producto_sucursal.listar_todos()
+        # ✅ OBTENER id_empresa DEL QUERY PARAM
+        id_empresa = request.args.get('id_empresa', type=int)
+        
+        exito, resultado = producto_sucursal.listar_todos(id_empresa)
         
         if exito:
             return jsonify({
@@ -373,9 +376,12 @@ def eliminar_producto(id_prod_sucursal):
 
 @ws_producto_sucursal.route('/productos-sucursal/estadisticas', methods=['GET'])
 def estadisticas_productos():
-    """Obtener estadísticas de productos y sus variantes"""
+    """Obtener estadísticas con filtro por empresa"""
     try:
-        exito, productos = producto_sucursal.listar_todos()
+        # ✅ OBTENER id_empresa DEL QUERY PARAM
+        id_empresa = request.args.get('id_empresa', type=int)
+        
+        exito, productos = producto_sucursal.listar_todos(id_empresa)
         
         if not exito:
             return jsonify({
@@ -415,9 +421,12 @@ def estadisticas_productos():
 
 @ws_producto_sucursal.route('/productos-sucursal/sucursales-activas', methods=['GET'])
 def listar_sucursales_activas():
-    """Listar sucursales activas para el select"""
+    """Listar sucursales con filtro por empresa"""
     try:
-        exito, resultado = producto_sucursal.listar_sucursales_activas()
+        # ✅ OBTENER id_empresa DEL QUERY PARAM
+        id_empresa = request.args.get('id_empresa', type=int)
+        
+        exito, resultado = producto_sucursal.listar_sucursales_activas(id_empresa)
         
         if exito:
             return jsonify({
@@ -436,7 +445,6 @@ def listar_sucursales_activas():
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
-
 
 @ws_producto_sucursal.route('/productos-sucursal/temporadas-activas', methods=['GET'])
 def listar_temporadas_activas():

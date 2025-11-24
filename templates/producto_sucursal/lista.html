@@ -293,6 +293,7 @@
     let categorias = [];
     let modelos = [];
     let modalInstance = null;
+    let ID_EMPRESA = null;
 
     function toast(msg, type = 'success') {
         const container = document.getElementById('toastContainer');
@@ -333,8 +334,19 @@
 
     // Initialize - SIN VALIDACIÓN DE AUTENTICACIÓN
     (async () => {
-        console.log('✅ Módulo de productos cargado - Acceso libre');
-        console.log('🔧 Inicializando con API:', API);
+        console.log('✅ Módulo de productos cargado');
+        
+        // ✅ OBTENER EMPRESA DEL USUARIO LOGUEADO
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                ID_EMPRESA = user.id_empresa;
+                console.log('🏢 ID Empresa del usuario:', ID_EMPRESA);
+            } catch (e) {
+                console.error('❌ Error al parsear usuario:', e);
+            }
+        }
         
         modalInstance = new bootstrap.Modal(document.getElementById('modal'));
         
@@ -342,10 +354,14 @@
         await cargar();
     })();
 
+
     async function cargarDatosAuxiliares() {
         try {
+            // ✅ AGREGAR id_empresa A LAS REQUESTS
+            const queryEmpresa = ID_EMPRESA ? `?id_empresa=${ID_EMPRESA}` : '';
+            
             const [r1, r2, r3, r4, r5] = await Promise.all([
-                fetch(`${API}/productos-sucursal/sucursales-activas`),
+                fetch(`${API}/productos-sucursal/sucursales-activas${queryEmpresa}`),
                 fetch(`${API}/productos-sucursal/temporadas-activas`),
                 fetch(`${API}/productos-sucursal/marcas-activas`),
                 fetch(`${API}/productos-sucursal/categorias-activas`),
@@ -409,11 +425,14 @@
 
     async function cargar() {
         try {
-            console.log('📡 Cargando productos desde:', `${API}/productos-sucursal/listar`);
+            // ✅ AGREGAR id_empresa A LAS REQUESTS
+            const queryEmpresa = ID_EMPRESA ? `?id_empresa=${ID_EMPRESA}` : '';
+            
+            console.log('📡 Cargando productos desde:', `${API}/productos-sucursal/listar${queryEmpresa}`);
             
             const [r1, r2] = await Promise.all([
-                fetch(`${API}/productos-sucursal/listar`),
-                fetch(`${API}/productos-sucursal/estadisticas`)
+                fetch(`${API}/productos-sucursal/listar${queryEmpresa}`),
+                fetch(`${API}/productos-sucursal/estadisticas${queryEmpresa}`)
             ]);
             
             if (!r1.ok || !r2.ok) {
