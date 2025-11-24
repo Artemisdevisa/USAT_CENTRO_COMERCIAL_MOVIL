@@ -4,7 +4,7 @@
 
 {% block content %}
 <!-- LOADING SCREEN CON LOGO -->
-<div id="loadingScreen" class="fixed inset-0 bg-black z-50 flex items-center justify-center">
+<div id="loadingScreen" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
     <div class="text-center">
         <img 
             src="/uploads/fotos/aguirre/logo3.png" 
@@ -12,7 +12,7 @@
             class="w-64 h-64 object-contain mx-auto animate-pulse-slow">
         <div class="mt-8">
             <div class="w-48 h-1 bg-gray-800 rounded-full overflow-hidden mx-auto">
-                <div class="h-full bg-red-600 rounded-full animate-loading-bar"></div>
+                <div class="loading-bar h-full bg-red-600 rounded-full"></div>
             </div>
         </div>
     </div>
@@ -232,7 +232,7 @@
     }
 }
 
-@keyframes loading-bar {
+@keyframes loading-bar-animation {
     0% {
         width: 0%;
     }
@@ -264,8 +264,8 @@
     animation: fade-in 1s ease-out 0.6s both;
 }
 
-.animate-loading-bar {
-    animation: loading-bar 2s ease-in-out;
+.loading-bar {
+    animation: loading-bar-animation 2s ease-in-out forwards;
 }
 
 .animate-pulse-slow {
@@ -274,12 +274,12 @@
 
 /* LOADING SCREEN */
 #loadingScreen {
-    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+    transition: opacity 0.5s ease-out;
 }
 
-#loadingScreen.hidden {
+#loadingScreen.fade-out {
     opacity: 0;
-    visibility: hidden;
+    pointer-events: none;
 }
 </style>
 {% endblock %}
@@ -289,16 +289,23 @@
 const API_URL = window.CONFIG.API_URL;
 
 // ==================== LOADING SCREEN ====================
-window.addEventListener('load', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎬 Iniciando loading screen...');
+    
+    // Ocultar loading después de 2 segundos
     setTimeout(() => {
         const loadingScreen = document.getElementById('loadingScreen');
-        loadingScreen.classList.add('hidden');
-        
-        // Remover del DOM después de la transición
-        setTimeout(() => {
-            loadingScreen.remove();
-        }, 500);
-    }, 2000); // 2 segundos de duración
+        if (loadingScreen) {
+            console.log('✅ Ocultando loading screen...');
+            loadingScreen.classList.add('fade-out');
+            
+            // Remover del DOM después de la transición
+            setTimeout(() => {
+                loadingScreen.remove();
+                console.log('✅ Loading screen removido del DOM');
+            }, 500);
+        }
+    }, 2000);
 });
 
 // ==================== CARGAR CATEGORÍAS ====================
