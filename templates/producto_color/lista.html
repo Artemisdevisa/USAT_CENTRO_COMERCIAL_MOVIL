@@ -34,6 +34,51 @@
         .page-title { font-size: 1.75rem; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 0.625rem; }
         .page-title i { color: #dc2626; }
         
+        /* Header Actions */
+        .header-actions { 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+        }
+        
+        /* Dropdown de Sucursales */
+        .sucursal-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .sucursal-dropdown select {
+            padding: 0.625rem 2.5rem 0.625rem 1rem;
+            border: 1.5px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: white;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            min-width: 200px;
+        }
+        
+        .sucursal-dropdown select:hover {
+            border-color: #dc2626;
+        }
+        
+        .sucursal-dropdown select:focus {
+            outline: none;
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
+        }
+        
+        .sucursal-dropdown i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #6b7280;
+        }
+        
         /* Main */
         .main-content { padding: 2rem; }
         .card { background: white; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
@@ -129,7 +174,7 @@
                 <a href="/dashboard/categorias" class="sidebar-link"><i class="bi bi-tag"></i>Categorías</a>
                 <a href="/dashboard/marcas" class="sidebar-link"><i class="bi bi-award"></i>Marcas</a>
                 <a href="/dashboard/colores" class="sidebar-link"><i class="bi bi-droplet"></i>Colores</a>
-                <a href="/" class="sidebar-link" style="margin-top:2.5rem;opacity:0.85"><i class="bi bi-house"></i>Volver al Inicio</a>
+                <a href="#" onclick="logout()" class="sidebar-link" style="margin-top:2.5rem;opacity:0.85"><i class="bi bi-box-arrow-right"></i>Cerrar Sesión</a>
             </nav>
         </aside>
         
@@ -137,7 +182,21 @@
         <main id="content">
             <header class="page-header">
                 <h1 class="page-title"><i class="bi bi-palette"></i>Gestión de Productos Color (Variantes)</h1>
-                <button class="btn btn-primary" onclick="abrirModal()"><i class="bi bi-plus-circle"></i>Nueva Variante</button>
+                
+                <!-- Header Actions: Dropdown + Botón -->
+                <div class="header-actions">
+                    <!-- Dropdown de Sucursales -->
+                    <div class="sucursal-dropdown">
+                        <select id="filtroSucursal" onchange="filtrarPorSucursal()">
+                            <option value="">Todas las sucursales</option>
+                        </select>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="abrirModal()">
+                        <i class="bi bi-plus-circle"></i>Nueva Variante
+                    </button>
+                </div>
             </header>
             
             <div class="main-content">
@@ -206,8 +265,22 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-label">Talla *</label>
-                                    <input type="text" class="form-control" id="talla" maxlength="10" placeholder="S, M, L, XL, U, etc." required>
-                                    <small class="text-muted">Máximo 10 caracteres</small>
+                                    <select class="form-control" id="talla" required>
+                                        <option value="">Seleccione una talla</option>
+                                        <option value="XS">XS - Extra Small</option>
+                                        <option value="S">S - Small</option>
+                                        <option value="M">M - Medium</option>
+                                        <option value="L">L - Large</option>
+                                        <option value="XL">XL - Extra Large</option>
+                                        <option value="XXL">XXL - Double Extra Large</option>
+                                        <option value="2">2 - 2 años</option>
+                                        <option value="4">4 - 4 años</option>
+                                        <option value="40">Calzado 40</option>
+                                        <option value="41">Calzado 41</option>
+                                        <option value="Individual">Individual</option>
+                                        <option value="Matrimonial">Matrimonial</option>
+                                        <option value="Única">Única</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -252,6 +325,9 @@
         let modalInstance = null;
         let productos = [];
         let colores = [];
+        let sucursales = [];
+        let ID_EMPRESA = null;
+        let variantesCompletas = [];
 
         // Toast notification
         function toast(msg, type = 'success') {
@@ -317,8 +393,42 @@
 
         // Initialize
         (async () => {
-            console.log('✅ Módulo de variantes cargado');
-            console.log('🔧 Inicializando con API:', API);
+            console.log('%c='.repeat(60), 'color: blue; font-weight: bold');
+            console.log('%c🎨 MÓDULO DE VARIANTES CARGADO', 'color: blue; font-weight: bold; font-size: 14px');
+            console.log('%c='.repeat(60), 'color: blue; font-weight: bold');
+            
+            const userStr = localStorage.getItem('user');
+            
+            if (!userStr) {
+                console.error('%c❌ NO HAY USUARIO EN LOCALSTORAGE', 'color: red; font-weight: bold');
+                toast('⚠️ No se encontró sesión activa', 'warning');
+                setTimeout(() => window.location.href = '/login', 2000);
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userStr);
+                
+                console.log('%c👤 USUARIO:', 'color: green; font-weight: bold');
+                console.table({
+                    'ID Usuario': user.id_usuario,
+                    'Email': user.email,
+                    'ID Empresa': user.id_empresa || 'NULL',
+                    'Roles': user.roles?.map(r => r.nombre).join(', ') || 'Sin roles'
+                });
+                
+                ID_EMPRESA = user.id_empresa;
+                
+                if (!ID_EMPRESA) {
+                    console.warn('%c⚠️ USUARIO SIN EMPRESA', 'color: orange; font-weight: bold');
+                    toast('⚠️ Este usuario no tiene empresa asociada', 'warning');
+                }
+                
+            } catch (e) {
+                console.error('%c❌ ERROR AL PARSEAR USUARIO:', 'color: red; font-weight: bold', e);
+            }
+            
+            console.log('%c='.repeat(60), 'color: blue; font-weight: bold');
             
             modalInstance = new bootstrap.Modal(document.getElementById('modal'));
             
@@ -328,50 +438,94 @@
         // Load data
         async function cargar() {
             try {
-                console.log('📡 Cargando productos color desde:', `${API}/productos-color/listar`);
+                const queryEmpresa = ID_EMPRESA ? `?id_empresa=${ID_EMPRESA}` : '';
                 
-                const [r1, r2, r3] = await Promise.all([
-                    fetch(`${API}/productos-color/listar`),
-                    fetch(`${API}/productos-color/productos-activos`),
-                    fetch(`${API}/productos-color/colores-activos`)
+                console.log('📡 Cargando productos color desde:', `${API}/productos-color/listar${queryEmpresa}`);
+                
+                const [r1, r2, r3, r4] = await Promise.all([
+                    fetch(`${API}/productos-color/listar${queryEmpresa}`),
+                    fetch(`${API}/productos-color/productos-activos${queryEmpresa}`),
+                    fetch(`${API}/productos-color/colores-activos`),
+                    fetch(`${API}/productos-sucursal/sucursales-activas${queryEmpresa}`)
                 ]);
                 
-                if (!r1.ok || !r2.ok || !r3.ok) {
-                    throw new Error(`HTTP error! status: ${r1.status}, ${r2.status}, ${r3.status}`);
+                if (!r1.ok || !r2.ok || !r3.ok || !r4.ok) {
+                    throw new Error(`HTTP error! status: ${r1.status}, ${r2.status}, ${r3.status}, ${r4.status}`);
                 }
                 
                 const d1 = await r1.json();
                 const d2 = await r2.json();
                 const d3 = await r3.json();
+                const d4 = await r4.json();
                 
                 console.log('✅ Productos color recibidos:', d1);
+                console.log('✅ Total variantes:', d1.data?.length || 0);
                 console.log('✅ Productos activos recibidos:', d2);
                 console.log('✅ Colores activos recibidos:', d3);
+                console.log('✅ Sucursales recibidas:', d4);
                 
-                if (!d1.status) return toast(d1.message, 'error');
+                if (!d1.status) {
+                    toast(d1.message, 'error');
+                    return;
+                }
+                
+                if (!d1.data || d1.data.length === 0) {
+                    toast('ℹ️ No hay variantes para esta empresa', 'info');
+                }
                 
                 productos = d2.status ? d2.data : [];
                 colores = d3.status ? d3.data : [];
+                sucursales = d4.status ? d4.data : [];
+                variantesCompletas = d1.data || [];
                 
-                renderizar(d1.data);
+                renderizar(variantesCompletas);
                 cargarSelectProductos();
                 cargarSelectColores();
+                cargarSelectSucursales();
             } catch (e) {
                 console.error('❌ Error al cargar:', e);
                 toast('Error al cargar los datos: ' + e.message, 'error');
             }
         }
 
+        function cargarSelectSucursales() {
+            const select = document.getElementById('filtroSucursal');
+            select.innerHTML = '<option value="">Todas las sucursales</option>';
+            sucursales.forEach(s => {
+                select.innerHTML += `<option value="${s.id_sucursal}">${s.nombre}</option>`;
+            });
+            console.log('✅ Sucursales cargadas en dropdown:', sucursales.length);
+        }
+
+        function filtrarPorSucursal() {
+            const idSucursal = document.getElementById('filtroSucursal').value;
+            
+            console.log('🔍 Filtrando por sucursal:', idSucursal || 'Todas');
+            
+            let variantesFiltradas;
+            
+            if (!idSucursal) {
+                variantesFiltradas = variantesCompletas;
+            } else {
+                variantesFiltradas = variantesCompletas.filter(v => v.id_sucursal == idSucursal);
+            }
+            
+            console.log('✅ Variantes filtradas:', variantesFiltradas.length);
+            renderizar(variantesFiltradas);
+        }
+
         function renderizar(data) {
             const tbody = document.getElementById('tabla');
-            if (!data.length) return tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay variantes registradas</td></tr>';
+            if (!data || !data.length) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:3rem;color:#9ca3af;font-size:1rem">No hay variantes registradas</td></tr>';
+                return;
+            }
             
             tbody.innerHTML = data.map(r => {
                 const estado = r.estado ? 
                     '<span class="badge badge-green"><i class="bi bi-check-circle"></i>Activo</span>' : 
                     '<span class="badge badge-red"><i class="bi bi-x-circle"></i>Inactivo</span>';
                 
-                // ✅ CLOUDINARY: Usar URL directa
                 const imagen = r.url_img ? 
                     `<img src="${r.url_img}" class="prod-img" alt="${r.nombre_producto}" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Img'">` : 
                     `<img src="https://via.placeholder.com/60x60?text=Sin+Img" class="prod-img" alt="Sin imagen">`;
@@ -387,7 +541,7 @@
                         <td>${r.nombre_marca}</td>
                         <td><span class="badge badge-blue">${r.nombre_color}</span></td>
                         <td><strong>${r.talla}</strong></td>
-                        <td style="text-align:right"><strong>S/ ${r.precio.toFixed(2)}</strong></td>
+                        <td style="text-align:right"><strong>S/ ${parseFloat(r.precio).toFixed(2)}</strong></td>
                         <td style="text-align:center"><span class="badge badge-blue">${r.stock}</span></td>
                         <td style="text-align:center">${estado}</td>
                         <td style="text-align:center">
@@ -406,7 +560,6 @@
                 productos.map(p => `<option value="${p.id_prod_sucursal}">${p.nombre_completo}</option>`).join('');
         }
 
-        // Cargar select de colores
         function cargarSelectColores() {
             const select = document.getElementById('id_color');
             select.innerHTML = '<option value="">Seleccione un color</option>' + 
@@ -422,7 +575,6 @@
             modalInstance.show();
         }
 
-        // Edit
         async function editar(id) {
             try {
                 const res = await fetch(`${API}/productos-color/obtener/${id}`);
@@ -440,7 +592,6 @@
                 document.getElementById('stock').value = r.stock;
                 document.getElementById('url_img_actual').value = r.url_img || '';
                 
-                // ✅ CLOUDINARY: Mostrar imagen actual
                 const container = document.getElementById('previewContainer');
                 if (r.url_img) {
                     container.innerHTML = `<img src="${r.url_img}" class="img-preview" alt="Imagen actual">`;
@@ -454,12 +605,11 @@
             }
         }
 
-        // Save
         async function guardar() {
             const id = document.getElementById('id_prod_color').value;
             const id_prod_sucursal = document.getElementById('id_prod_sucursal').value;
             const id_color = document.getElementById('id_color').value;
-            const talla = document.getElementById('talla').value.trim();
+            const talla = document.getElementById('talla').value;
             const precio = document.getElementById('precio').value;
             const stock = document.getElementById('stock').value;
             const imagen = document.getElementById('imagen').files[0];
@@ -485,7 +635,6 @@
                 formData.append('precio', precio);
                 formData.append('stock', stock);
                 
-                // ✅ CAMBIAR: De 'imagen' a 'url_img' para coincidir con backend
                 if (imagen) formData.append('url_img', imagen);
                 if (id) formData.append('url_img_actual', url_img_actual);
                 
@@ -506,11 +655,11 @@
                     toast(data.message, 'error');
                 }
             } catch (e) {
+                console.error('Error al guardar:', e);
                 toast('Error al guardar la variante', 'error');
             }
         }
 
-        // Cambiar estado (Eliminación lógica)
         async function cambiarEstado(id) {
             try {
                 const res = await fetch(`${API}/productos-color/cambiar-estado/${id}`, { method: 'PATCH' });
@@ -546,13 +695,20 @@
             }
         }
 
-     
         document.getElementById('search').addEventListener('input', e => {
             const val = e.target.value.toLowerCase();
             document.querySelectorAll('#tabla tr').forEach(row => {
                 row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
             });
         });
+
+        async function logout() {
+            const ok = await confirmar('Se cerrará tu sesión actual', '¿Cerrar sesión?');
+            if (ok) {
+                localStorage.clear();
+                location.href = '/login';
+            }
+        }
     </script>
 </body>
 </html>
