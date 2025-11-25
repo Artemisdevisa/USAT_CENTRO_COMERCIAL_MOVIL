@@ -99,7 +99,7 @@ class ProductoSucursal:
             con = Conexion().open
             cursor = con.cursor()
             
-            # Información básica del producto
+            # ✅ INFORMACIÓN BÁSICA DEL PRODUCTO (CORREGIDO)
             sql_producto = """
                 SELECT 
                     ps.id_prod_sucursal,
@@ -108,10 +108,13 @@ class ProductoSucursal:
                     ps.material,
                     ps.genero,
                     m.nombre as marca,
-                    c.nombre as categoria
+                    c.nombre as categoria,
+                    s.nombre as nombre_sucursal,
+                    s.id_sucursal
                 FROM producto_sucursal ps
                 LEFT JOIN marca m ON ps.id_marca = m.id_marca
                 LEFT JOIN categoria_producto c ON ps.id_categoria = c.id_categoria
+                INNER JOIN sucursal s ON ps.id_sucursal = s.id_sucursal
                 WHERE ps.id_prod_sucursal = %s AND ps.estado = TRUE
             """
             cursor.execute(sql_producto, (id_prod_sucursal,))
@@ -122,7 +125,7 @@ class ProductoSucursal:
                 con.close()
                 return False, "Producto no encontrado"
             
-            # Obtener todas las variantes (talla + color)
+            # ✅ OBTENER TODAS LAS VARIANTES (talla + color)
             sql_variantes = """
                 SELECT 
                     pc.id_prod_color,
@@ -150,7 +153,7 @@ class ProductoSucursal:
             else:
                 base_url = "http://10.0.2.2:3007" if is_android else ""
             
-            # Agrupar por color y talla
+            # ✅ AGRUPAR POR COLOR Y TALLA
             colores = {}
             tallas = set()
             
@@ -174,14 +177,15 @@ class ProductoSucursal:
                             url_img = '/' + url_img
                         url_img = base_url + url_img
                 
-                # ✅ AQUÍ ESTÁ EL CAMBIO - LÍNEA 186-191
+                # ✅ INCLUIR id_prod_color EN CADA TALLA
                 colores[color_nombre]['tallas'][talla] = {
-                    'id_prod_color': var['id_prod_color'],  # ✅ AGREGAR ESTA LÍNEA
+                    'id_prod_color': var['id_prod_color'],  # ✅ CRÍTICO
                     'precio': float(var['precio']),
                     'stock': var['stock'],
                     'url_img': url_img
                 }
             
+            # ✅ CONSTRUIR RESULTADO FINAL
             resultado = {
                 'id_prod_sucursal': producto['id_prod_sucursal'],
                 'id_categoria': producto['id_categoria'],
@@ -190,6 +194,8 @@ class ProductoSucursal:
                 'genero': producto['genero'] if producto['genero'] else 'Sin definir',
                 'marca': producto['marca'] if producto['marca'] else '',
                 'categoria': producto['categoria'] if producto['categoria'] else '',
+                'nombre_sucursal': producto['nombre_sucursal'],  # ✅ AGREGAR
+                'id_sucursal': producto['id_sucursal'],          # ✅ AGREGAR
                 'colores': list(colores.values()),
                 'tallas_disponibles': sorted(list(tallas))
             }
@@ -197,9 +203,15 @@ class ProductoSucursal:
             cursor.close()
             con.close()
             
+            print(f"✅ Producto: {resultado['nombre']}")
+            print(f"✅ Sucursal: {resultado['nombre_sucursal']}")
+            
             return True, resultado
                 
         except Exception as e:
+            print(f"💥 ERROR en obtener_detalle_producto: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False, f"Error al obtener detalle: {str(e)}"
     
     def listar_todos(self, id_empresa=None):
