@@ -8,84 +8,212 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="/static/js/config.js"></script>
     <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
         .chat-card {
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             cursor: pointer;
             border-left: 4px solid transparent;
+            height: 100%;
+            border: 1px solid #e0e0e0;
         }
+
         .chat-card:hover {
             background-color: #f8f9fa;
             border-left-color: #dc3545;
             transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
+
         .chat-card.unread {
-            background-color: #fff3cd;
+            background-color: #fff9e6;
             border-left-color: #ffc107;
         }
+
         .badge-unread {
             background-color: #dc3545;
             color: white;
             font-size: 0.7rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 10px;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-weight: bold;
+            min-width: 24px;
+            text-align: center;
         }
+
         .user-avatar {
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
+            min-width: 56px;
             border-radius: 50%;
-            object-fit: cover;
-            background-color: #dc3545;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
         }
-        .last-message {
-            color: #6c757d;
-            font-size: 0.9rem;
+
+        .chat-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #212529;
+            margin: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
+        .last-message {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin: 0.5rem 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-height: 1.4;
+            max-height: 2.8em;
+        }
+
         .timestamp {
             color: #adb5bd;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
+
         .sucursal-badge {
             background-color: #e3f2fd;
             color: #1976d2;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
             font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 500;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .chat-row {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .filter-card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .page-header h2 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.95;
+        }
+
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            color: #dee2e6;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state p {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .user-avatar {
+                width: 48px;
+                height: 48px;
+                min-width: 48px;
+                font-size: 1.2rem;
+            }
+
+            .chat-row {
+                gap: 0.75rem;
+            }
+
+            .page-header {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 <body class="bg-light">
     <div class="container-fluid p-4">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="mb-0"><i class="bi bi-chat-dots text-danger"></i> Mis Chats</h2>
-                <p class="text-muted mb-0">Conversaciones con clientes</p>
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="bi bi-chat-dots"></i> Mis Chats</h2>
+                    <p>Conversaciones con clientes</p>
+                </div>
+                <a href="/dashboard" class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
             </div>
-            <a href="/dashboard" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Volver al Dashboard
-            </a>
         </div>
 
         <!-- Filtros -->
-        <div class="card mb-4">
+        <div class="card filter-card mb-4">
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">Filtrar por Sucursal</label>
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-shop"></i> Filtrar por Sucursal
+                        </label>
                         <select id="filtroSucursal" class="form-select" onchange="filtrarPorSucursal()">
                             <option value="">Todas las sucursales</option>
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Estado</label>
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-funnel"></i> Estado
+                        </label>
                         <select id="filtroEstado" class="form-select" onchange="filtrarChats()">
                             <option value="">Todos</option>
                             <option value="unread">No leídos</option>
@@ -93,7 +221,9 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Buscar</label>
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-search"></i> Buscar
+                        </label>
                         <input type="text" id="txtBuscar" class="form-control" placeholder="Buscar por nombre..." oninput="filtrarChats()">
                     </div>
                 </div>
@@ -114,9 +244,9 @@
         </div>
 
         <!-- Sin resultados -->
-        <div id="sinResultados" class="text-center py-5" style="display: none;">
-            <i class="bi bi-chat-dots text-muted" style="font-size: 4rem;"></i>
-            <p class="text-muted mt-3">No hay conversaciones disponibles</p>
+        <div id="sinResultados" class="empty-state" style="display: none;">
+            <i class="bi bi-chat-dots"></i>
+            <p>No hay conversaciones disponibles</p>
         </div>
     </div>
 
@@ -171,7 +301,6 @@
             mostrarCargando(true);
 
             try {
-                // Obtener conversaciones de todas las sucursales de la empresa
                 const promesas = sucursales.map(s => 
                     fetch(`${API}/conversacion/listar-por-sucursal/${s.id_sucursal}`)
                         .then(r => r.json())
@@ -197,7 +326,6 @@
                     }
                 });
 
-                // Ordenar por fecha más reciente
                 conversaciones.sort((a, b) => {
                     const fechaA = new Date(a.fecha_ultimo_mensaje || 0);
                     const fechaB = new Date(b.fecha_ultimo_mensaje || 0);
@@ -229,28 +357,28 @@
 
             conversacionesFiltradas.forEach(conv => {
                 const isUnread = conv.mensajes_no_leidos_sucursal > 0;
+                const inicialUsuario = (conv.nombre_usuario || 'U').charAt(0).toUpperCase();
+                const ultimoMensaje = truncarTexto(conv.ultimo_mensaje || 'Sin mensajes', 80);
                 
                 const col = document.createElement('div');
-                col.className = 'col-12 col-md-6 col-lg-4';
+                col.className = 'col-12 col-lg-6 col-xl-4';
                 
                 col.innerHTML = `
-                    <div class="card chat-card ${isUnread ? 'unread' : ''}" onclick="abrirChat(${conv.id_conversacion}, '${conv.nombre_usuario}', ${conv.id_sucursal})">
+                    <div class="card chat-card ${isUnread ? 'unread' : ''}" onclick="abrirChat(${conv.id_conversacion}, '${escapeHtml(conv.nombre_usuario)}', ${conv.id_sucursal})">
                         <div class="card-body">
-                            <div class="d-flex align-items-start">
-                                <div class="user-avatar me-3">
-                                    ${conv.nombre_usuario ? conv.nombre_usuario.charAt(0).toUpperCase() : 'U'}
+                            <div class="chat-row">
+                                <div class="user-avatar">
+                                    ${inicialUsuario}
                                 </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <h6 class="mb-0">${conv.nombre_usuario || 'Usuario'}</h6>
+                                <div class="chat-content">
+                                    <div class="chat-header">
+                                        <h6 class="user-name">${escapeHtml(conv.nombre_usuario || 'Usuario')}</h6>
                                         ${isUnread ? `<span class="badge-unread">${conv.mensajes_no_leidos_sucursal}</span>` : ''}
                                     </div>
                                     <span class="sucursal-badge">
-                                        <i class="bi bi-shop"></i> ${conv.nombre_sucursal}
+                                        <i class="bi bi-shop"></i> ${escapeHtml(conv.nombre_sucursal)}
                                     </span>
-                                    <p class="last-message mt-2 mb-1">
-                                        ${conv.ultimo_mensaje || 'Sin mensajes'}
-                                    </p>
+                                    <p class="last-message">${escapeHtml(ultimoMensaje)}</p>
                                     <small class="timestamp">
                                         <i class="bi bi-clock"></i> ${formatearFecha(conv.fecha_ultimo_mensaje)}
                                     </small>
@@ -274,14 +402,10 @@
             const busqueda = document.getElementById('txtBuscar').value.toLowerCase();
 
             conversacionesFiltradas = conversaciones.filter(conv => {
-                // Filtro por sucursal
                 if (idSucursal && conv.id_sucursal != idSucursal) return false;
-
-                // Filtro por estado
                 if (estado === 'unread' && conv.mensajes_no_leidos_sucursal === 0) return false;
                 if (estado === 'read' && conv.mensajes_no_leidos_sucursal > 0) return false;
 
-                // Filtro por búsqueda
                 if (busqueda) {
                     const nombre = (conv.nombre_usuario || '').toLowerCase();
                     if (!nombre.includes(busqueda)) return false;
@@ -312,7 +436,25 @@
             if (horas < 24) return `Hace ${horas} h`;
             if (dias < 7) return `Hace ${dias} d`;
             
-            return fecha.toLocaleDateString('es-PE');
+            return fecha.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
+        }
+
+        function truncarTexto(texto, maxLength) {
+            if (!texto) return '';
+            if (texto.length <= maxLength) return texto;
+            return texto.substring(0, maxLength) + '...';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
         }
 
         function mostrarCargando(mostrar) {
@@ -320,7 +462,6 @@
             document.getElementById('listaChats').style.display = mostrar ? 'none' : 'flex';
         }
 
-        // Auto-refresh cada 10 segundos
         setInterval(cargarConversaciones, 10000);
     </script>
 </body>
