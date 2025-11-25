@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 import os
 from models.venta import Venta
 from models.carrito import Carrito
+from conexionBD import Conexion
 
 ws_venta = Blueprint('ws_venta', __name__)
 
@@ -12,7 +13,8 @@ def crear_venta_multiple():
         data = request.get_json()
         id_usuario = data.get('id_usuario')
         id_tarjeta = data.get('id_tarjeta')
-        sucursales = data.get('sucursales')  # Lista de IDs de sucursales
+        sucursales = data.get('sucursales')
+        id_cupon = data.get('id_cupon')
         
         print(f"\n{'='*60}")
         print(f"📥 PETICIÓN RECIBIDA - CREAR VENTA MÚLTIPLE")
@@ -20,6 +22,7 @@ def crear_venta_multiple():
         print(f"ID Usuario: {id_usuario}")
         print(f"ID Tarjeta: {id_tarjeta}")
         print(f"Sucursales: {sucursales}")
+        print(f"ID Cupón: {id_cupon if id_cupon else 'Sin cupón'}")
         
         if not all([id_usuario, id_tarjeta, sucursales]):
             return jsonify({
@@ -31,7 +34,6 @@ def crear_venta_multiple():
         ventas_creadas = []
         errores = []
         
-        # Crear una venta por cada sucursal
         for id_sucursal in sucursales:
             print(f"\n🏪 Procesando sucursal ID: {id_sucursal}")
             
@@ -52,6 +54,69 @@ def crear_venta_multiple():
                     'id_sucursal': id_sucursal,
                     'error': resultado
                 })
+        
+        if ventas_creadas and id_cupon:
+            try:
+                print(f"\n{'='*60}")
+                print(f"🎫 REGISTRANDO USO DE CUPÓN")
+                print(f"{'='*60}")
+                print(f"ID Cupón: {id_cupon}")
+                print(f"ID Usuario: {id_usuario}")
+                
+                primera_venta = ventas_creadas[0]['id_venta']
+                print(f"ID Venta (primera): {primera_venta}")
+                
+                con = Conexion().open
+                cursor = con.cursor()
+                
+                cursor.execute("""
+                    SELECT COUNT(*) as usado
+                    FROM cupon_usuario
+                    WHERE id_cupon = %s AND id_usuario = %s
+                """, [id_cupon, id_usuario])
+                
+                resultado_check = cursor.fetchone()
+                
+                if resultado_check['usado'] > 0:
+                    print("⚠️ Usuario ya usó este cupón previamente")
+                    cursor.close()
+                    con.close()
+                else:
+                    cursor.execute("""
+                        SELECT cantidad_total, cantidad_usada
+                        FROM cupon
+                        WHERE id_cupon = %s AND estado = TRUE
+                    """, [id_cupon])
+                    
+                    cupon = cursor.fetchone()
+                    
+                    if cupon and cupon['cantidad_usada'] < cupon['cantidad_total']:
+                        cursor.execute("""
+                            INSERT INTO cupon_usuario (id_cupon, id_usuario, id_venta, fecha_uso)
+                            VALUES (%s, %s, %s, NOW())
+                        """, [id_cupon, id_usuario, primera_venta])
+                        
+                        cursor.execute("""
+                            UPDATE cupon
+                            SET cantidad_usada = cantidad_usada + 1
+                            WHERE id_cupon = %s
+                        """, [id_cupon])
+                        
+                        con.commit()
+                        print(f"✅ Cupón registrado exitosamente")
+                        print(f"   - Cantidad usada incrementada")
+                    else:
+                        print("⚠️ Cupón no disponible o agotado")
+                    
+                    cursor.close()
+                    con.close()
+                
+                print(f"{'='*60}\n")
+                
+            except Exception as e:
+                print(f"⚠️ Error al registrar cupón: {str(e)}")
+                import traceback
+                traceback.print_exc()
         
         print(f"\n{'='*60}")
         print(f"📊 RESUMEN:")
@@ -93,14 +158,12 @@ def listar_ventas(id_usuario):
         print(f"📥 PETICIÓN: Listar ventas usuario {id_usuario}")
         print(f"{'='*60}")
         
-        # ✅ DETECTAR ENTORNO Y CLIENTE
         user_agent = request.headers.get('User-Agent', '').lower()
         is_android = 'okhttp' in user_agent or 'android' in user_agent
         
         print(f"User-Agent: {user_agent}")
         print(f"Es Android: {is_android}")
         
-        # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
         if os.environ.get('RENDER'):
             base_url = "https://usat-comercial-api.onrender.com"
             print(f"🌍 Entorno: RENDER (Producción)")
@@ -116,7 +179,6 @@ def listar_ventas(id_usuario):
         if exito:
             print(f"\n✅ Productos obtenidos: {len(resultado)}")
             
-            # ✅ PROCESAR URLs DE IMÁGENES
             for i, producto in enumerate(resultado):
                 url_img = producto.get('url_img_producto', '')
                 print(f"\n📦 Producto {i+1}:")
@@ -163,11 +225,9 @@ def listar_ventas(id_usuario):
 def obtener_detalle_venta(id_venta):
     """Obtener detalle de una venta"""
     try:
-        # ✅ DETECTAR ENTORNO Y CLIENTE
         user_agent = request.headers.get('User-Agent', '').lower()
         is_android = 'okhttp' in user_agent or 'android' in user_agent
         
-        # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
         if os.environ.get('RENDER'):
             base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
         else:
@@ -177,7 +237,6 @@ def obtener_detalle_venta(id_venta):
         exito, resultado = venta.obtener_detalle(id_venta)
         
         if exito:
-            # ✅ PROCESAR URLs DE IMÁGENES
             for detalle in resultado:
                 url_img = detalle.get('url_img', '')
                 if url_img and is_android:

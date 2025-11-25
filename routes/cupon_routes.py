@@ -364,3 +364,109 @@ def obtener_mejor_descuento():
             'data': None,
             'message': f'Error: {str(e)}'
         }), 500
+    
+
+@ws_cupon.route('/cupones/usar', methods=['POST'])
+def usar_cupon():
+    """Registra el uso de un cupón por un usuario"""
+    try:
+        data = request.get_json()
+        
+        id_cupon = data.get('id_cupon')
+        id_usuario = data.get('id_usuario')
+        id_venta = data.get('id_venta')
+        
+        print(f"\n{'='*60}")
+        print(f"🎫 REGISTRANDO USO DE CUPÓN")
+        print(f"   ID Cupón: {id_cupon}")
+        print(f"   ID Usuario: {id_usuario}")
+        print(f"   ID Venta: {id_venta}")
+        print(f"{'='*60}")
+        
+        if not id_cupon or not id_usuario or not id_venta:
+            return jsonify({
+                'status': False,
+                'message': 'Faltan datos requeridos'
+            }), 400
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # Verificar si el usuario ya usó este cupón
+        cursor.execute("""
+            SELECT COUNT(*) as usado
+            FROM cupon_usuario
+            WHERE id_cupon = %s AND id_usuario = %s
+        """, [id_cupon, id_usuario])
+        
+        resultado = cursor.fetchone()
+        
+        if resultado['usado'] > 0:
+            cursor.close()
+            con.close()
+            print("❌ Usuario ya usó este cupón")
+            return jsonify({
+                'status': False,
+                'message': 'Ya has usado este cupón anteriormente'
+            }), 400
+        
+        # Verificar que el cupón esté disponible
+        cursor.execute("""
+            SELECT cantidad_total, cantidad_usada
+            FROM cupon
+            WHERE id_cupon = %s AND estado = TRUE
+        """, [id_cupon])
+        
+        cupon = cursor.fetchone()
+        
+        if not cupon:
+            cursor.close()
+            con.close()
+            print("❌ Cupón no encontrado")
+            return jsonify({
+                'status': False,
+                'message': 'Cupón no válido'
+            }), 400
+        
+        if cupon['cantidad_usada'] >= cupon['cantidad_total']:
+            cursor.close()
+            con.close()
+            print("❌ Cupón agotado")
+            return jsonify({
+                'status': False,
+                'message': 'Este cupón ya no está disponible'
+            }), 400
+        
+        # Registrar uso del cupón
+        cursor.execute("""
+            INSERT INTO cupon_usuario (id_cupon, id_usuario, id_venta, fecha_uso)
+            VALUES (%s, %s, %s, NOW())
+        """, [id_cupon, id_usuario, id_venta])
+        
+        # Incrementar cantidad_usada
+        cursor.execute("""
+            UPDATE cupon
+            SET cantidad_usada = cantidad_usada + 1
+            WHERE id_cupon = %s
+        """, [id_cupon])
+        
+        con.commit()
+        cursor.close()
+        con.close()
+        
+        print("✅ Cupón registrado exitosamente")
+        print(f"{'='*60}\n")
+        
+        return jsonify({
+            'status': True,
+            'message': 'Cupón aplicado correctamente'
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
