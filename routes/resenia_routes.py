@@ -172,7 +172,11 @@ def crear_resenia():
 def modificar_resenia(id_resenia):
     """Modificar una reseña existente"""
     try:
+        print(f"=== MODIFICAR RESEÑA ===")
+        print(f"id_resenia: {id_resenia}")
+        
         data = request.get_json()
+        print(f"Body recibido: {data}")
         
         # Validaciones
         if not data:
@@ -194,6 +198,10 @@ def modificar_resenia(id_resenia):
         comentario = data.get('comentario', '').strip()
         calificacion = data.get('calificacion')
         
+        print(f"Título: {titulo}")
+        print(f"Comentario: {comentario}")
+        print(f"Calificación: {calificacion}")
+        
         # Validaciones adicionales
         if not titulo or not comentario:
             return jsonify({
@@ -211,33 +219,7 @@ def modificar_resenia(id_resenia):
         resenia = Resenia()
         exito, mensaje = resenia.modificar(id_resenia, titulo, comentario, calificacion)
         
-        if exito:
-            return jsonify({
-                'status': True,
-                'message': mensaje
-            }), 200
-        else:
-            return jsonify({
-                'status': False,
-                'message': mensaje
-            }), 400
-            
-    except Exception as e:
-        return jsonify({
-            'status': False,
-            'message': f'Error en el servidor: {str(e)}'
-        }), 500
-
-
-# ============================================
-# ELIMINAR RESEÑA
-# ============================================
-@ws_resenia.route('/resenias/eliminar/<int:id_resenia>', methods=['DELETE'])
-def eliminar_resenia(id_resenia):
-    """Eliminar lógicamente una reseña"""
-    try:
-        resenia = Resenia()
-        exito, mensaje = resenia.eliminar(id_resenia)
+        print(f"Resultado: exito={exito}, mensaje={mensaje}")
         
         if exito:
             return jsonify({
@@ -251,6 +233,47 @@ def eliminar_resenia(id_resenia):
             }), 400
             
     except Exception as e:
+        print(f"💥 ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return jsonify({
+            'status': False,
+            'message': f'Error en el servidor: {str(e)}'
+        }), 500
+
+
+# ============================================
+# ELIMINAR RESEÑA
+# ============================================
+@ws_resenia.route('/resenias/eliminar/<int:id_resenia>', methods=['DELETE'])
+def eliminar_resenia(id_resenia):
+    """Eliminar lógicamente una reseña"""
+    try:
+        print(f"=== ELIMINAR RESEÑA ===")
+        print(f"id_resenia: {id_resenia}")
+        
+        resenia = Resenia()
+        exito, mensaje = resenia.eliminar(id_resenia)
+        
+        print(f"Resultado: exito={exito}, mensaje={mensaje}")
+        
+        if exito:
+            return jsonify({
+                'status': True,
+                'message': mensaje
+            }), 200
+        else:
+            return jsonify({
+                'status': False,
+                'message': mensaje
+            }), 400
+            
+    except Exception as e:
+        print(f"💥 ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
@@ -407,7 +430,7 @@ def obtener_estadisticas(id_prod_color):
 
 
 # ============================================
-# ✅ LISTAR RESEÑAS POR PRODUCTO_SUCURSAL (CAMBIO DE RUTA)
+# ✅ LISTAR RESEÑAS POR PRODUCTO_SUCURSAL
 # ============================================
 @ws_resenia.route('/resenias/producto-sucursal/<int:id_prod_sucursal>', methods=['GET'])
 def listar_resenias_por_producto_sucursal(id_prod_sucursal):
@@ -419,7 +442,7 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
         con = Conexion().open
         cursor = con.cursor()
         
-        # ✅ QUERY CORRECTA: JOIN con producto_color
+        # ✅ SQL CORRECTO con id_usuario
         sql = """
             SELECT 
                 r.id_resenia,
@@ -452,10 +475,10 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
         if resultado:
             resenias = []
             for row in resultado:
-                print(f"  ✅ Reseña: {row['titulo']} por {row['nombre_completo']}")
+                print(f"  ✅ Reseña ID {row['id_resenia']} - Usuario ID {row['id_usuario']}: {row['titulo']}")
                 resenias.append({
                     'id_resenia': row['id_resenia'],
-                    'id_usuario': row['id_usuario'],
+                    'id_usuario': row['id_usuario'],  # ✅ CRÍTICO
                     'titulo': row['titulo'],
                     'comentario': row['comentario'],
                     'calificacion': row['calificacion'],
@@ -472,7 +495,7 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
                 'data': resenias
             }), 200
         else:
-            print("❌ No hay reseñas para este producto_sucursal")
+            print("⚠️ No hay reseñas para este producto_sucursal")
             return jsonify({
                 'status': True,
                 'message': 'No hay reseñas para este producto',
@@ -515,7 +538,6 @@ def obtener_id_det_vent():
         con = Conexion().open
         cursor = con.cursor()
         
-        # ✅ SQL CORRECTO: Usar nombres reales de columnas
         sql = """
             SELECT dv.id_detalle_venta
             FROM detalle_venta dv
@@ -548,7 +570,7 @@ def obtener_id_det_vent():
                 }
             }), 200
         else:
-            print(f"❌ No se encontró compra del usuario {id_usuario} con producto_color {id_prod_color}")
+            print(f"❌ No se encontró compra")
             return jsonify({
                 'status': False,
                 'message': 'No has comprado este producto aún'
