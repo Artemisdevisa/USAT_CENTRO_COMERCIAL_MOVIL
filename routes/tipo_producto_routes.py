@@ -9,36 +9,46 @@ ws_tipo_producto = Blueprint('ws_tipo_producto', __name__)
 
 @ws_tipo_producto.route('/tipos/listar', methods=['GET'])
 def listar_tipos():
-    """listar tipos de producto activos para el frontend público"""
+    """Lista todos los tipos de producto activos CON 'TODOS' al inicio"""
     try:
         tipo_producto = TipoProducto()
-        resultado, tipos = tipo_producto.listar_tipos()
+        exito, resultado = tipo_producto.listar_tipos()
         
-        if resultado:
+        if exito:
             # ✅ AGREGAR "TODOS" AL INICIO
             todos = {
                 'id_tipo_prod': -1,
-                'nombre': 'Todos'
+                'idTipoProd': -1,  # ✅ ALIAS PARA ANDROID
+                'nombre': 'Todos',
+                'descripcion': 'Mostrar todos los productos'
             }
-            tipos.insert(0, todos)
+            
+            # ✅ AGREGAR ALIAS A CADA TIPO
+            tipos_con_alias = []
+            for tipo in resultado:
+                tipo['idTipoProd'] = tipo['id_tipo_prod']  # ✅ AGREGAR ALIAS
+                tipos_con_alias.append(tipo)
+            
+            # Insertar "Todos" al inicio
+            tipos_con_alias.insert(0, todos)
             
             return jsonify({
                 'status': True,
-                'data': tipos,
-                'message': f'Se encontraron {len(tipos)} tipos'
+                'data': tipos_con_alias,
+                'message': 'Tipos listados correctamente'
             }), 200
         else:
             return jsonify({
                 'status': False,
-                'data': None,
-                'message': tipos
+                'data': [],
+                'message': resultado
             }), 500
             
     except Exception as e:
         return jsonify({
             'status': False,
-            'data': None,
-            'message': f'Error interno: {str(e)}'
+            'data': [],
+            'message': f'Error: {str(e)}'
         }), 500
 
 # ============================================
