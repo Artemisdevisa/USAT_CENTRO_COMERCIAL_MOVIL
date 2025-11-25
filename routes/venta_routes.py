@@ -308,6 +308,86 @@ def obtener_venta_completa(id_venta):
             'data': None,
             'message': f'Error: {str(e)}'
         }), 500
+    
+
+@ws_venta.route('/ventas/reporte-por-sucursal/<int:id_sucursal>', methods=['GET'])
+def obtener_reporte_por_sucursal(id_sucursal):
+    """Obtener reporte de ventas por sucursal"""
+    try:
+        print(f"\n{'='*60}")
+        print(f"📊 GENERANDO REPORTE DE VENTAS")
+        print(f"{'='*60}")
+        print(f"ID Sucursal: {id_sucursal}")
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                v.id_venta,
+                v.codigo_qr as codigo_venta,
+                v.created_at as fecha_venta,
+                v.subtotal,
+                v.descuento,
+                v.impuesto,
+                v.total,
+                v.estado,
+                u.nomusuario as nombre_usuario,
+                (SELECT COUNT(*) FROM detalle_venta dv WHERE dv.id_venta = v.id_venta AND dv.estado = TRUE) as cantidad_productos
+            FROM venta v
+            INNER JOIN usuario u ON v.id_usuario = u.id_usuario
+            WHERE v.id_sucursal = %s
+            ORDER BY v.created_at DESC
+        """, [id_sucursal])
+        
+        resultados = cursor.fetchall()
+        
+        cursor.close()
+        con.close()
+        
+        print(f"✅ Ventas encontradas: {len(resultados)}")
+        
+        if resultados:
+            ventas = []
+            for row in resultados:
+                venta = {
+                    'id_venta': row['id_venta'],
+                    'codigo_venta': row['codigo_venta'],
+                    'fecha_venta': str(row['fecha_venta']) if row['fecha_venta'] else '',
+                    'subtotal': float(row['subtotal']) if row['subtotal'] else 0.0,
+                    'descuento': float(row['descuento']) if row['descuento'] else 0.0,
+                    'impuesto': float(row['impuesto']) if row['impuesto'] else 0.0,
+                    'total': float(row['total']) if row['total'] else 0.0,
+                    'estado': row['estado'],
+                    'nombre_usuario': row['nombre_usuario'],
+                    'cantidad_productos': row['cantidad_productos']
+                }
+                ventas.append(venta)
+            
+            print(f"{'='*60}\n")
+            
+            return jsonify({
+                'status': True,
+                'data': ventas,
+                'message': 'Reporte generado correctamente'
+            }), 200
+        else:
+            return jsonify({
+                'status': True,
+                'data': [],
+                'message': 'No hay ventas para esta sucursal'
+            }), 200
+            
+    except Exception as e:
+        print(f"\n💥 ERROR CRÍTICO: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return jsonify({
+            'status': False,
+            'data': [],
+            'message': f'Error: {str(e)}'
+        }), 500
 
 @ws_venta.route('/ventas/cancelar/<int:id_venta>', methods=['POST'])
 def cancelar_venta(id_venta):

@@ -267,6 +267,12 @@ def dashboard_chat_conversacion(id_conversacion):
     """Vista de conversación individual"""
     return render_template('chat/conversacion.html')
 
+
+@app.route('/dashboard/reportes-ventas')
+def dashboard_reportes_ventas():
+    """Reportes de ventas por sucursal - ACCESO EMPRESA"""
+    return render_template('reporte_venta/lista.html')
+
 @app.route('/api/info')
 def api_info():
     """Información de la API y configuración de Cloudinary"""
