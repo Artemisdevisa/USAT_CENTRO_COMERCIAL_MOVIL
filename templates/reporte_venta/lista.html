@@ -190,12 +190,6 @@
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-icon stat-blue"><i class="bi bi-box-seam"></i></div>
-                        <div class="stat-label">Productos Vendidos</div>
-                        <div class="stat-value" id="statProductosVendidos">0</div>
-                    </div>
-                    
-                    <div class="stat-card">
                         <div class="stat-icon stat-yellow"><i class="bi bi-ticket-perforated"></i></div>
                         <div class="stat-label">Cupones Usados</div>
                         <div class="stat-value" id="statCuponesUsados">0</div>
@@ -437,12 +431,10 @@
         function calcularEstadisticas(ventas) {
             const totalVentas = ventas.reduce((sum, v) => sum + parseFloat(v.total || 0), 0);
             const cantidadVentas = ventas.length;
-            const productosVendidos = ventas.reduce((sum, v) => sum + parseInt(v.cantidad_productos || 0), 0);
             const cuponesUsados = ventas.filter(v => parseFloat(v.descuento || 0) > 0).length;
             
             document.getElementById('statTotalVentas').textContent = 'S/ ' + totalVentas.toFixed(2);
             document.getElementById('statCantidadVentas').textContent = cantidadVentas;
-            document.getElementById('statProductosVendidos').textContent = productosVendidos;
             document.getElementById('statCuponesUsados').textContent = cuponesUsados;
         }
 

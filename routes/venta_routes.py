@@ -322,14 +322,29 @@ def obtener_reporte_por_sucursal(id_sucursal):
         con = Conexion().open
         cursor = con.cursor()
         
+        # ✅ CORREGIDO: Calcular subtotal, impuesto y descuento si son NULL
         cursor.execute("""
             SELECT 
                 v.id_venta,
                 v.codigo_qr as codigo_venta,
                 v.created_at as fecha_venta,
-                v.subtotal,
-                v.descuento,
-                v.impuesto,
+                -- ✅ Si subtotal es NULL, calcular desde detalles
+                COALESCE(
+                    v.subtotal,
+                    (SELECT COALESCE(SUM(dv.sub_total), 0) 
+                     FROM detalle_venta dv 
+                     WHERE dv.id_venta = v.id_venta AND dv.estado = TRUE)
+                ) as subtotal,
+                -- ✅ Descuento (si es NULL, es 0)
+                COALESCE(v.descuento, 0) as descuento,
+                -- ✅ Si impuesto es NULL, calcular como (subtotal - descuento) * 0.18
+                COALESCE(
+                    v.impuesto,
+                    (COALESCE(v.subtotal, (SELECT COALESCE(SUM(dv.sub_total), 0) 
+                                            FROM detalle_venta dv 
+                                            WHERE dv.id_venta = v.id_venta AND dv.estado = TRUE)) 
+                     - COALESCE(v.descuento, 0)) * 0.18
+                ) as impuesto,
                 v.total,
                 v.estado,
                 u.nomusuario as nombre_usuario,
@@ -350,14 +365,26 @@ def obtener_reporte_por_sucursal(id_sucursal):
         if resultados:
             ventas = []
             for row in resultados:
+                subtotal = float(row['subtotal']) if row['subtotal'] else 0.0
+                descuento = float(row['descuento']) if row['descuento'] else 0.0
+                impuesto = float(row['impuesto']) if row['impuesto'] else 0.0
+                total = float(row['total']) if row['total'] else 0.0
+                
+                # ✅ DEBUG: Imprimir valores calculados
+                print(f"\n📦 Venta {row['codigo_venta']}:")
+                print(f"   Subtotal: {subtotal}")
+                print(f"   Descuento: {descuento}")
+                print(f"   Impuesto: {impuesto}")
+                print(f"   Total: {total}")
+                
                 venta = {
                     'id_venta': row['id_venta'],
                     'codigo_venta': row['codigo_venta'],
                     'fecha_venta': str(row['fecha_venta']) if row['fecha_venta'] else '',
-                    'subtotal': float(row['subtotal']) if row['subtotal'] else 0.0,
-                    'descuento': float(row['descuento']) if row['descuento'] else 0.0,
-                    'impuesto': float(row['impuesto']) if row['impuesto'] else 0.0,
-                    'total': float(row['total']) if row['total'] else 0.0,
+                    'subtotal': subtotal,
+                    'descuento': descuento,
+                    'impuesto': impuesto,
+                    'total': total,
                     'estado': row['estado'],
                     'nombre_usuario': row['nombre_usuario'],
                     'cantidad_productos': row['cantidad_productos']
@@ -386,28 +413,5 @@ def obtener_reporte_por_sucursal(id_sucursal):
         return jsonify({
             'status': False,
             'data': [],
-            'message': f'Error: {str(e)}'
-        }), 500
-
-@ws_venta.route('/ventas/cancelar/<int:id_venta>', methods=['POST'])
-def cancelar_venta(id_venta):
-    """Cancelar venta y devolver stock"""
-    try:
-        venta = Venta()
-        exito, mensaje = venta.cancelar_venta(id_venta)
-        
-        if exito:
-            return jsonify({
-                'status': True,
-                'message': mensaje
-            }), 200
-        else:
-            return jsonify({
-                'status': False,
-                'message': mensaje
-            }), 400
-    except Exception as e:
-        return jsonify({
-            'status': False,
             'message': f'Error: {str(e)}'
         }), 500
