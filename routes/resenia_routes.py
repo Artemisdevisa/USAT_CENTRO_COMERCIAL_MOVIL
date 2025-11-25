@@ -423,6 +423,7 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
         sql = """
             SELECT 
                 r.id_resenia,
+                r.id_usuario,
                 r.titulo,
                 r.comentario,
                 r.calificacion,
@@ -454,6 +455,7 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
                 print(f"  ✅ Reseña: {row['titulo']} por {row['nombre_completo']}")
                 resenias.append({
                     'id_resenia': row['id_resenia'],
+                    'id_usuario': row['id_usuario'],
                     'titulo': row['titulo'],
                     'comentario': row['comentario'],
                     'calificacion': row['calificacion'],

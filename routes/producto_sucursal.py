@@ -113,18 +113,33 @@ def productos_relacionados(id_categoria, id_actual):
                         url_img = '/' + url_img
                     url_img = base_url + url_img
             
+            # ✅ CRÍTICO: Enviar TODOS los aliases posibles
             producto = {
+                # ✅ IDs (todos los formatos)
                 "id_prod_sucursal": row['id_prod_sucursal'],
+                "idProdSucursal": row['id_prod_sucursal'],      # ← AGREGAR
+                "idProducto": row['id_prod_sucursal'],           # ← AGREGAR
                 "id_prod_color": row['id_prod_color'] if row['id_prod_color'] else None,
+                "idProdColor": row['id_prod_color'] if row['id_prod_color'] else None,  # ← AGREGAR
+                
+                # ✅ Nombre (todos los formatos)
                 "nombre": row['nombre'],
+                "nombreProducto": row['nombre'],                 # ← AGREGAR
+                
+                # ✅ URLs (todos los formatos)
+                "url_img": url_img,
+                "urlImg": url_img,                               # ← AGREGAR
+                "imagen": url_img,                               # ← AGREGAR
+                
+                # ✅ Otros campos
                 "talla": row['talla'] if row['talla'] else '',
                 "material": row['material'] if row['material'] else '',
-                "url_img": url_img,  # ✅ URL COMPLETA
                 "genero": row['genero'] if row['genero'] else 'Sin definir',
                 "precio": float(row['precio']) if row['precio'] else 0.0,
                 "stock": row['stock'] if row['stock'] else 0,
                 "marca": row['marca'] if row['marca'] else '',
                 "categoria": row['categoria'] if row['categoria'] else '',
+                "nombreCategoria": row['categoria'] if row['categoria'] else '',  # ← AGREGAR
                 "color": row['color'] if row['color'] else 'Sin color'
             }
             productos.append(producto)
@@ -132,13 +147,22 @@ def productos_relacionados(id_categoria, id_actual):
         cursor.close()
         con.close()
         
+        # ✅ LOG PARA DEBUGGING
+        print(f"🔍 Productos relacionados encontrados: {len(productos)}")
+        if productos:
+            print(f"📦 Primer producto: {productos[0]}")
+        
         return jsonify({
             'status': True,
             'data': productos,
-            'message': 'Productos relacionados obtenidos'
+            'message': f'Se encontraron {len(productos)} productos relacionados'
         }), 200
             
     except Exception as e:
+        import traceback
+        print(f"❌ ERROR en productos_relacionados: {str(e)}")
+        traceback.print_exc()
+        
         return jsonify({
             'status': False,
             'data': [],
