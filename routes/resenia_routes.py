@@ -585,3 +585,74 @@ def obtener_id_det_vent():
             'status': False,
             'message': f'Error en el servidor: {str(e)}'
         }), 500
+    
+
+# ============================================
+# ✅ ESTADÍSTICAS POR PRODUCTO_SUCURSAL
+# ============================================
+@ws_resenia.route('/resenias/estadisticas-producto-sucursal/<int:id_prod_sucursal>', methods=['GET'])
+def obtener_estadisticas_producto_sucursal(id_prod_sucursal):
+    """Obtener promedio y total de reseñas de un producto_sucursal"""
+    try:
+        print(f"=== ESTADÍSTICAS PRODUCTO_SUCURSAL ===")
+        print(f"id_prod_sucursal: {id_prod_sucursal}")
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        sql = """
+            SELECT 
+                COALESCE(AVG(r.calificacion), 0) as promedio,
+                COUNT(r.id_resenia) as total,
+                COUNT(CASE WHEN r.calificacion = 5 THEN 1 END) as estrellas_5,
+                COUNT(CASE WHEN r.calificacion = 4 THEN 1 END) as estrellas_4,
+                COUNT(CASE WHEN r.calificacion = 3 THEN 1 END) as estrellas_3,
+                COUNT(CASE WHEN r.calificacion = 2 THEN 1 END) as estrellas_2,
+                COUNT(CASE WHEN r.calificacion = 1 THEN 1 END) as estrellas_1
+            FROM resenia_producto r
+            INNER JOIN producto_color pc ON r.id_prod_color = pc.id_prod_color
+            WHERE pc.id_prod_sucursal = %s 
+              AND r.estado = TRUE
+        """
+        
+        cursor.execute(sql, [id_prod_sucursal])
+        resultado = cursor.fetchone()
+        
+        cursor.close()
+        con.close()
+        
+        if resultado:
+            estadisticas = {
+                'promedio': round(float(resultado['promedio']), 1),
+                'total': resultado['total'],
+                'distribucion': {
+                    '5': resultado['estrellas_5'],
+                    '4': resultado['estrellas_4'],
+                    '3': resultado['estrellas_3'],
+                    '2': resultado['estrellas_2'],
+                    '1': resultado['estrellas_1']
+                }
+            }
+            
+            print(f"✅ Estadísticas: {estadisticas}")
+            
+            return jsonify({
+                'status': True,
+                'data': estadisticas,
+                'message': 'Estadísticas obtenidas'
+            }), 200
+        else:
+            return jsonify({
+                'status': False,
+                'message': 'No se pudieron obtener estadísticas'
+            }), 500
+            
+    except Exception as e:
+        print(f"💥 ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
