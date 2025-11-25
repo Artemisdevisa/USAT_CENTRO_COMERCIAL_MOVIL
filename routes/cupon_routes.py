@@ -470,3 +470,76 @@ def usar_cupon():
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
+    
+@ws_cupon.route('/cupones/verificar-uso/<int:id_cupon>/<int:id_usuario>', methods=['GET'])
+def verificar_uso_cupon(id_cupon, id_usuario):
+    """Verifica si un usuario ya usó un cupón específico"""
+    try:
+        print(f"\n{'='*60}")
+        print(f"🔍 VERIFICANDO USO DE CUPÓN")
+        print(f"   ID Cupón: {id_cupon}")
+        print(f"   ID Usuario: {id_usuario}")
+        print(f"{'='*60}")
+        
+        con = Conexion().open
+        cursor = con.cursor()
+        
+        # ✅ VERIFICAR SI YA LO USÓ
+        cursor.execute("""
+            SELECT COUNT(*) as usado
+            FROM cupon_usuario
+            WHERE id_cupon = %s AND id_usuario = %s
+        """, [id_cupon, id_usuario])
+        
+        resultado = cursor.fetchone()
+        ya_usado = resultado['usado'] > 0
+        
+        # ✅ VERIFICAR DISPONIBILIDAD
+        cursor.execute("""
+            SELECT 
+                cantidad_total,
+                cantidad_usada,
+                (cantidad_total - cantidad_usada) as disponibles
+            FROM cupon
+            WHERE id_cupon = %s AND estado = TRUE
+        """, [id_cupon])
+        
+        cupon_data = cursor.fetchone()
+        
+        cursor.close()
+        con.close()
+        
+        if not cupon_data:
+            print("❌ Cupón no encontrado")
+            return jsonify({
+                'status': False,
+                'ya_usado': False,
+                'disponible': False,
+                'message': 'Cupón no encontrado'
+            }), 404
+        
+        disponibles = cupon_data['disponibles']
+        disponible = disponibles > 0
+        
+        print(f"✅ Resultado:")
+        print(f"   Ya usado: {ya_usado}")
+        print(f"   Disponibles: {disponibles}")
+        print(f"   Está disponible: {disponible}")
+        print(f"{'='*60}\n")
+        
+        return jsonify({
+            'status': True,
+            'ya_usado': ya_usado,
+            'disponible': disponible,
+            'cantidad_disponible': disponibles,
+            'message': 'Verificación exitosa'
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': False,
+            'message': f'Error: {str(e)}'
+        }), 500
