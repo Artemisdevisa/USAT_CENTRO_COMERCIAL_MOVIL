@@ -33,12 +33,36 @@ def crear_venta_multiple():
         venta_model = Venta()
         ventas_creadas = []
         errores = []
+        id_sucursal_cupon = None  # ✅ NUEVA VARIABLE
+        
+        # ✅ SI HAY CUPÓN, OBTENER SU SUCURSAL
+        if id_cupon:
+            try:
+                con = Conexion().open
+                cursor = con.cursor()
+                cursor.execute("SELECT id_sucursal FROM cupon WHERE id_cupon = %s", [id_cupon])
+                cupon_info = cursor.fetchone()
+                if cupon_info:
+                    id_sucursal_cupon = cupon_info['id_sucursal']
+                cursor.close()
+                con.close()
+                print(f"   ✅ Sucursal del cupón: {id_sucursal_cupon}")
+            except Exception as e:
+                print(f"   ⚠️ Error al obtener sucursal del cupón: {str(e)}")
         
         for id_sucursal in sucursales:
             print(f"\n🏪 Procesando sucursal ID: {id_sucursal}")
             
+            # ✅ SOLO APLICAR CUPÓN EN LA SUCURSAL CORRECTA
+            cupon_para_esta_venta = id_cupon if (id_sucursal == id_sucursal_cupon) else None
+            
+            if cupon_para_esta_venta:
+                print(f"   🎫 Aplicando cupón {id_cupon} en esta sucursal")
+            else:
+                print(f"   ℹ️ Sin cupón para esta sucursal")
+            
             exito, resultado = venta_model.crear_venta_completa(
-                id_usuario, id_sucursal, id_tarjeta
+                id_usuario, id_sucursal, id_tarjeta, cupon_para_esta_venta  # ✅ AQUÍ PASAMOS EL CUPÓN
             )
             
             if exito:
@@ -46,6 +70,7 @@ def crear_venta_multiple():
                 print(f"   - ID Venta: {resultado.get('id_venta')}")
                 print(f"   - Código: {resultado.get('codigo_venta')}")
                 print(f"   - Total: {resultado.get('total', 0)}")
+                print(f"   - Descuento: {resultado.get('descuento', 0)}")
                 
                 ventas_creadas.append(resultado)
             else:
@@ -55,47 +80,43 @@ def crear_venta_multiple():
                     'error': resultado
                 })
         
+        # ✅ REGISTRAR USO DEL CUPÓN
         if ventas_creadas and id_cupon:
             try:
                 print(f"\n{'='*60}")
                 print(f"🎫 REGISTRANDO USO DE CUPÓN")
                 print(f"{'='*60}")
-                print(f"ID Cupón: {id_cupon}")
-                print(f"ID Usuario: {id_usuario}")
                 
-                primera_venta = ventas_creadas[0]['id_venta']
-                print(f"ID Venta (primera): {primera_venta}")
+                # Buscar la venta que tiene el cupón aplicado (la que tiene descuento > 0)
+                venta_con_cupon = None
+                for venta in ventas_creadas:
+                    if venta.get('descuento', 0) > 0:
+                        venta_con_cupon = venta
+                        break
                 
-                con = Conexion().open
-                cursor = con.cursor()
-                
-                cursor.execute("""
-                    SELECT COUNT(*) as usado
-                    FROM cupon_usuario
-                    WHERE id_cupon = %s AND id_usuario = %s
-                """, [id_cupon, id_usuario])
-                
-                resultado_check = cursor.fetchone()
-                
-                if resultado_check['usado'] > 0:
-                    print("⚠️ Usuario ya usó este cupón previamente")
-                    cursor.close()
-                    con.close()
-                else:
+                if venta_con_cupon:
+                    con = Conexion().open
+                    cursor = con.cursor()
+                    
+                    # Verificar si ya usó el cupón
                     cursor.execute("""
-                        SELECT cantidad_total, cantidad_usada
-                        FROM cupon
-                        WHERE id_cupon = %s AND estado = TRUE
-                    """, [id_cupon])
+                        SELECT COUNT(*) as usado
+                        FROM cupon_usuario
+                        WHERE id_cupon = %s AND id_usuario = %s
+                    """, [id_cupon, id_usuario])
                     
-                    cupon = cursor.fetchone()
+                    resultado_check = cursor.fetchone()
                     
-                    if cupon and cupon['cantidad_usada'] < cupon['cantidad_total']:
+                    if resultado_check['usado'] > 0:
+                        print("⚠️ Usuario ya usó este cupón previamente (no debería llegar aquí)")
+                    else:
+                        # Insertar registro
                         cursor.execute("""
                             INSERT INTO cupon_usuario (id_cupon, id_usuario, id_venta, fecha_uso)
                             VALUES (%s, %s, %s, NOW())
-                        """, [id_cupon, id_usuario, primera_venta])
+                        """, [id_cupon, id_usuario, venta_con_cupon['id_venta']])
                         
+                        # Incrementar contador
                         cursor.execute("""
                             UPDATE cupon
                             SET cantidad_usada = cantidad_usada + 1
@@ -103,13 +124,12 @@ def crear_venta_multiple():
                         """, [id_cupon])
                         
                         con.commit()
-                        print(f"✅ Cupón registrado exitosamente")
-                        print(f"   - Cantidad usada incrementada")
-                    else:
-                        print("⚠️ Cupón no disponible o agotado")
+                        print(f"✅ Cupón registrado en venta {venta_con_cupon['id_venta']}")
                     
                     cursor.close()
                     con.close()
+                else:
+                    print("⚠️ No se encontró venta con descuento aplicado")
                 
                 print(f"{'='*60}\n")
                 

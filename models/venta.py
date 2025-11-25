@@ -4,18 +4,22 @@ class Venta:
     def __init__(self):
         pass
     
-    def crear_venta_completa(self, id_usuario, id_sucursal, id_tarjeta):
-        """Crear venta completa desde el carrito"""
+    def crear_venta_completa(self, id_usuario, id_sucursal, id_tarjeta, id_cupon=None):
+        """Crear venta completa desde el carrito con soporte de cupones"""
         try:
             con = Conexion().open
             cursor = con.cursor()
             
             print(f"\n🔍 EJECUTANDO fn_crear_venta_completa:")
-            print(f"   Usuario: {id_usuario}, Sucursal: {id_sucursal}, Tarjeta: {id_tarjeta}")
+            print(f"   Usuario: {id_usuario}")
+            print(f"   Sucursal: {id_sucursal}")
+            print(f"   Tarjeta: {id_tarjeta}")
+            print(f"   Cupón: {id_cupon if id_cupon else 'Sin cupón'}")
             
+            # ✅ PASAR id_cupon A LA FUNCIÓN
             cursor.execute("""
-                SELECT * FROM fn_crear_venta_completa(%s, %s, %s)
-            """, [id_usuario, id_sucursal, id_tarjeta])
+                SELECT * FROM fn_crear_venta_completa(%s, %s, %s, %s)
+            """, [id_usuario, id_sucursal, id_tarjeta, id_cupon])
             
             resultado = cursor.fetchone()
             
@@ -29,24 +33,31 @@ class Venta:
             con.close()
             
             if resultado and resultado['id_venta'] > 0:
-                # ✅ OBTENER EL TOTAL DESDE LA BD
+                # ✅ OBTENER EL TOTAL DESDE LA BD (YA CON DESCUENTO)
                 con2 = Conexion().open
                 cursor2 = con2.cursor()
                 
-                cursor2.execute("SELECT total FROM venta WHERE id_venta = %s", [resultado['id_venta']])
+                cursor2.execute("""
+                    SELECT total, descuento, subtotal, impuesto 
+                    FROM venta 
+                    WHERE id_venta = %s
+                """, [resultado['id_venta']])
                 venta_info = cursor2.fetchone()
                 
                 cursor2.close()
                 con2.close()
                 
                 total_venta = float(venta_info['total']) if venta_info else 0.0
+                descuento = float(venta_info['descuento']) if venta_info else 0.0
                 
                 print(f"   ✅ Total recuperado: {total_venta}")
+                print(f"   ✅ Descuento aplicado: {descuento}")
                 
                 return True, {
                     'id_venta': resultado['id_venta'],
                     'codigo_venta': resultado['codigo_venta'],
                     'total': total_venta,
+                    'descuento': descuento,
                     'mensaje': resultado['mensaje']
                 }
             else:
