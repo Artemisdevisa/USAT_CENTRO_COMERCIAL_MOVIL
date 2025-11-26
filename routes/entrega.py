@@ -115,7 +115,8 @@ def marcar_venta_entregada():
         if not codigo_venta:
             return jsonify({
                 'status': False,
-                'message': 'Código de venta requerido'
+                'message': 'Código de venta requerido',
+                'data': None
             }), 400
         
         print(f"\n{'='*60}")
@@ -128,51 +129,86 @@ def marcar_venta_entregada():
         
         # ✅ EJECUTAR FUNCIÓN DE POSTGRESQL
         cursor.execute("SELECT fn_marcar_venta_entregada(%s)", [codigo_venta])
-        resultado_raw = cursor.fetchone()[0]
+        
+        # ✅ FIX: Acceder al resultado correctamente
+        resultado_raw = cursor.fetchone()
+        
+        # El resultado viene en el primer campo del diccionario
+        # Puede ser 'fn_marcar_venta_entregada' o index 0 dependiendo del cursor
+        if isinstance(resultado_raw, dict):
+            # Si es diccionario, buscar la clave correcta
+            resultado_json = resultado_raw.get('fn_marcar_venta_entregada') or list(resultado_raw.values())[0]
+        else:
+            # Si es tupla
+            resultado_json = resultado_raw[0]
+        
+        print(f"\n📊 RESULTADO RAW:")
+        print(f"   Tipo resultado_raw: {type(resultado_raw)}")
+        print(f"   Contenido: {resultado_raw}")
+        print(f"   Tipo resultado_json: {type(resultado_json)}")
         
         # ✅ CONVERTIR JSONB A DICCIONARIO PYTHON
-        if isinstance(resultado_raw, str):
-            resultado = json.loads(resultado_raw)
+        if isinstance(resultado_json, str):
+            resultado = json.loads(resultado_json)
         else:
-            resultado = resultado_raw
+            resultado = resultado_json
         
-        print(f"\n📊 RESULTADO DE LA FUNCIÓN:")
-        print(f"   Tipo: {type(resultado)}")
-        print(f"   Contenido: {resultado}")
+        print(f"\n📊 RESULTADO PROCESADO:")
         print(f"   Success: {resultado.get('success')}")
         print(f"   Message: {resultado.get('message')}")
-        print(f"{'='*60}\n")
+        print(f"   ID Venta: {resultado.get('id_venta')}")
         
-        con.commit()
+        # Solo hacer commit si fue exitoso
+        if resultado.get('success'):
+            con.commit()
+            print(f"✅ Commit realizado - Venta marcada como entregada")
+        else:
+            print(f"⚠️ No se hizo commit - Operación no exitosa")
+        
         cursor.close()
         con.close()
         
-        # ✅ VALIDAR RESULTADO
+        print(f"{'='*60}\n")
+        
+        # ✅ RETORNAR RESPUESTA
         if resultado.get('success'):
-            print(f"✅ Venta marcada como entregada correctamente")
             return jsonify({
                 'status': True,
-                'data': resultado,
+                'data': {
+                    'success': resultado.get('success'),
+                    'message': resultado.get('message'),
+                    'id_venta': resultado.get('id_venta'),
+                    'sucursal': resultado.get('sucursal', ''),
+                    'total': resultado.get('total', 0),
+                    'codigo': resultado.get('codigo', codigo_venta)
+                },
                 'message': resultado.get('message', 'Venta entregada correctamente')
             }), 200
         else:
-            print(f"❌ Error: {resultado.get('message')}")
             return jsonify({
                 'status': False,
-                'data': resultado,
+                'data': {
+                    'success': False,
+                    'message': resultado.get('message'),
+                    'id_venta': resultado.get('id_venta')
+                },
                 'message': resultado.get('message', 'Error al marcar venta')
             }), 400
         
     except Exception as e:
-        print(f"\n💥 ERROR CRÍTICO:")
+        print(f"\n{'='*60}")
+        print(f"💥 ERROR CRÍTICO:")
+        print(f"   Tipo: {type(e).__name__}")
         print(f"   Mensaje: {str(e)}")
+        print(f"{'='*60}")
         import traceback
         traceback.print_exc()
         print(f"{'='*60}\n")
         
         return jsonify({
             'status': False,
-            'message': f'Error: {str(e)}'
+            'data': None,
+            'message': f'Error interno: {str(e)}'
         }), 500
 
 
