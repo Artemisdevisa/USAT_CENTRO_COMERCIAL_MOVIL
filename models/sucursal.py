@@ -64,7 +64,7 @@ class Sucursal:
             con = Conexion().open
             cursor = con.cursor()
             
-            # Obtener información de la sucursal
+            # ✅ AGREGAR latitud y longitud al SELECT
             sql_sucursal = """
                 SELECT 
                     s.id_sucursal,
@@ -73,6 +73,8 @@ class Sucursal:
                     s.telefono,
                     s.img_logo,
                     s.img_banner,
+                    s.latitud,
+                    s.longitud,
                     e.nombre_comercial as empresa,
                     e.sitio_web,
                     e.descripcion as empresa_descripcion,
@@ -126,7 +128,7 @@ class Sucursal:
                     "hora_fin": str(horario['hora_fin'])[:5]  # HH:MM
                 })
             
-            # Construir respuesta completa
+            # ✅ AGREGAR latitud y longitud en la respuesta
             sucursal = {
                 "id_sucursal": sucursal_data['id_sucursal'],
                 "nombre": sucursal_data['nombre'],
@@ -134,6 +136,8 @@ class Sucursal:
                 "telefono": sucursal_data['telefono'],
                 "img_logo": sucursal_data['img_logo'] if sucursal_data['img_logo'] else '',
                 "img_banner": sucursal_data['img_banner'] if sucursal_data['img_banner'] else '',
+                "latitud": str(sucursal_data['latitud']) if sucursal_data['latitud'] else None,
+                "longitud": str(sucursal_data['longitud']) if sucursal_data['longitud'] else None,
                 "empresa": sucursal_data['empresa'] if sucursal_data['empresa'] else '',
                 "sitio_web": sucursal_data['sitio_web'] if sucursal_data['sitio_web'] else '',
                 "empresa_descripcion": sucursal_data['empresa_descripcion'] if sucursal_data['empresa_descripcion'] else '',
