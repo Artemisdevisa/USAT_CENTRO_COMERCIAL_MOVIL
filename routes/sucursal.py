@@ -72,7 +72,15 @@ def listar_por_empresa(id_empresa):
             ORDER BY s.nombre
         """, [id_empresa])
         
-        sucursales = cursor.fetchall()
+        sucursales_raw = cursor.fetchall()
+        
+        # ✅ CONVERTIR estado booleano a texto
+        sucursales = []
+        for row in sucursales_raw:
+            sucursal = dict(row)
+            sucursal['estado'] = "Abierto" if row['estado'] else "Cerrado"
+            sucursales.append(sucursal)
+        
         cursor.close()
         con.close()
         
@@ -215,7 +223,8 @@ def listar_sucursales():
                 "longitud": str(row['longitud']) if row['longitud'] else None,
                 "empresa": row['empresa'] or '',
                 "distrito": row['distrito'] or '',
-                "estado": row['estado']
+                # ✅ CORRECCIÓN: Convertir booleano a texto legible
+                "estado": "Abierto" if row['estado'] else "Cerrado"
             }
             sucursales.append(sucursal)
         
@@ -298,11 +307,14 @@ def obtener_sucursal(id):
             WHERE s.id_sucursal = %s
         """, [id])
         
-        sucursal = cursor.fetchone()
+        sucursal_raw = cursor.fetchone()
         cursor.close()
         con.close()
         
-        if sucursal:
+        if sucursal_raw:
+            # ✅ CONVERTIR estado booleano a texto
+            sucursal = dict(sucursal_raw)
+            sucursal['estado'] = "Abierto" if sucursal_raw['estado'] else "Cerrado"
             return jsonify({'status': True, 'data': sucursal}), 200
         else:
             return jsonify({'status': False, 'message': 'Sucursal no encontrada'}), 404
