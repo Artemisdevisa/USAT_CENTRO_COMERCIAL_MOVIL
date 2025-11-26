@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from conexionBD import Conexion
+import json  # ✅ AGREGAR ESTE IMPORT
 
 ws_entrega = Blueprint('ws_entrega', __name__)
 
@@ -125,32 +126,50 @@ def marcar_venta_entregada():
         con = Conexion().open
         cursor = con.cursor()
         
+        # ✅ EJECUTAR FUNCIÓN DE POSTGRESQL
         cursor.execute("SELECT fn_marcar_venta_entregada(%s)", [codigo_venta])
-        resultado = cursor.fetchone()[0]
+        resultado_raw = cursor.fetchone()[0]
+        
+        # ✅ CONVERTIR JSONB A DICCIONARIO PYTHON
+        if isinstance(resultado_raw, str):
+            resultado = json.loads(resultado_raw)
+        else:
+            resultado = resultado_raw
+        
+        print(f"\n📊 RESULTADO DE LA FUNCIÓN:")
+        print(f"   Tipo: {type(resultado)}")
+        print(f"   Contenido: {resultado}")
+        print(f"   Success: {resultado.get('success')}")
+        print(f"   Message: {resultado.get('message')}")
+        print(f"{'='*60}\n")
         
         con.commit()
         cursor.close()
         con.close()
         
-        if resultado['success']:
-            print(f"✅ Venta marcada como entregada")
+        # ✅ VALIDAR RESULTADO
+        if resultado.get('success'):
+            print(f"✅ Venta marcada como entregada correctamente")
             return jsonify({
                 'status': True,
                 'data': resultado,
-                'message': resultado['message']
+                'message': resultado.get('message', 'Venta entregada correctamente')
             }), 200
         else:
-            print(f"❌ Error: {resultado['message']}")
+            print(f"❌ Error: {resultado.get('message')}")
             return jsonify({
                 'status': False,
                 'data': resultado,
-                'message': resultado['message']
+                'message': resultado.get('message', 'Error al marcar venta')
             }), 400
         
     except Exception as e:
-        print(f"💥 ERROR: {str(e)}")
+        print(f"\n💥 ERROR CRÍTICO:")
+        print(f"   Mensaje: {str(e)}")
         import traceback
         traceback.print_exc()
+        print(f"{'='*60}\n")
+        
         return jsonify({
             'status': False,
             'message': f'Error: {str(e)}'
@@ -169,6 +188,11 @@ def verificar_codigo_venta():
                 'status': False,
                 'message': 'Código de venta requerido'
             }), 400
+        
+        print(f"\n{'='*60}")
+        print(f"🔍 VERIFICAR CÓDIGO DE VENTA")
+        print(f"   Código QR: {codigo_venta}")
+        print(f"{'='*60}")
         
         con = Conexion().open
         cursor = con.cursor()
@@ -191,6 +215,13 @@ def verificar_codigo_venta():
         con.close()
         
         if venta:
+            print(f"✅ Venta encontrada:")
+            print(f"   ID: {venta['id_venta']}")
+            print(f"   Sucursal: {venta['nombre_sucursal']}")
+            print(f"   Total: {venta['total']}")
+            print(f"   Entregado: {venta['entregado']}")
+            print(f"{'='*60}\n")
+            
             return jsonify({
                 'status': True,
                 'data': {
@@ -203,6 +234,9 @@ def verificar_codigo_venta():
                 'message': 'Código válido'
             }), 200
         else:
+            print(f"❌ Venta no encontrada")
+            print(f"{'='*60}\n")
+            
             return jsonify({
                 'status': False,
                 'data': None,
@@ -210,6 +244,11 @@ def verificar_codigo_venta():
             }), 404
         
     except Exception as e:
+        print(f"\n💥 ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        print(f"{'='*60}\n")
+        
         return jsonify({
             'status': False,
             'message': f'Error: {str(e)}'
