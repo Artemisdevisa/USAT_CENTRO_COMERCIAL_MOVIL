@@ -10,6 +10,7 @@ from routes.departamento import ws_departamento
 from routes.favorito import ws_favorito
 from routes.tipo_documento import ws_tipo_documento
 from routes.carrito import ws_carrito
+from routes.entrega import ws_entrega
 from routes.resenia_routes import ws_resenia
 from routes.persona_routes import ws_persona
 from routes.rol import ws_rol
@@ -91,6 +92,7 @@ app.register_blueprint(ws_tipo_producto)
 app.register_blueprint(ws_conversacion)
 app.register_blueprint(ws_mensaje)
 app.register_blueprint(ws_tarjeta)
+app.register_blueprint(ws_entrega, url_prefix='/api')
 app.register_blueprint(ws_venta)
 app.register_blueprint(ws_resenia)
 app.register_blueprint(ws_color)
