@@ -58,7 +58,61 @@ def dashboard_page():
 
 @ws_usuario.route('/api/login', methods=['POST'])
 def login():
-    """Login de usuario - INCLUYE id_empresa"""
+    """
+    ---
+    tags:
+      - Autenticación
+    summary: Login de usuario
+    description: Autentica un usuario con email y contraseña, retorna token JWT e información del usuario incluyendo id_empresa
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              format: email
+              example: "usuario@example.com"
+            password:
+              type: string
+              example: "contraseña123"
+    responses:
+      200:
+        description: Login exitoso
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            token:
+              type: string
+            user:
+              type: object
+              properties:
+                id_usuario:
+                  type: integer
+                email:
+                  type: string
+                nomusuario:
+                  type: string
+                id_empresa:
+                  type: integer
+                roles:
+                  type: array
+      401:
+        description: Credenciales inválidas
+      400:
+        description: Email o contraseña vacíos
+      500:
+        description: Error en el servidor
+    """
     try:
         print("\n" + "="*60)
         print("🔐 INICIANDO PROCESO DE LOGIN")
@@ -128,7 +182,25 @@ def login():
 
 @ws_usuario.route('/api/logout', methods=['POST'])
 def logout():
-    """Cerrar sesión"""
+    """
+    ---
+    tags:
+      - Autenticación
+    summary: Cerrar sesión
+    description: Cierra la sesión del usuario actual
+    responses:
+      200:
+        description: Sesión cerrada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      500:
+        description: Error en el servidor
+    """
     try:
         session.clear()
         return jsonify({
@@ -143,7 +215,33 @@ def logout():
 
 @ws_usuario.route('/api/verify-token', methods=['POST'])
 def verify_token():
-    """Verificar token JWT"""
+    """
+    ---
+    tags:
+      - Autenticación
+    summary: Verificar token JWT
+    description: Verifica si un token JWT es válido y retorna el payload
+    parameters:
+      - name: Authorization
+        in: header
+        type: string
+        required: true
+        description: Token JWT con formato "Bearer <token>"
+    responses:
+      200:
+        description: Token válido
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            user:
+              type: object
+      401:
+        description: Token expirado o inválido
+      500:
+        description: Error en el servidor
+    """
     try:
         token = request.headers.get('Authorization')
         
@@ -183,7 +281,35 @@ def verify_token():
 
 @ws_usuario.route('/api/usuario/<int:id_usuario>', methods=['GET'])
 def obtener_usuario(id_usuario):
-    """Obtener datos de usuario por ID"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Obtener usuario por ID
+    description: Obtiene todos los datos de un usuario específico
+    parameters:
+      - name: id_usuario
+        in: path
+        type: integer
+        required: true
+        description: ID del usuario
+    responses:
+      200:
+        description: Usuario obtenido correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+      404:
+        description: Usuario no encontrado
+      500:
+        description: Error en el servidor
+    """
     try:
         resultado, data = usuario_model.obtener_por_id(id_usuario)
         
@@ -209,7 +335,34 @@ def obtener_usuario(id_usuario):
 
 @ws_usuario.route('/api/usuario/validar-email', methods=['POST'])
 def validar_email():
-    """Validar si el email ya existe"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Validar disponibilidad de email
+    description: Verifica si un email ya está registrado en el sistema
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - email
+          properties:
+            email:
+              type: string
+              format: email
+    responses:
+      200:
+        description: Email disponible
+      409:
+        description: Email ya registrado
+      400:
+        description: Email no proporcionado
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         email = data.get('email')
@@ -245,7 +398,37 @@ def validar_email():
 
 @ws_usuario.route('/api/usuario/cambiar-password', methods=['POST'])
 def cambiar_password():
-    """Cambiar contraseña del usuario"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Cambiar contraseña
+    description: Cambia la contraseña de un usuario verificando la contraseña actual
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - password_actual
+            - password_nueva
+          properties:
+            id_usuario:
+              type: integer
+            password_actual:
+              type: string
+            password_nueva:
+              type: string
+    responses:
+      200:
+        description: Contraseña cambiada correctamente
+      400:
+        description: Contraseña actual incorrecta o datos incompletos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')
@@ -283,7 +466,49 @@ def cambiar_password():
 
 @ws_usuario.route('/api/usuario/registrar', methods=['POST'])
 def registrar():
-    """Registrar nuevo usuario"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Registrar nuevo usuario
+    description: Crea un nuevo usuario con los datos mínimos requeridos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - nomusuario
+            - email
+            - password
+            - id_persona
+            - id_rol
+          properties:
+            nomusuario:
+              type: string
+            email:
+              type: string
+              format: email
+            password:
+              type: string
+            id_persona:
+              type: integer
+            id_rol:
+              type: integer
+            id_empresa:
+              type: integer
+              description: Opcional
+    responses:
+      201:
+        description: Usuario registrado correctamente
+      400:
+        description: Datos incompletos
+      409:
+        description: Email ya registrado
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -337,7 +562,58 @@ def registrar():
 
 @ws_usuario.route('/api/postular-empresa', methods=['POST'])
 def postular_empresa():
-    """Crear solicitud de empresa"""
+    """
+    ---
+    tags:
+      - Solicitudes de Empresa
+    summary: Crear solicitud de empresa
+    description: Crea una solicitud de registro de nueva empresa para ser aprobada por administrador
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - id_dist
+            - ruc
+            - razon_social
+            - nombre_comercial
+            - descripcion
+            - telefono
+            - email
+            - direccion
+          properties:
+            id_usuario:
+              type: integer
+            id_dist:
+              type: integer
+            ruc:
+              type: string
+            razon_social:
+              type: string
+            nombre_comercial:
+              type: string
+            descripcion:
+              type: string
+            telefono:
+              type: string
+            email:
+              type: string
+              format: email
+            direccion:
+              type: string
+    responses:
+      201:
+        description: Solicitud creada correctamente
+      400:
+        description: Solicitud pendiente, RUC duplicado o datos inválidos
+      401:
+        description: Usuario no identificado
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')
@@ -432,7 +708,77 @@ def postular_empresa():
     
 @ws_usuario.route('/api/usuario/registrar-completo', methods=['POST'])
 def registrar_completo():
-    """Registrar usuario completo con persona, dirección e imagen en Cloudinary"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Registrar usuario completo
+    description: Registra un nuevo usuario con datos de persona, dirección e imagen en Cloudinary
+    parameters:
+      - name: nombres
+        in: formData
+        type: string
+        required: true
+      - name: apellidos
+        in: formData
+        type: string
+        required: true
+      - name: tipo_doc
+        in: formData
+        type: integer
+        required: true
+      - name: documento
+        in: formData
+        type: string
+        required: true
+      - name: fecha_nacimiento
+        in: formData
+        type: string
+        format: date
+        required: true
+      - name: telefono
+        in: formData
+        type: string
+        required: true
+      - name: id_dist
+        in: formData
+        type: integer
+        required: true
+      - name: direccion
+        in: formData
+        type: string
+        required: true
+      - name: nomusuario
+        in: formData
+        type: string
+        required: true
+      - name: email
+        in: formData
+        type: string
+        format: email
+        required: true
+      - name: password
+        in: formData
+        type: string
+        description: Opcional si se proporciona google_id
+      - name: google_id
+        in: formData
+        type: string
+        description: Opcional para registro con Google
+      - name: img_logo
+        in: formData
+        type: file
+        description: Foto de perfil (PNG, JPG, GIF, WebP)
+    responses:
+      201:
+        description: Usuario registrado correctamente
+      400:
+        description: Datos incompletos o email ya registrado
+      409:
+        description: Email ya registrado
+      500:
+        description: Error en el servidor
+    """
     try:
         from models.persona import Persona
         
@@ -557,7 +903,30 @@ def registrar_completo():
 
 @ws_usuario.route('/api/usuario/actualizar-foto', methods=['POST'])
 def actualizar_foto():
-    """Actualizar foto de perfil con Cloudinary"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Actualizar foto de perfil
+    description: Actualiza la foto de perfil del usuario en Cloudinary
+    parameters:
+      - name: id_usuario
+        in: formData
+        type: integer
+        required: true
+      - name: foto
+        in: formData
+        type: file
+        required: true
+        description: Foto de perfil (PNG, JPG, GIF, WebP)
+    responses:
+      200:
+        description: Foto actualizada correctamente
+      400:
+        description: Archivo no válido o datos incompletos
+      500:
+        description: Error al subir a Cloudinary
+    """
     try:
         if 'foto' not in request.files:
             return jsonify({
@@ -626,7 +995,18 @@ def actualizar_foto():
 
 @ws_usuario.route('/api/solicitudes-empresa/pendientes', methods=['GET'])
 def listar_solicitudes_pendientes():
-    """Listar solicitudes pendientes"""
+    """
+    ---
+    tags:
+      - Solicitudes de Empresa
+    summary: Listar solicitudes pendientes
+    description: Obtiene todas las solicitudes de empresa con estado pendiente
+    responses:
+      200:
+        description: Solicitudes obtenidas
+      500:
+        description: Error en el servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -648,7 +1028,18 @@ def listar_solicitudes_pendientes():
 
 @ws_usuario.route('/api/solicitudes-empresa/todas', methods=['GET'])
 def listar_todas_solicitudes():
-    """Listar todas las solicitudes"""
+    """
+    ---
+    tags:
+      - Solicitudes de Empresa
+    summary: Listar todas las solicitudes
+    description: Obtiene todas las solicitudes de empresa (cualquier estado)
+    responses:
+      200:
+        description: Solicitudes obtenidas
+      500:
+        description: Error en el servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -670,7 +1061,23 @@ def listar_todas_solicitudes():
 
 @ws_usuario.route('/api/solicitudes-empresa/<int:id_solicitud>', methods=['GET'])
 def obtener_solicitud(id_solicitud):
-    """Obtener una solicitud por ID"""
+    """
+    ---
+    tags:
+      - Solicitudes de Empresa
+    summary: Obtener solicitud por ID
+    description: Obtiene los detalles de una solicitud específica
+    parameters:
+      - name: id_solicitud
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Solicitud obtenida
+      500:
+        description: Error en el servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -688,10 +1095,47 @@ def obtener_solicitud(id_solicitud):
             'status': False,
             'message': f'Error: {str(e)}'
         }), 500
-    
+
+
+
 @ws_usuario.route('/api/solicitudes-empresa/aprobar/<int:id_solicitud>', methods=['PATCH'])
 def aprobar_solicitud(id_solicitud):
-    """Aprobar solicitud y crear empresa"""
+    """
+    ---
+    tags:
+      - Solicitudes de Empresa
+    summary: Aprobar solicitud de empresa
+    description: Aprueba una solicitud y crea la empresa en el sistema
+    parameters:
+      - name: id_solicitud
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            observaciones:
+              type: string
+              description: Observaciones sobre la aprobación
+    responses:
+      200:
+        description: Solicitud aprobada
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            id_empresa:
+              type: integer
+      400:
+        description: Error al aprobar
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         observaciones = data.get('observaciones', '')
@@ -724,7 +1168,40 @@ def aprobar_solicitud(id_solicitud):
 
 @ws_usuario.route('/api/solicitudes-empresa/rechazar/<int:id_solicitud>', methods=['DELETE'])
 def rechazar_solicitud(id_solicitud):
-    """Rechazar solicitud"""
+    """
+    ---
+    tags:
+      - Solicitudes de Empresa
+    summary: Rechazar solicitud de empresa
+    description: Rechaza una solicitud de empresa
+    parameters:
+      - name: id_solicitud
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            observaciones:
+              type: string
+              description: Motivo del rechazo
+    responses:
+      200:
+        description: Solicitud rechazada
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Error al rechazar
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         observaciones = data.get('observaciones', 'Solicitud rechazada')
@@ -755,7 +1232,59 @@ def rechazar_solicitud(id_solicitud):
     
 @ws_usuario.route('/api/usuario/actualizar-perfil', methods=['POST'])
 def actualizar_perfil():
-    """Actualizar perfil de usuario"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Actualizar perfil de usuario
+    description: Actualiza los datos de perfil del usuario (persona)
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - id_persona
+            - nombres
+            - apellidos
+            - telefono
+            - direccion
+            - fecha_nacimiento
+          properties:
+            id_usuario:
+              type: integer
+            id_persona:
+              type: integer
+            nombres:
+              type: string
+            apellidos:
+              type: string
+            telefono:
+              type: string
+            direccion:
+              type: string
+            fecha_nacimiento:
+              type: string
+              format: date
+    responses:
+      200:
+        description: Perfil actualizado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Datos incompletos
+      404:
+        description: Persona no encontrada
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')
@@ -812,11 +1341,58 @@ def actualizar_perfil():
         }), 500
 
 
-# ✅ AGREGAR ESTOS ENDPOINTS AL FINAL DEL ARCHIVO
-
 @ws_usuario.route('/api/usuario/google/registro', methods=['POST'])
 def registro_google():
-    """Registrar o login con Google Sign-In"""
+    """
+    ---
+    tags:
+      - Autenticación Google
+    summary: Registrar o login con Google
+    description: Registra un nuevo usuario o autentica uno existente usando Google Sign-In
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - google_id
+            - email
+            - nombres
+            - apellidos
+          properties:
+            google_id:
+              type: string
+              description: ID único de Google
+            email:
+              type: string
+              format: email
+            nombres:
+              type: string
+            apellidos:
+              type: string
+            img_logo:
+              type: string
+              description: URL de la foto de perfil de Google
+    responses:
+      200:
+        description: Login/Registro exitoso
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            token:
+              type: string
+            user:
+              type: object
+      400:
+        description: Datos incompletos o error
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -895,7 +1471,45 @@ def registro_google():
 
 @ws_usuario.route('/api/usuario/google/login', methods=['POST'])
 def login_google():
-    """Login con Google ID"""
+    """
+    ---
+    tags:
+      - Autenticación Google
+    summary: Login con Google ID
+    description: Autentica un usuario existente usando su Google ID
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - google_id
+          properties:
+            google_id:
+              type: string
+              description: ID único de Google del usuario
+    responses:
+      200:
+        description: Login exitoso
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            token:
+              type: string
+            user:
+              type: object
+      404:
+        description: Usuario no encontrado
+      400:
+        description: Google ID no proporcionado
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         google_id = data.get('google_id')
@@ -955,7 +1569,58 @@ def login_google():
 
 @ws_usuario.route('/api/usuario/registrar-simple', methods=['POST'])
 def registrar_simple():
-    """Registrar usuario simplificado"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Registrar usuario simplificado
+    description: Registra un nuevo usuario con datos mínimos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - nombres
+            - apellidos
+            - email
+          properties:
+            nombres:
+              type: string
+            apellidos:
+              type: string
+            email:
+              type: string
+              format: email
+            password:
+              type: string
+              description: Requerido si no hay google_id
+            google_id:
+              type: string
+              description: Opcional para registro con Google
+            img_logo:
+              type: string
+              description: URL de la foto de perfil
+    responses:
+      201:
+        description: Usuario registrado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            token:
+              type: string
+            user:
+              type: object
+      400:
+        description: Datos incompletos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -1019,7 +1684,56 @@ def registrar_simple():
 
 @ws_usuario.route('/api/usuario/google/registro-simple', methods=['POST'])
 def registro_google_simple():
-    """Registrar con Google simplificado"""
+    """
+    ---
+    tags:
+      - Autenticación Google
+    summary: Registrar con Google simplificado
+    description: Registra un nuevo usuario con Google usando datos mínimos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - google_id
+            - email
+            - nombres
+            - apellidos
+          properties:
+            google_id:
+              type: string
+              description: ID único de Google
+            email:
+              type: string
+              format: email
+            nombres:
+              type: string
+            apellidos:
+              type: string
+            img_logo:
+              type: string
+              description: URL de la foto de perfil de Google
+    responses:
+      200:
+        description: Usuario registrado/autenticado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            token:
+              type: string
+            user:
+              type: object
+      400:
+        description: Datos incompletos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -1073,7 +1787,48 @@ def registro_google_simple():
     
 @ws_usuario.route('/api/usuarios/listar', methods=['GET'])
 def listar_usuarios():
-    """Listar todos los usuarios con sus datos de persona"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Listar todos los usuarios
+    description: Obtiene la lista de todos los usuarios con sus datos de persona y roles
+    responses:
+      200:
+        description: Usuarios listados correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_usuario:
+                    type: integer
+                  nomusuario:
+                    type: string
+                  email:
+                    type: string
+                  img_logo:
+                    type: string
+                  estado:
+                    type: boolean
+                  nombres:
+                    type: string
+                  apellidos:
+                    type: string
+                  telefono:
+                    type: string
+                  roles:
+                    type: array
+                    items:
+                      type: object
+      500:
+        description: Error en el servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -1123,7 +1878,43 @@ def listar_usuarios():
     
 @ws_usuario.route('/api/usuario/actualizar-nombre/<int:id_usuario>', methods=['PUT'])
 def actualizar_nombre_usuario(id_usuario):
-    """Actualizar nombre de usuario"""
+    """
+    ---
+    tags:
+      - Usuarios
+    summary: Actualizar nombre de usuario
+    description: Actualiza el nombre de usuario (nomusuario)
+    parameters:
+      - name: id_usuario
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - nomusuario
+          properties:
+            nomusuario:
+              type: string
+              description: Nuevo nombre de usuario
+    responses:
+      200:
+        description: Nombre de usuario actualizado
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Nombre de usuario no proporcionado
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         nomusuario = data.get('nomusuario')
@@ -1159,14 +1950,49 @@ def actualizar_nombre_usuario(id_usuario):
         }), 500
 
 
-# ============================================
-# AGREGAR ESTE ENDPOINT A routes/usuario.py
-# ============================================
-
 @ws_usuario.route('/api/usuario/registrar-token', methods=['POST'])
 def registrar_token():
     """
-    Registra el token FCM de un dispositivo para envío de notificaciones push
+    ---
+    tags:
+      - Notificaciones
+    summary: Registrar token FCM
+    description: Registra el token FCM de un dispositivo para envío de notificaciones push
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - dispositivo
+            - token
+          properties:
+            id_usuario:
+              type: integer
+              description: ID del usuario
+            dispositivo:
+              type: string
+              description: Tipo de dispositivo (android, ios, web)
+              example: "android"
+            token:
+              type: string
+              description: Token FCM obtenido de Firebase
+    responses:
+      200:
+        description: Token registrado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Faltan datos obligatorios
+      500:
+        description: Error en el servidor
     """
     try:
         data = request.get_json()

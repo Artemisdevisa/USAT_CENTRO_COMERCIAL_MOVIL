@@ -7,6 +7,29 @@ producto_sucursal = ProductoSucursal()
 
 @ws_producto_sucursal.route('/productos/listar', methods=['GET'])
 def listar_productos():
+    """
+    ---
+    tags:
+      - Productos
+    summary: Listar todos los productos
+    description: Obtiene una lista de todos los productos disponibles
+    responses:
+      200:
+        description: Productos obtenidos correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            data:
+              type: array
+              items:
+                type: object
+            message:
+              type: string
+      500:
+        description: Error interno del servidor
+    """
     try:
         resultado, productos = producto_sucursal.listar_productos()
         
@@ -33,6 +56,35 @@ def listar_productos():
 
 @ws_producto_sucursal.route('/productos/detalle/<int:id_prod_sucursal>', methods=['GET'])
 def detalle_producto(id_prod_sucursal):
+    """
+    ---
+    tags:
+      - Productos
+    summary: Obtener detalle de un producto
+    description: Obtiene la información detallada de un producto específico
+    parameters:
+      - name: id_prod_sucursal
+        in: path
+        type: integer
+        required: true
+        description: ID del producto sucursal
+    responses:
+      200:
+        description: Detalle obtenido correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            data:
+              type: object
+            message:
+              type: string
+      404:
+        description: Producto no encontrado
+      500:
+        description: Error interno del servidor
+    """
     try:
         producto_sucursal = ProductoSucursal()
         resultado, data = producto_sucursal.obtener_detalle_producto(id_prod_sucursal)
@@ -59,6 +111,40 @@ def detalle_producto(id_prod_sucursal):
     
 @ws_producto_sucursal.route('/productos/relacionados/<int:id_categoria>/<int:id_actual>', methods=['GET'])
 def productos_relacionados(id_categoria, id_actual):
+    """
+    ---
+    tags:
+      - Productos
+    summary: Obtener productos relacionados
+    description: Obtiene productos de la misma categoría excluyendo el producto actual
+    parameters:
+      - name: id_categoria
+        in: path
+        type: integer
+        required: true
+        description: ID de la categoría
+      - name: id_actual
+        in: path
+        type: integer
+        required: true
+        description: ID del producto actual a excluir
+    responses:
+      200:
+        description: Productos relacionados obtenidos correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            data:
+              type: array
+              items:
+                type: object
+            message:
+              type: string
+      500:
+        description: Error interno del servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -171,7 +257,32 @@ def productos_relacionados(id_categoria, id_actual):
     
 @ws_producto_sucursal.route('/productos-sucursal/listar', methods=['GET'])
 def listar_productos_admin():
-    """Listar productos con filtro opcional por empresa"""
+    """
+    ---
+    tags:
+      - Administración de Productos
+    summary: Listar productos con filtro por empresa
+    description: Obtiene la lista de productos con filtro opcional por empresa
+    parameters:
+      - name: id_empresa
+        in: query
+        type: integer
+        description: ID de la empresa para filtrar
+    responses:
+      200:
+        description: Productos obtenidos correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+      500:
+        description: Error en el servidor
+    """
     try:
         # ✅ OBTENER id_empresa DEL QUERY PARAM
         id_empresa = request.args.get('id_empresa', type=int)
@@ -199,7 +310,35 @@ def listar_productos_admin():
 
 @ws_producto_sucursal.route('/productos-sucursal/obtener/<int:id_prod_sucursal>', methods=['GET'])
 def obtener_producto_admin(id_prod_sucursal):
-    """Obtener un producto específico por ID para edición"""
+    """
+    ---
+    tags:
+      - Administración de Productos
+    summary: Obtener producto específico para edición
+    description: Obtiene un producto específico por ID para su edición
+    parameters:
+      - name: id_prod_sucursal
+        in: path
+        type: integer
+        required: true
+        description: ID del producto sucursal
+    responses:
+      200:
+        description: Producto obtenido correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+      404:
+        description: Producto no encontrado
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, resultado = producto_sucursal.obtener_por_id(id_prod_sucursal)
         
@@ -224,7 +363,60 @@ def obtener_producto_admin(id_prod_sucursal):
 
 @ws_producto_sucursal.route('/productos-sucursal/crear', methods=['POST'])
 def crear_producto():
-    """Crear un nuevo producto"""
+    """
+    ---
+    tags:
+      - Administración de Productos
+    summary: Crear un nuevo producto
+    description: Crea un nuevo producto con los datos proporcionados
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_sucursal
+            - id_temporada
+            - id_marca
+            - id_categoria
+            - id_tipo_modelo
+            - nombre
+            - genero
+          properties:
+            id_sucursal:
+              type: integer
+            id_temporada:
+              type: integer
+            id_marca:
+              type: integer
+            id_categoria:
+              type: integer
+            id_tipo_modelo:
+              type: integer
+            nombre:
+              type: string
+            material:
+              type: string
+            genero:
+              type: string
+    responses:
+      201:
+        description: Producto creado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+      400:
+        description: Datos inválidos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -284,7 +476,63 @@ def crear_producto():
 
 @ws_producto_sucursal.route('/productos-sucursal/modificar/<int:id_prod_sucursal>', methods=['PUT'])
 def modificar_producto(id_prod_sucursal):
-    """Modificar un producto existente"""
+    """
+    ---
+    tags:
+      - Administración de Productos
+    summary: Modificar un producto existente
+    description: Actualiza los datos de un producto existente
+    parameters:
+      - name: id_prod_sucursal
+        in: path
+        type: integer
+        required: true
+        description: ID del producto sucursal
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_sucursal
+            - id_temporada
+            - id_marca
+            - id_categoria
+            - id_tipo_modelo
+            - nombre
+            - genero
+          properties:
+            id_sucursal:
+              type: integer
+            id_temporada:
+              type: integer
+            id_marca:
+              type: integer
+            id_categoria:
+              type: integer
+            id_tipo_modelo:
+              type: integer
+            nombre:
+              type: string
+            material:
+              type: string
+            genero:
+              type: string
+    responses:
+      200:
+        description: Producto modificado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Datos inválidos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -342,7 +590,33 @@ def modificar_producto(id_prod_sucursal):
 
 @ws_producto_sucursal.route('/productos-sucursal/cambiar-estado/<int:id_prod_sucursal>', methods=['PATCH'])
 def cambiar_estado_producto(id_prod_sucursal):
-    """Cambiar estado de un producto (activar/desactivar)"""
+    """
+    ---
+    tags:
+      - Administración de Productos
+    summary: Cambiar estado de un producto
+    description: Activa o desactiva un producto (toggle de estado)
+    parameters:
+      - name: id_prod_sucursal
+        in: path
+        type: integer
+        required: true
+        description: ID del producto sucursal
+    responses:
+      200:
+        description: Estado cambiado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Error al cambiar estado
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, mensaje = producto_sucursal.cambiar_estado(id_prod_sucursal)
         
@@ -366,7 +640,33 @@ def cambiar_estado_producto(id_prod_sucursal):
 
 @ws_producto_sucursal.route('/productos-sucursal/eliminar/<int:id_prod_sucursal>', methods=['DELETE'])
 def eliminar_producto(id_prod_sucursal):
-    """Eliminar FÍSICAMENTE un producto (DELETE permanente)"""
+    """
+    ---
+    tags:
+      - Administración de Productos
+    summary: Eliminar permanentemente un producto
+    description: Elimina FÍSICAMENTE un producto de la base de datos (DELETE permanente)
+    parameters:
+      - name: id_prod_sucursal
+        in: path
+        type: integer
+        required: true
+        description: ID del producto sucursal
+    responses:
+      200:
+        description: Producto eliminado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: No se puede eliminar el producto
+      500:
+        description: Error en el servidor
+    """
     try:
         # Verificar si tiene colores/tallas asociados
         total_colores = producto_sucursal.contar_colores(id_prod_sucursal)
@@ -400,7 +700,32 @@ def eliminar_producto(id_prod_sucursal):
 
 @ws_producto_sucursal.route('/productos-sucursal/estadisticas', methods=['GET'])
 def estadisticas_productos():
-    """Obtener estadísticas con filtro por empresa"""
+    """
+    ---
+    tags:
+      - Administración de Productos
+    summary: Obtener estadísticas de productos
+    description: Obtiene estadísticas con filtro opcional por empresa
+    parameters:
+      - name: id_empresa
+        in: query
+        type: integer
+        description: ID de la empresa para filtrar
+    responses:
+      200:
+        description: Estadísticas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+      500:
+        description: Error en el servidor
+    """
     try:
         # ✅ OBTENER id_empresa DEL QUERY PARAM
         id_empresa = request.args.get('id_empresa', type=int)
@@ -445,7 +770,32 @@ def estadisticas_productos():
 
 @ws_producto_sucursal.route('/productos-sucursal/sucursales-activas', methods=['GET'])
 def listar_sucursales_activas():
-    """Listar sucursales con filtro por empresa"""
+    """
+    ---
+    tags:
+      - Auxiliares
+    summary: Listar sucursales activas
+    description: Obtiene lista de sucursales activas filtradas por empresa
+    parameters:
+      - name: id_empresa
+        in: query
+        type: integer
+        description: ID de la empresa para filtrar
+    responses:
+      200:
+        description: Sucursales obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+      500:
+        description: Error en el servidor
+    """
     try:
         # ✅ OBTENER id_empresa DEL QUERY PARAM
         id_empresa = request.args.get('id_empresa', type=int)
@@ -472,7 +822,27 @@ def listar_sucursales_activas():
 
 @ws_producto_sucursal.route('/productos-sucursal/temporadas-activas', methods=['GET'])
 def listar_temporadas_activas():
-    """Listar temporadas activas para el select"""
+    """
+    ---
+    tags:
+      - Auxiliares
+    summary: Listar temporadas activas
+    description: Obtiene lista de temporadas activas para los selects
+    responses:
+      200:
+        description: Temporadas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, resultado = producto_sucursal.listar_temporadas_activas()
         
@@ -497,7 +867,27 @@ def listar_temporadas_activas():
 
 @ws_producto_sucursal.route('/productos-sucursal/marcas-activas', methods=['GET'])
 def listar_marcas_activas():
-    """Listar marcas activas para el select"""
+    """
+    ---
+    tags:
+      - Auxiliares
+    summary: Listar marcas activas
+    description: Obtiene lista de marcas activas para los selects
+    responses:
+      200:
+        description: Marcas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, resultado = producto_sucursal.listar_marcas_activas()
         
@@ -522,7 +912,27 @@ def listar_marcas_activas():
 
 @ws_producto_sucursal.route('/productos-sucursal/categorias-activas', methods=['GET'])
 def listar_categorias_activas():
-    """Listar categorías activas para el select"""
+    """
+    ---
+    tags:
+      - Auxiliares
+    summary: Listar categorías activas
+    description: Obtiene lista de categorías activas para los selects
+    responses:
+      200:
+        description: Categorías obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, resultado = producto_sucursal.listar_categorias_activas()
         
@@ -547,7 +957,27 @@ def listar_categorias_activas():
 
 @ws_producto_sucursal.route('/productos-sucursal/modelos-activos', methods=['GET'])
 def listar_modelos_activos():
-    """Listar modelos activos para el select"""
+    """
+    ---
+    tags:
+      - Auxiliares
+    summary: Listar modelos activos
+    description: Obtiene lista de modelos activos para los selects
+    responses:
+      200:
+        description: Modelos obtenidos correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, resultado = producto_sucursal.listar_modelos_activos()
         
@@ -571,7 +1001,33 @@ def listar_modelos_activos():
     
 @ws_producto_sucursal.route('/productos/por-temporada/<int:id_temporada>', methods=['GET'])
 def productos_por_temporada(id_temporada):
-    """Listar productos filtrados por temporada"""
+    """
+    ---
+    tags:
+      - Productos
+    summary: Listar productos por temporada
+    description: Obtiene productos filtrados por temporada específica
+    parameters:
+      - name: id_temporada
+        in: path
+        type: integer
+        required: true
+        description: ID de la temporada
+    responses:
+      200:
+        description: Productos obtenidos correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            data:
+              type: array
+            message:
+              type: string
+      500:
+        description: Error interno del servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -663,29 +1119,3 @@ def productos_por_temporada(id_temporada):
             'data': [],
             'message': f'Error interno: {str(e)}'
         }), 500
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

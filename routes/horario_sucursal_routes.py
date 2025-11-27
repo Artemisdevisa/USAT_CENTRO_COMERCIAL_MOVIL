@@ -15,7 +15,48 @@ DIAS_SEMANA = {
 
 @ws_horario_sucursal.route('/horarios-sucursal/crear', methods=['POST'])
 def crear_horario():
-    """Crear un nuevo horario para una sucursal"""
+    """
+    Crear un nuevo horario para una sucursal
+    ---
+    tags:
+      - Horarios Sucursal
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        description: Datos del horario a registrar
+        schema:
+          type: object
+          properties:
+            id_sucursal:
+              type: integer
+              description: ID de la sucursal
+            dia:
+              type: integer
+              description: Día de la semana (0=Domingo, 6=Sábado)
+            hora_inicio:
+              type: string
+              description: Hora de apertura en formato HH:MM
+              example: "09:00"
+            hora_fin:
+              type: string
+              description: Hora de cierre en formato HH:MM
+              example: "18:00"
+          required:
+            - id_sucursal
+            - dia
+            - hora_inicio
+            - hora_fin
+    responses:
+      201:
+        description: Horario creado correctamente
+      400:
+        description: Error de validación o datos incompletos
+      500:
+        description: Error del servidor
+    """
     try:
         data = request.get_json()
         
@@ -91,7 +132,53 @@ def crear_horario():
 
 @ws_horario_sucursal.route('/horarios-sucursal/modificar/<int:id_horario>', methods=['PUT'])
 def modificar_horario(id_horario):
-    """Modificar un horario existente"""
+    """
+    Modificar un horario existente
+    ---
+    tags:
+      - Horarios Sucursal
+    consumes:
+      - application/json
+    parameters:
+      - name: id_horario
+        in: path
+        required: true
+        type: integer
+        description: ID del horario a modificar
+      - in: body
+        name: body
+        required: true
+        description: Datos actualizados del horario
+        schema:
+          type: object
+          properties:
+            id_sucursal:
+              type: integer
+              description: ID de la sucursal
+            dia:
+              type: integer
+              description: Día de la semana (0=Domingo, 6=Sábado)
+            hora_inicio:
+              type: string
+              description: Hora de apertura en formato HH:MM
+              example: "09:00"
+            hora_fin:
+              type: string
+              description: Hora de cierre en formato HH:MM
+              example: "18:00"
+          required:
+            - id_sucursal
+            - dia
+            - hora_inicio
+            - hora_fin
+    responses:
+      200:
+        description: Horario modificado correctamente
+      400:
+        description: Error de validación o actualización
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         
@@ -137,7 +224,25 @@ def modificar_horario(id_horario):
 
 @ws_horario_sucursal.route('/horarios-sucursal/eliminar/<int:id_horario>', methods=['DELETE'])
 def eliminar_horario(id_horario):
-    """Eliminar (lógico) un horario"""
+    """
+    Eliminar (lógico) un horario
+    ---
+    tags:
+      - Horarios Sucursal
+    parameters:
+      - name: id_horario
+        in: path
+        required: true
+        type: integer
+        description: ID del horario a eliminar
+    responses:
+      200:
+        description: Horario eliminado correctamente
+      400:
+        description: Error al eliminar el horario
+      500:
+        description: Error interno del servidor
+    """
     try:
         resultado = HorarioSucursal.eliminar(id_horario)
         
@@ -162,7 +267,23 @@ def eliminar_horario(id_horario):
 
 @ws_horario_sucursal.route('/horarios-sucursal/listar/<int:id_sucursal>', methods=['GET'])
 def listar_horarios(id_sucursal):
-    """Listar todos los horarios de una sucursal"""
+    """
+    Listar todos los horarios de una sucursal
+    ---
+    tags:
+      - Horarios Sucursal
+    parameters:
+      - name: id_sucursal
+        in: path
+        required: true
+        type: integer
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Lista de horarios obtenida correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         horarios = HorarioSucursal.listar_por_sucursal(id_sucursal)
         
@@ -186,7 +307,25 @@ def listar_horarios(id_sucursal):
 
 @ws_horario_sucursal.route('/horarios-sucursal/obtener/<int:id_horario>', methods=['GET'])
 def obtener_horario(id_horario):
-    """Obtener un horario específico"""
+    """
+    Obtener un horario específico
+    ---
+    tags:
+      - Horarios Sucursal
+    parameters:
+      - name: id_horario
+        in: path
+        required: true
+        type: integer
+        description: ID del horario
+    responses:
+      200:
+        description: Horario obtenido correctamente
+      404:
+        description: Horario no encontrado
+      500:
+        description: Error interno del servidor
+    """
     try:
         horario = HorarioSucursal.obtener(id_horario)
         

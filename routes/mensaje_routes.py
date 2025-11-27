@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from models.mensaje import Mensaje
 from conexionBD import Conexion
 from config import Config
+
 ws_mensaje = Blueprint('mensaje', __name__)
 
 # =====================================================
@@ -18,6 +19,50 @@ def enviar_mensaje():
         "contenido": "Hola, ¿tienen stock?",
         "tipo_mensaje": "TEXTO"
     }
+    ---
+    tags:
+      - Mensajes
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            id_conversacion:
+              type: integer
+              description: ID de la conversación
+            id_emisor:
+              type: integer
+              description: ID del emisor del mensaje
+            tipo_emisor:
+              type: string
+              description: Tipo de emisor (USUARIO o SUCURSAL)
+              example: "USUARIO"
+            contenido:
+              type: string
+              description: Contenido del mensaje
+            tipo_mensaje:
+              type: string
+              description: Tipo de mensaje (TEXTO, IMAGEN, etc.)
+              default: "TEXTO"
+            url_archivo:
+              type: string
+              description: URL del archivo adjunto si aplica
+          required:
+            - id_conversacion
+            - id_emisor
+            - tipo_emisor
+            - contenido
+    responses:
+      200:
+        description: Mensaje enviado correctamente
+      400:
+        description: Faltan datos requeridos o error de validación
+      500:
+        description: Error interno del servidor
     """
     try:
         data = request.json
@@ -76,8 +121,29 @@ def enviar_mensaje():
 @ws_mensaje.route('/mensaje/listar/<int:id_conversacion>/<int:id_usuario>', methods=['GET'])
 def listar_mensajes(id_conversacion, id_usuario):
     """
-    Lista todos los mensajes de una conversación
-    Automáticamente marca los mensajes como leídos
+    Lista todos los mensajes de una conversación.
+    Automáticamente marca los mensajes como leídos.
+    ---
+    tags:
+      - Mensajes
+    parameters:
+      - name: id_conversacion
+        in: path
+        required: true
+        type: integer
+        description: ID de la conversación
+      - name: id_usuario
+        in: path
+        required: true
+        type: integer
+        description: ID del usuario que solicita los mensajes
+    responses:
+      200:
+        description: Mensajes obtenidos correctamente
+      400:
+        description: Error en la operación
+      500:
+        description: Error interno del servidor
     """
     try:
         print(f"📨 Listando mensajes | Conversación: {id_conversacion} | Usuario: {id_usuario}")
@@ -117,6 +183,34 @@ def marcar_leidos():
         "id_conversacion": 1,
         "tipo_lector": "USUARIO"
     }
+    ---
+    tags:
+      - Mensajes
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            id_conversacion:
+              type: integer
+              description: ID de la conversación
+            tipo_lector:
+              type: string
+              description: Tipo de lector (USUARIO o SUCURSAL)
+          required:
+            - id_conversacion
+            - tipo_lector
+    responses:
+      200:
+        description: Mensajes marcados como leídos correctamente
+      400:
+        description: Error en la operación o datos inválidos
+      500:
+        description: Error interno del servidor
     """
     try:
         data = request.json
@@ -154,6 +248,25 @@ def marcar_leidos():
 def listar_mensajes_web(id_conversacion, id_sucursal):
     """
     Lista mensajes y marca como leídos para la sucursal
+    ---
+    tags:
+      - Mensajes
+    parameters:
+      - name: id_conversacion
+        in: path
+        required: true
+        type: integer
+        description: ID de la conversación
+      - name: id_sucursal
+        in: path
+        required: true
+        type: integer
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Mensajes obtenidos correctamente y marcados como leídos para la sucursal
+      500:
+        description: Error interno del servidor
     """
     try:
         print(f"📨 Listando mensajes web | Conversación: {id_conversacion} | Sucursal: {id_sucursal}")

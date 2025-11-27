@@ -37,7 +37,17 @@ def subir_a_cloudinary(file, folder):
 
 @ws_empresa.route('/empresas/listar-admin', methods=['GET'])
 def listar_empresas_admin():
-    """Listar TODAS las empresas (aprobadas y pendientes)"""
+    """
+    Listar TODAS las empresas (aprobadas y pendientes)
+    ---
+    tags:
+      - Empresas
+    responses:
+      200:
+        description: Lista de empresas obtenida correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -105,7 +115,25 @@ def listar_empresas_admin():
 
 @ws_empresa.route('/empresas/aprobar/<int:id_solicitud>', methods=['PATCH'])
 def aprobar_empresa(id_solicitud):
-    """Aprobar solicitud: crear empresa y asignar rol"""
+    """
+    Aprobar solicitud de empresa (crea empresa y asigna rol)
+    ---
+    tags:
+      - Empresas
+    parameters:
+      - name: id_solicitud
+        in: path
+        required: true
+        type: integer
+        description: ID de la solicitud de empresa a aprobar
+    responses:
+      200:
+        description: Empresa aprobada correctamente
+      400:
+        description: Error al aprobar la solicitud
+      500:
+        description: Error interno del servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -139,7 +167,25 @@ def aprobar_empresa(id_solicitud):
 
 @ws_empresa.route('/empresas/rechazar/<int:id_solicitud>', methods=['DELETE'])
 def rechazar_empresa(id_solicitud):
-    """Rechazar solicitud de empresa"""
+    """
+    Rechazar solicitud de empresa
+    ---
+    tags:
+      - Empresas
+    parameters:
+      - name: id_solicitud
+        in: path
+        required: true
+        type: integer
+        description: ID de la solicitud de empresa a rechazar
+    responses:
+      200:
+        description: Solicitud rechazada correctamente
+      400:
+        description: Error al rechazar la solicitud
+      500:
+        description: Error interno del servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -169,7 +215,25 @@ def rechazar_empresa(id_solicitud):
 
 @ws_empresa.route('/empresas/obtener/<int:id_solicitud>', methods=['GET'])
 def obtener_detalle_empresa(id_solicitud):
-    """Obtener detalle de una solicitud"""
+    """
+    Obtener detalle de una solicitud de empresa
+    ---
+    tags:
+      - Empresas
+    parameters:
+      - name: id_solicitud
+        in: path
+        required: true
+        type: integer
+        description: ID de la solicitud de empresa
+    responses:
+      200:
+        description: Detalle de la solicitud obtenido correctamente
+      404:
+        description: Solicitud no encontrada
+      500:
+        description: Error interno del servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -198,7 +262,25 @@ def obtener_detalle_empresa(id_solicitud):
 
 @ws_empresa.route('/empresas/obtener-por-usuario/<int:id_empresa>', methods=['GET'])
 def obtener_empresa_por_usuario(id_empresa):
-    """Obtener datos completos de empresa por ID"""
+    """
+    Obtener datos completos de una empresa por ID
+    ---
+    tags:
+      - Empresas
+    parameters:
+      - name: id_empresa
+        in: path
+        required: true
+        type: integer
+        description: ID de la empresa
+    responses:
+      200:
+        description: Datos de la empresa obtenidos correctamente
+      404:
+        description: Empresa no encontrada
+      500:
+        description: Error interno del servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -243,7 +325,82 @@ def obtener_empresa_por_usuario(id_empresa):
 
 @ws_empresa.route('/empresas/modificar/<int:id_empresa>', methods=['PUT'])
 def modificar_empresa(id_empresa):
-    """Modificar datos de empresa con logo y banner en Cloudinary"""
+    """
+    Modificar datos de empresa con logo y banner en Cloudinary
+    ---
+    tags:
+      - Empresas
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: id_empresa
+        in: path
+        required: true
+        type: integer
+        description: ID de la empresa a modificar
+      - name: ruc
+        in: formData
+        required: true
+        type: string
+        description: RUC de la empresa
+      - name: razon_social
+        in: formData
+        required: true
+        type: string
+        description: Razón social de la empresa
+      - name: nombre_comercial
+        in: formData
+        required: true
+        type: string
+        description: Nombre comercial de la empresa
+      - name: descripcion
+        in: formData
+        required: false
+        type: string
+        description: Descripción de la empresa
+      - name: sitio_web
+        in: formData
+        required: false
+        type: string
+        description: Sitio web de la empresa
+      - name: telefono
+        in: formData
+        required: true
+        type: string
+        description: Teléfono de contacto
+      - name: email
+        in: formData
+        required: true
+        type: string
+        description: Correo electrónico de contacto
+      - name: id_dist
+        in: formData
+        required: true
+        type: integer
+        description: ID del distrito
+      - name: direccion
+        in: formData
+        required: true
+        type: string
+        description: Dirección de la empresa
+      - name: img_logo
+        in: formData
+        required: false
+        type: file
+        description: Nuevo logo de la empresa (opcional)
+      - name: img_banner
+        in: formData
+        required: false
+        type: file
+        description: Nuevo banner de la empresa (opcional)
+    responses:
+      200:
+        description: Empresa modificada correctamente
+      400:
+        description: Faltan campos obligatorios o datos inválidos
+      500:
+        description: Error interno del servidor
+    """
     try:
         print("=" * 60)
         print(f"🔄 MODIFICANDO EMPRESA ID: {id_empresa}")

@@ -6,7 +6,23 @@ provincia_model = Provincia()
 
 @ws_provincia.route('/provincias/listar/<int:id_dep>', methods=['GET'])
 def listar_por_departamento(id_dep):
-    """Listar provincias por departamento"""
+    """
+    Listar provincias por departamento
+    ---
+    tags:
+      - Provincias
+    parameters:
+      - name: id_dep
+        in: path
+        type: integer
+        required: true
+        description: ID del departamento
+    responses:
+      200:
+        description: Provincias obtenidas correctamente
+      500:
+        description: Error del servidor
+    """
     try:
         resultado, data = provincia_model.listar_por_departamento(id_dep)
         
@@ -32,7 +48,29 @@ def listar_por_departamento(id_dep):
 
 @ws_provincia.route('/provincias/crear', methods=['POST'])
 def crear():
-    """Crear provincia"""
+    """
+    Crear provincia
+    ---
+    tags:
+      - Provincias
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            id_dep:
+              type: integer
+              example: 1
+            nombre:
+              type: string
+              example: Lima
+    responses:
+      201:
+        description: Provincia creada correctamente
+      400:
+        description: Faltan datos requeridos
+    """
     try:
         data = request.get_json()
         id_dep = data.get('id_dep')
@@ -66,7 +104,32 @@ def crear():
 
 @ws_provincia.route('/provincias/modificar', methods=['PUT'])
 def modificar():
-    """Modificar provincia"""
+    """
+    Modificar provincia
+    ---
+    tags:
+      - Provincias
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            id_prov:
+              type: integer
+              example: 1
+            id_dep:
+              type: integer
+              example: 1
+            nombre:
+              type: string
+              example: Lima Actualizada
+    responses:
+      200:
+        description: Provincia modificada correctamente
+      400:
+        description: Faltan datos requeridos
+    """
     try:
         data = request.get_json()
         id_prov = data.get('id_prov')
@@ -100,7 +163,23 @@ def modificar():
 
 @ws_provincia.route('/provincias/eliminar/<int:id_prov>', methods=['DELETE'])
 def eliminar(id_prov):
-    """Eliminar provincia"""
+    """
+    Eliminar provincia
+    ---
+    tags:
+      - Provincias
+    parameters:
+      - name: id_prov
+        in: path
+        type: integer
+        required: true
+        description: ID de la provincia
+    responses:
+      200:
+        description: Provincia eliminada correctamente
+      400:
+        description: Error al eliminar
+    """
     try:
         resultado, mensaje = provincia_model.eliminar(id_prov)
         

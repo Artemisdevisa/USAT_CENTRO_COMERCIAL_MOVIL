@@ -6,7 +6,23 @@ distrito_model = Distrito()
 
 @ws_distrito.route('/distritos/listar/<int:id_prov>', methods=['GET'])
 def listar_por_provincia(id_prov):
-    """Listar distritos por provincia"""
+    """
+    Listar distritos por provincia
+    ---
+    tags:
+      - Distritos
+    parameters:
+      - name: id_prov
+        in: path
+        type: integer
+        required: true
+        description: ID de la provincia
+    responses:
+      200:
+        description: Distritos obtenidos correctamente
+      500:
+        description: Error del servidor
+    """
     try:
         resultado, data = distrito_model.listar_por_provincia(id_prov)
         
@@ -32,7 +48,29 @@ def listar_por_provincia(id_prov):
 
 @ws_distrito.route('/distritos/crear', methods=['POST'])
 def crear():
-    """Crear distrito"""
+    """
+    Crear distrito
+    ---
+    tags:
+      - Distritos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            id_prov:
+              type: integer
+              example: 1
+            nombre:
+              type: string
+              example: San Isidro
+    responses:
+      201:
+        description: Distrito creado correctamente
+      400:
+        description: Faltan datos requeridos
+    """
     try:
         data = request.get_json()
         id_prov = data.get('id_prov')
@@ -66,7 +104,32 @@ def crear():
 
 @ws_distrito.route('/distritos/modificar', methods=['PUT'])
 def modificar():
-    """Modificar distrito"""
+    """
+    Modificar distrito
+    ---
+    tags:
+      - Distritos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            id_dist:
+              type: integer
+              example: 1
+            id_prov:
+              type: integer
+              example: 1
+            nombre:
+              type: string
+              example: San Isidro Actualizado
+    responses:
+      200:
+        description: Distrito modificado correctamente
+      400:
+        description: Faltan datos requeridos
+    """
     try:
         data = request.get_json()
         id_dist = data.get('id_dist')
@@ -100,7 +163,23 @@ def modificar():
 
 @ws_distrito.route('/distritos/eliminar/<int:id_dist>', methods=['DELETE'])
 def eliminar(id_dist):
-    """Eliminar distrito"""
+    """
+    Eliminar distrito
+    ---
+    tags:
+      - Distritos
+    parameters:
+      - name: id_dist
+        in: path
+        type: integer
+        required: true
+        description: ID del distrito
+    responses:
+      200:
+        description: Distrito eliminado correctamente
+      400:
+        description: Error al eliminar
+    """
     try:
         resultado, mensaje = distrito_model.eliminar(id_dist)
         

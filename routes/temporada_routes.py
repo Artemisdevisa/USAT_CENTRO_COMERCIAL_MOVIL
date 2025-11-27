@@ -5,7 +5,42 @@ ws_temporada = Blueprint('ws_temporada', __name__)
 
 @ws_temporada.route('/temporadas/listar', methods=['GET'])
 def listar_temporadas():
-    """Listar TODAS las temporadas (activas e inactivas) para el dashboard"""
+    """
+    ---
+    tags:
+      - Temporadas
+    summary: Listar todas las temporadas
+    description: Obtiene la lista de TODAS las temporadas (activas e inactivas) para el dashboard
+    responses:
+      200:
+        description: Temporadas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_temporada:
+                    type: integer
+                  nombre:
+                    type: string
+                  fecha_inicio:
+                    type: string
+                    format: date
+                  fecha_fin:
+                    type: string
+                    format: date
+                  estado:
+                    type: boolean
+      500:
+        description: Error en el servidor
+    """
     try:
         temporada = Temporada()
         exito, resultado = temporada.listar()
@@ -31,7 +66,48 @@ def listar_temporadas():
 
 @ws_temporada.route('/temporadas/obtener/<int:id_temporada>', methods=['GET'])
 def obtener_temporada(id_temporada):
-    """Obtener una temporada específica por ID"""
+    """
+    ---
+    tags:
+      - Temporadas
+    summary: Obtener temporada por ID
+    description: Obtiene una temporada específica con todos sus datos
+    parameters:
+      - name: id_temporada
+        in: path
+        type: integer
+        required: true
+        description: ID de la temporada
+    responses:
+      200:
+        description: Temporada obtenida correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id_temporada:
+                  type: integer
+                nombre:
+                  type: string
+                fecha_inicio:
+                  type: string
+                  format: date
+                fecha_fin:
+                  type: string
+                  format: date
+                estado:
+                  type: boolean
+      404:
+        description: Temporada no encontrada
+      500:
+        description: Error en el servidor
+    """
     try:
         temporada = Temporada()
         exito, resultado = temporada.obtener_por_id(id_temporada)
@@ -57,7 +133,57 @@ def obtener_temporada(id_temporada):
 
 @ws_temporada.route('/temporadas/crear', methods=['POST'])
 def crear_temporada():
-    """Crear una nueva temporada"""
+    """
+    ---
+    tags:
+      - Temporadas
+    summary: Crear nueva temporada
+    description: Crea una nueva temporada con fechas de inicio y fin
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - nombre
+            - fecha_inicio
+            - fecha_fin
+          properties:
+            nombre:
+              type: string
+              description: Nombre de la temporada
+              example: "Verano 2024"
+            fecha_inicio:
+              type: string
+              format: date
+              description: Fecha de inicio (YYYY-MM-DD)
+              example: "2024-06-21"
+            fecha_fin:
+              type: string
+              format: date
+              description: Fecha de fin (YYYY-MM-DD)
+              example: "2024-09-22"
+    responses:
+      201:
+        description: Temporada creada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id_temporada:
+                  type: integer
+      400:
+        description: Datos inválidos o incompletos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -109,7 +235,57 @@ def crear_temporada():
 
 @ws_temporada.route('/temporadas/modificar/<int:id_temporada>', methods=['PUT'])
 def modificar_temporada(id_temporada):
-    """Modificar una temporada existente"""
+    """
+    ---
+    tags:
+      - Temporadas
+    summary: Modificar temporada existente
+    description: Actualiza los datos de una temporada existente
+    parameters:
+      - name: id_temporada
+        in: path
+        type: integer
+        required: true
+        description: ID de la temporada
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - nombre
+            - fecha_inicio
+            - fecha_fin
+          properties:
+            nombre:
+              type: string
+              description: Nombre actualizado de la temporada
+              example: "Verano 2024"
+            fecha_inicio:
+              type: string
+              format: date
+              description: Fecha de inicio actualizada (YYYY-MM-DD)
+              example: "2024-06-21"
+            fecha_fin:
+              type: string
+              format: date
+              description: Fecha de fin actualizada (YYYY-MM-DD)
+              example: "2024-09-22"
+    responses:
+      200:
+        description: Temporada modificada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Datos inválidos o incompletos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -160,7 +336,33 @@ def modificar_temporada(id_temporada):
 
 @ws_temporada.route('/temporadas/cambiar-estado/<int:id_temporada>', methods=['PATCH'])
 def cambiar_estado_temporada(id_temporada):
-    """Cambiar estado de una temporada (activar/desactivar)"""
+    """
+    ---
+    tags:
+      - Temporadas
+    summary: Cambiar estado de temporada
+    description: Cambia el estado de una temporada entre activo e inactivo (toggle)
+    parameters:
+      - name: id_temporada
+        in: path
+        type: integer
+        required: true
+        description: ID de la temporada
+    responses:
+      200:
+        description: Estado cambiado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Error al cambiar estado
+      500:
+        description: Error en el servidor
+    """
     try:
         temporada = Temporada()
         exito, mensaje = temporada.cambiar_estado(id_temporada)
@@ -185,7 +387,33 @@ def cambiar_estado_temporada(id_temporada):
 
 @ws_temporada.route('/temporadas/eliminar/<int:id_temporada>', methods=['DELETE'])
 def eliminar_temporada(id_temporada):
-    """Eliminar lógicamente una temporada (desactivar)"""
+    """
+    ---
+    tags:
+      - Temporadas
+    summary: Eliminar temporada lógicamente
+    description: Desactiva una temporada lógicamente. No se puede eliminar si tiene productos activos asociados
+    parameters:
+      - name: id_temporada
+        in: path
+        type: integer
+        required: true
+        description: ID de la temporada
+    responses:
+      200:
+        description: Temporada eliminada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: No se puede desactivar la temporada o error en los datos
+      500:
+        description: Error en el servidor
+    """
     try:
         temporada = Temporada()
         
@@ -221,7 +449,44 @@ def eliminar_temporada(id_temporada):
 
 @ws_temporada.route('/temporadas/estadisticas', methods=['GET'])
 def estadisticas_temporadas():
-    """Obtener estadísticas de temporadas y productos"""
+    """
+    ---
+    tags:
+      - Temporadas
+    summary: Obtener estadísticas de temporadas
+    description: Obtiene estadísticas completas incluyendo cantidad de productos por temporada
+    responses:
+      200:
+        description: Estadísticas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_temporada:
+                    type: integer
+                  nombre:
+                    type: string
+                  fecha_inicio:
+                    type: string
+                    format: date
+                  fecha_fin:
+                    type: string
+                    format: date
+                  estado:
+                    type: boolean
+                  total_productos:
+                    type: integer
+      500:
+        description: Error en el servidor
+    """
     try:
         temporada = Temporada()
         exito, temporadas = temporada.listar()

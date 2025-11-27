@@ -8,7 +8,71 @@ ws_venta = Blueprint('ws_venta', __name__)
 
 @ws_venta.route('/ventas/crear-multiple', methods=['POST'])
 def crear_venta_multiple():
-    """Crear múltiples ventas (una por sucursal) desde el carrito"""
+    """
+    ---
+    tags:
+      - Ventas
+    summary: Crear múltiples ventas desde carrito
+    description: Crea múltiples ventas (una por sucursal) desde el carrito del usuario. Soporta aplicación de cupones a sucursales específicas
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - id_tarjeta
+            - sucursales
+          properties:
+            id_usuario:
+              type: integer
+              description: ID del usuario que realiza la compra
+            id_tarjeta:
+              type: integer
+              description: ID de la tarjeta de pago
+            sucursales:
+              type: array
+              items:
+                type: integer
+              description: Lista de IDs de sucursales para crear ventas
+            id_cupon:
+              type: integer
+              description: Opcional. ID del cupón a aplicar (se aplica solo en la sucursal del cupón)
+    responses:
+      201:
+        description: Compra realizada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                ventas:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id_venta:
+                        type: integer
+                      codigo_venta:
+                        type: string
+                      total:
+                        type: number
+                      descuento:
+                        type: number
+                errores:
+                  type: array
+                  description: Errores al crear alguna venta
+      400:
+        description: Faltan datos requeridos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')
@@ -172,7 +236,48 @@ def crear_venta_multiple():
 
 @ws_venta.route('/ventas/listar/<int:id_usuario>', methods=['GET'])
 def listar_ventas(id_usuario):
-    """Listar productos comprados del usuario"""
+    """
+    ---
+    tags:
+      - Ventas
+    summary: Listar productos comprados del usuario
+    description: Obtiene una lista de todos los productos que el usuario ha comprado, con URLs de imágenes procesadas según el entorno
+    parameters:
+      - name: id_usuario
+        in: path
+        type: integer
+        required: true
+        description: ID del usuario
+    responses:
+      200:
+        description: Productos listados correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_venta:
+                    type: integer
+                  nombre_producto:
+                    type: string
+                  url_img_producto:
+                    type: string
+                    description: URL de la imagen del producto (procesada según entorno)
+                  total:
+                    type: number
+                  fecha_venta:
+                    type: string
+                    format: date-time
+      500:
+        description: Error en el servidor
+    """
     try:
         print(f"\n{'='*60}")
         print(f"📥 PETICIÓN: Listar ventas usuario {id_usuario}")
@@ -243,7 +348,48 @@ def listar_ventas(id_usuario):
 
 @ws_venta.route('/ventas/detalle/<int:id_venta>', methods=['GET'])
 def obtener_detalle_venta(id_venta):
-    """Obtener detalle de una venta"""
+    """
+    ---
+    tags:
+      - Ventas
+    summary: Obtener detalle de una venta
+    description: Obtiene los detalles completos de una venta específica (items, precios, etc)
+    parameters:
+      - name: id_venta
+        in: path
+        type: integer
+        required: true
+        description: ID de la venta
+    responses:
+      200:
+        description: Detalle obtenido correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_detalle_venta:
+                    type: integer
+                  id_prod_color:
+                    type: integer
+                  talla:
+                    type: string
+                  cantidad:
+                    type: integer
+                  precio:
+                    type: number
+                  url_img:
+                    type: string
+      500:
+        description: Error en el servidor
+    """
     try:
         user_agent = request.headers.get('User-Agent', '').lower()
         is_android = 'okhttp' in user_agent or 'android' in user_agent
@@ -285,7 +431,52 @@ def obtener_detalle_venta(id_venta):
 
 @ws_venta.route('/ventas/completa/<int:id_venta>', methods=['GET'])
 def obtener_venta_completa(id_venta):
-    """Obtener información completa de una venta"""
+    """
+    ---
+    tags:
+      - Ventas
+    summary: Obtener información completa de una venta
+    description: Obtiene toda la información de una venta incluyendo datos del usuario, dirección y detalles
+    parameters:
+      - name: id_venta
+        in: path
+        type: integer
+        required: true
+        description: ID de la venta
+    responses:
+      200:
+        description: Venta obtenida correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id_venta:
+                  type: integer
+                codigo_qr:
+                  type: string
+                usuario:
+                  type: object
+                subtotal:
+                  type: number
+                descuento:
+                  type: number
+                impuesto:
+                  type: number
+                total:
+                  type: number
+                detalles:
+                  type: array
+      404:
+        description: Venta no encontrada
+      500:
+        description: Error en el servidor
+    """
     try:
         venta = Venta()
         exito, resultado = venta.obtener_venta_completa(id_venta)
@@ -312,7 +503,57 @@ def obtener_venta_completa(id_venta):
 
 @ws_venta.route('/ventas/reporte-por-sucursal/<int:id_sucursal>', methods=['GET'])
 def obtener_reporte_por_sucursal(id_sucursal):
-    """Obtener reporte de ventas por sucursal"""
+    """
+    ---
+    tags:
+      - Reportes
+    summary: Obtener reporte de ventas por sucursal
+    description: Genera un reporte completo de ventas para una sucursal específica incluyendo totales, descuentos e impuestos
+    parameters:
+      - name: id_sucursal
+        in: path
+        type: integer
+        required: true
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Reporte generado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_venta:
+                    type: integer
+                  codigo_venta:
+                    type: string
+                  fecha_venta:
+                    type: string
+                    format: date-time
+                  subtotal:
+                    type: number
+                  descuento:
+                    type: number
+                  impuesto:
+                    type: number
+                  total:
+                    type: number
+                  nombre_usuario:
+                    type: string
+                  cantidad_productos:
+                    type: integer
+                  estado:
+                    type: boolean
+      500:
+        description: Error en el servidor
+    """
     try:
         print(f"\n{'='*60}")
         print(f"📊 GENERANDO REPORTE DE VENTAS")

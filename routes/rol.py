@@ -5,7 +5,34 @@ ws_rol = Blueprint('ws_rol', __name__)
 
 @ws_rol.route('/roles/listar', methods=['GET'])
 def listar_roles():
-    """Listar todos los roles activos"""
+    """
+    ---
+    tags:
+      - Roles
+    summary: Listar todos los roles
+    description: Obtiene una lista de todos los roles activos del sistema
+    responses:
+      200:
+        description: Roles obtenidos correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_rol:
+                    type: integer
+                  nombre:
+                    type: string
+      500:
+        description: Error interno del servidor
+    """
     try:
         rol = Rol()
         exito, resultado = rol.listar()
@@ -30,7 +57,40 @@ def listar_roles():
 
 @ws_rol.route('/roles/obtener/<int:id_rol>', methods=['GET'])
 def obtener_rol(id_rol):
-    """Obtener un rol específico por ID"""
+    """
+    ---
+    tags:
+      - Roles
+    summary: Obtener rol por ID
+    description: Obtiene un rol específico por su ID
+    parameters:
+      - name: id_rol
+        in: path
+        type: integer
+        required: true
+        description: ID del rol
+    responses:
+      200:
+        description: Rol obtenido correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id_rol:
+                  type: integer
+                nombre:
+                  type: string
+      404:
+        description: Rol no encontrado
+      500:
+        description: Error interno del servidor
+    """
     try:
         rol = Rol()
         exito, resultado = rol.obtener_por_id(id_rol)
@@ -55,7 +115,45 @@ def obtener_rol(id_rol):
 
 @ws_rol.route('/roles/crear', methods=['POST'])
 def crear_rol():
-    """Crear un nuevo rol"""
+    """
+    ---
+    tags:
+      - Roles
+    summary: Crear un nuevo rol
+    description: Crea un nuevo rol en el sistema
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - nombre
+          properties:
+            nombre:
+              type: string
+              description: Nombre del rol
+              example: "Administrador"
+    responses:
+      201:
+        description: Rol creado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id_rol:
+                  type: integer
+      400:
+        description: Datos inválidos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -98,7 +196,45 @@ def crear_rol():
 
 @ws_rol.route('/roles/modificar/<int:id_rol>', methods=['PUT'])
 def modificar_rol(id_rol):
-    """Modificar un rol existente"""
+    """
+    ---
+    tags:
+      - Roles
+    summary: Modificar un rol existente
+    description: Actualiza los datos de un rol existente
+    parameters:
+      - name: id_rol
+        in: path
+        type: integer
+        required: true
+        description: ID del rol
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - nombre
+          properties:
+            nombre:
+              type: string
+              description: Nombre actualizado del rol
+              example: "Super Administrador"
+    responses:
+      200:
+        description: Rol modificado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Datos inválidos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -140,7 +276,33 @@ def modificar_rol(id_rol):
 
 @ws_rol.route('/roles/eliminar/<int:id_rol>', methods=['DELETE'])
 def eliminar_rol(id_rol):
-    """Eliminar lógicamente un rol"""
+    """
+    ---
+    tags:
+      - Roles
+    summary: Eliminar un rol
+    description: Elimina lógicamente un rol del sistema. No se puede eliminar si tiene usuarios asociados
+    parameters:
+      - name: id_rol
+        in: path
+        type: integer
+        required: true
+        description: ID del rol
+    responses:
+      200:
+        description: Rol eliminado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: No se puede eliminar el rol o error en los datos
+      500:
+        description: Error en el servidor
+    """
     try:
         rol = Rol()
         
@@ -175,7 +337,36 @@ def eliminar_rol(id_rol):
 
 @ws_rol.route('/roles/estadisticas', methods=['GET'])
 def estadisticas_roles():
-    """Obtener estadísticas de roles y usuarios"""
+    """
+    ---
+    tags:
+      - Roles
+    summary: Obtener estadísticas de roles
+    description: Obtiene estadísticas completas de roles incluyendo cantidad de usuarios por rol
+    responses:
+      200:
+        description: Estadísticas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_rol:
+                    type: integer
+                  nombre:
+                    type: string
+                  total_usuarios:
+                    type: integer
+      500:
+        description: Error en el servidor
+    """
     try:
         rol = Rol()
         exito, roles = rol.listar()

@@ -5,7 +5,17 @@ ws_marca = Blueprint('ws_marca', __name__)
 
 @ws_marca.route('/marcas/listar', methods=['GET'])
 def listar_marcas():
-    """Listar TODAS las marcas (activas e inactivas) para el dashboard"""
+    """
+    Listar todas las marcas
+    ---
+    tags:
+      - Marcas
+    responses:
+      200:
+        description: Marcas obtenidas correctamente
+      500:
+        description: Error del servidor
+    """
     try:
         marca = Marca()
         exito, resultado = marca.listar()
@@ -31,7 +41,22 @@ def listar_marcas():
 
 @ws_marca.route('/marcas/obtener/<int:id_marca>', methods=['GET'])
 def obtener_marca(id_marca):
-    """Obtener una marca específica por ID"""
+    """
+    Obtener una marca por ID
+    ---
+    tags:
+      - Marcas
+    parameters:
+      - name: id_marca
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Marca obtenida correctamente
+      404:
+        description: Marca no encontrada
+    """
     try:
         marca = Marca()
         exito, resultado = marca.obtener_por_id(id_marca)
@@ -57,11 +82,29 @@ def obtener_marca(id_marca):
 
 @ws_marca.route('/marcas/crear', methods=['POST'])
 def crear_marca():
-    """Crear una nueva marca"""
+    """
+    Crear una nueva marca
+    ---
+    tags:
+      - Marcas
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            nombre:
+              type: string
+              example: Nike
+    responses:
+      201:
+        description: Marca creada correctamente
+      400:
+        description: Datos inválidos
+    """
     try:
         data = request.get_json()
         
-        # Validaciones
         if not data or 'nombre' not in data:
             return jsonify({
                 'status': False,
@@ -76,7 +119,6 @@ def crear_marca():
                 'message': 'El nombre de la marca no puede estar vacío'
             }), 400
         
-        # Crear marca
         marca = Marca()
         exito, resultado = marca.crear(nombre)
         
@@ -101,11 +143,33 @@ def crear_marca():
 
 @ws_marca.route('/marcas/modificar/<int:id_marca>', methods=['PUT'])
 def modificar_marca(id_marca):
-    """Modificar una marca existente"""
+    """
+    Modificar una marca existente
+    ---
+    tags:
+      - Marcas
+    parameters:
+      - name: id_marca
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            nombre:
+              type: string
+              example: Nike Updated
+    responses:
+      200:
+        description: Marca modificada correctamente
+      400:
+        description: Error en los datos
+    """
     try:
         data = request.get_json()
         
-        # Validaciones
         if not data or 'nombre' not in data:
             return jsonify({
                 'status': False,
@@ -120,7 +184,6 @@ def modificar_marca(id_marca):
                 'message': 'El nombre de la marca no puede estar vacío'
             }), 400
         
-        # Modificar marca
         marca = Marca()
         exito, mensaje = marca.modificar(id_marca, nombre)
         
@@ -144,7 +207,22 @@ def modificar_marca(id_marca):
 
 @ws_marca.route('/marcas/cambiar-estado/<int:id_marca>', methods=['PATCH'])
 def cambiar_estado_marca(id_marca):
-    """Cambiar estado de una marca (activar/desactivar)"""
+    """
+    Cambiar estado de una marca
+    ---
+    tags:
+      - Marcas
+    parameters:
+      - name: id_marca
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Estado cambiado correctamente
+      400:
+        description: Error al cambiar estado
+    """
     try:
         marca = Marca()
         exito, mensaje = marca.cambiar_estado(id_marca)
@@ -169,11 +247,25 @@ def cambiar_estado_marca(id_marca):
 
 @ws_marca.route('/marcas/eliminar/<int:id_marca>', methods=['DELETE'])
 def eliminar_marca(id_marca):
-    """Eliminar lógicamente una marca (desactivar)"""
+    """
+    Eliminar una marca
+    ---
+    tags:
+      - Marcas
+    parameters:
+      - name: id_marca
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Marca eliminada correctamente
+      400:
+        description: No se puede eliminar la marca
+    """
     try:
         marca = Marca()
         
-        # Verificar si tiene productos activos asociados
         total_productos = marca.contar_productos(id_marca)
         
         if total_productos > 0:
@@ -182,7 +274,6 @@ def eliminar_marca(id_marca):
                 'message': f'No se puede desactivar la marca porque tiene {total_productos} producto(s) activo(s) asociado(s)'
             }), 400
         
-        # Eliminar (desactivar) marca
         exito, mensaje = marca.eliminar_logico(id_marca)
         
         if exito:
@@ -205,7 +296,17 @@ def eliminar_marca(id_marca):
 
 @ws_marca.route('/marcas/estadisticas', methods=['GET'])
 def estadisticas_marcas():
-    """Obtener estadísticas de marcas y productos"""
+    """
+    Obtener estadísticas de marcas
+    ---
+    tags:
+      - Marcas
+    responses:
+      200:
+        description: Estadísticas obtenidas correctamente
+      500:
+        description: Error del servidor
+    """
     try:
         marca = Marca()
         exito, marcas = marca.listar()

@@ -38,7 +38,23 @@ def subir_a_cloudinary(file, folder):
 
 @ws_producto_color.route('/productos-color/listar', methods=['GET'])
 def listar_productos_color():
-    """Listar productos-color con filtro opcional por empresa"""
+    """
+    Listar productos-color con filtro opcional por empresa
+    ---
+    tags:
+      - Productos Color
+    parameters:
+      - name: id_empresa
+        in: query
+        required: false
+        type: integer
+        description: ID de la empresa para filtrar productos-color
+    responses:
+      200:
+        description: Lista de productos-color obtenida correctamente
+      500:
+        description: Error en el servidor
+    """
     try:
         # ✅ OBTENER id_empresa DEL QUERY PARAM
         id_empresa = request.args.get('id_empresa', type=int)
@@ -71,7 +87,25 @@ def listar_productos_color():
 
 @ws_producto_color.route('/productos-color/obtener/<int:id_prod_color>', methods=['GET'])
 def obtener_producto_color(id_prod_color):
-    """Obtener un producto-color específico por ID"""
+    """
+    Obtener un producto-color específico por ID
+    ---
+    tags:
+      - Productos Color
+    parameters:
+      - name: id_prod_color
+        in: path
+        required: true
+        type: integer
+        description: ID del producto-color (variante)
+    responses:
+      200:
+        description: Producto-color obtenido correctamente
+      404:
+        description: Producto-color no encontrado
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, resultado = producto_color.obtener_por_id(id_prod_color)
         
@@ -98,7 +132,53 @@ def obtener_producto_color(id_prod_color):
 
 @ws_producto_color.route('/productos-color/crear', methods=['POST'])
 def crear_producto_color():
-    """Crear una nueva variante (color/talla) con imagen en Cloudinary"""
+    """
+    Crear una nueva variante (color/talla) con imagen en Cloudinary
+    ---
+    tags:
+      - Productos Color
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: id_prod_sucursal
+        in: formData
+        required: true
+        type: integer
+        description: ID del producto-sucursal base
+      - name: id_color
+        in: formData
+        required: true
+        type: integer
+        description: ID del color
+      - name: talla
+        in: formData
+        required: true
+        type: string
+        description: Talla de la variante
+      - name: precio
+        in: formData
+        required: true
+        type: number
+        format: float
+        description: Precio de la variante
+      - name: stock
+        in: formData
+        required: true
+        type: integer
+        description: Stock disponible de la variante
+      - name: url_img
+        in: formData
+        required: true
+        type: file
+        description: Imagen de la variante a subir a Cloudinary
+    responses:
+      201:
+        description: Variante creada correctamente
+      400:
+        description: Datos inválidos o incompletos
+      500:
+        description: Error en el servidor
+    """
     try:
         print("=" * 60)
         print("📝 CREAR PRODUCTO-COLOR (VARIANTE)")
@@ -178,7 +258,58 @@ def crear_producto_color():
 
 @ws_producto_color.route('/productos-color/modificar/<int:id_prod_color>', methods=['PUT'])
 def modificar_producto_color(id_prod_color):
-    """Modificar una variante existente con opción de nueva imagen en Cloudinary"""
+    """
+    Modificar una variante existente con opción de nueva imagen en Cloudinary
+    ---
+    tags:
+      - Productos Color
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: id_prod_color
+        in: path
+        required: true
+        type: integer
+        description: ID del producto-color (variante) a modificar
+      - name: id_prod_sucursal
+        in: formData
+        required: true
+        type: integer
+        description: ID del producto-sucursal base
+      - name: id_color
+        in: formData
+        required: true
+        type: integer
+        description: ID del color
+      - name: talla
+        in: formData
+        required: true
+        type: string
+        description: Talla de la variante
+      - name: precio
+        in: formData
+        required: true
+        type: number
+        format: float
+        description: Precio de la variante
+      - name: stock
+        in: formData
+        required: true
+        type: integer
+        description: Stock disponible de la variante
+      - name: url_img
+        in: formData
+        required: false
+        type: file
+        description: Nueva imagen de la variante (opcional)
+    responses:
+      200:
+        description: Variante modificada correctamente
+      400:
+        description: Datos inválidos o incompletos
+      500:
+        description: Error en el servidor
+    """
     try:
         print("=" * 60)
         print(f"🔄 MODIFICAR PRODUCTO-COLOR ID: {id_prod_color}")
@@ -269,7 +400,25 @@ def modificar_producto_color(id_prod_color):
 
 @ws_producto_color.route('/productos-color/cambiar-estado/<int:id_prod_color>', methods=['PATCH'])
 def cambiar_estado_producto_color(id_prod_color):
-    """Cambiar estado de una variante (activar/desactivar)"""
+    """
+    Cambiar estado de una variante (activar/desactivar)
+    ---
+    tags:
+      - Productos Color
+    parameters:
+      - name: id_prod_color
+        in: path
+        required: true
+        type: integer
+        description: ID del producto-color (variante)
+    responses:
+      200:
+        description: Estado cambiado correctamente
+      400:
+        description: Error al cambiar el estado
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, mensaje = producto_color.cambiar_estado(id_prod_color)
         
@@ -293,7 +442,25 @@ def cambiar_estado_producto_color(id_prod_color):
 
 @ws_producto_color.route('/productos-color/eliminar/<int:id_prod_color>', methods=['DELETE'])
 def eliminar_producto_color(id_prod_color):
-    """Eliminar FÍSICAMENTE una variante (DELETE permanente)"""
+    """
+    Eliminar FÍSICAMENTE una variante (DELETE permanente)
+    ---
+    tags:
+      - Productos Color
+    parameters:
+      - name: id_prod_color
+        in: path
+        required: true
+        type: integer
+        description: ID del producto-color (variante) a eliminar
+    responses:
+      200:
+        description: Variante eliminada correctamente
+      400:
+        description: Error al eliminar la variante
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, mensaje = producto_color.eliminar_fisico(id_prod_color)
         
@@ -317,7 +484,23 @@ def eliminar_producto_color(id_prod_color):
 
 @ws_producto_color.route('/productos-color/por-producto/<int:id_prod_sucursal>', methods=['GET'])
 def listar_por_producto(id_prod_sucursal):
-    """Listar todas las variantes de un producto específico"""
+    """
+    Listar todas las variantes de un producto específico
+    ---
+    tags:
+      - Productos Color
+    parameters:
+      - name: id_prod_sucursal
+        in: path
+        required: true
+        type: integer
+        description: ID del producto-sucursal
+    responses:
+      200:
+        description: Variantes obtenidas correctamente
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, resultado = producto_color.listar_por_producto(id_prod_sucursal)
         
@@ -348,7 +531,23 @@ def listar_por_producto(id_prod_sucursal):
 
 @ws_producto_color.route('/productos-color/productos-activos', methods=['GET'])
 def listar_productos_activos():
-    """Listar productos activos para el select con filtro por empresa"""
+    """
+    Listar productos activos para el select con filtro por empresa
+    ---
+    tags:
+      - Productos Color
+    parameters:
+      - name: id_empresa
+        in: query
+        required: false
+        type: integer
+        description: ID de la empresa para filtrar productos activos
+    responses:
+      200:
+        description: Productos obtenidos correctamente
+      500:
+        description: Error en el servidor
+    """
     try:
         # ✅ OBTENER id_empresa DEL QUERY PARAM
         id_empresa = request.args.get('id_empresa', type=int)
@@ -378,7 +577,17 @@ def listar_productos_activos():
 
 @ws_producto_color.route('/productos-color/colores-activos', methods=['GET'])
 def listar_colores_activos():
-    """Listar colores activos para el select"""
+    """
+    Listar colores activos para el select
+    ---
+    tags:
+      - Productos Color
+    responses:
+      200:
+        description: Colores obtenidos correctamente
+      500:
+        description: Error en el servidor
+    """
     try:
         exito, resultado = producto_color.listar_colores_activos()
         

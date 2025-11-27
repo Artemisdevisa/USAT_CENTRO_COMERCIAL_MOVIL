@@ -29,7 +29,6 @@ class Cupon:
                 LEFT JOIN categoria_producto cat ON c.id_categoria = cat.id_categoria
             """
             
-            # ✅ FILTRAR POR EMPRESA
             if id_empresa:
                 sql += " WHERE s.id_empresa = %s"
                 cursor.execute(sql + " ORDER BY c.fecha_inicio DESC", [id_empresa])
@@ -42,7 +41,7 @@ class Cupon:
             
             return resultado if resultado else []
         except Exception as e:
-            print(f"❌ Error: {str(e)}")
+            print(f"Error: {str(e)}")
             import traceback
             traceback.print_exc()
             return []

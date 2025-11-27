@@ -7,7 +7,23 @@ ws_cupon = Blueprint('ws_cupon', __name__)
 
 @ws_cupon.route('/cupones/listar', methods=['GET'])
 def listar_cupones():
-    """Listar cupones con filtro opcional por empresa"""
+    """
+    Listar cupones con filtro opcional por empresa
+    ---
+    tags:
+      - Cupones
+    parameters:
+      - name: id_empresa
+        in: query
+        required: false
+        type: integer
+        description: ID de la empresa para filtrar cupones
+    responses:
+      200:
+        description: Lista de cupones obtenida correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         # ✅ OBTENER id_empresa DEL QUERY PARAM
         id_empresa = request.args.get('id_empresa', type=int)
@@ -43,7 +59,23 @@ def listar_cupones():
 
 @ws_cupon.route('/cupones/listar-por-sucursal/<int:id_sucursal>', methods=['GET'])
 def listar_por_sucursal(id_sucursal):
-    """Listar cupones activos de una sucursal"""
+    """
+    Listar cupones activos de una sucursal
+    ---
+    tags:
+      - Cupones
+    parameters:
+      - name: id_sucursal
+        in: path
+        required: true
+        type: integer
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Lista de cupones de la sucursal obtenida correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         print(f"📥 Listando cupones para sucursal: {id_sucursal}")
         cupones = Cupon.listar_por_sucursal(id_sucursal)
@@ -68,7 +100,63 @@ def listar_por_sucursal(id_sucursal):
 
 @ws_cupon.route('/cupones/crear', methods=['POST'])
 def crear_cupon():
-    """Crear un nuevo cupón y notificar a todos los usuarios"""
+    """
+    Crear un nuevo cupón y notificar a todos los usuarios
+    ---
+    tags:
+      - Cupones
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - codigo
+            - descripcion
+            - porcentaje_descuento
+            - id_sucursal
+            - fecha_inicio
+            - fecha_fin
+            - cantidad_total
+          properties:
+            codigo:
+              type: string
+              description: Código único del cupón
+            descripcion:
+              type: string
+              description: Descripción del cupón
+            porcentaje_descuento:
+              type: number
+              format: float
+              description: Porcentaje de descuento
+            monto_minimo:
+              type: number
+              format: float
+              description: Monto mínimo de compra para aplicar el cupón
+            id_sucursal:
+              type: integer
+              description: ID de la sucursal asociada al cupón
+            id_categoria:
+              type: integer
+              description: ID de la categoría asociada (opcional)
+            fecha_inicio:
+              type: string
+              description: Fecha de inicio de vigencia del cupón (YYYY-MM-DD)
+            fecha_fin:
+              type: string
+              description: Fecha de fin de vigencia del cupón (YYYY-MM-DD)
+            cantidad_total:
+              type: integer
+              description: Cantidad total disponible del cupón
+    responses:
+      201:
+        description: Cupón creado correctamente
+      400:
+        description: Error de validación o negocio al crear cupón
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         
@@ -228,7 +316,57 @@ def enviar_notificacion_nuevo_cupon(codigo, descripcion, porcentaje, nombre_sucu
 
 @ws_cupon.route('/cupones/modificar/<int:id_cupon>', methods=['PUT'])
 def modificar_cupon(id_cupon):
-    """Modificar un cupón existente"""
+    """
+    Modificar un cupón existente
+    ---
+    tags:
+      - Cupones
+    parameters:
+      - name: id_cupon
+        in: path
+        required: true
+        type: integer
+        description: ID del cupón a modificar
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - descripcion
+            - porcentaje_descuento
+            - fecha_inicio
+            - fecha_fin
+            - cantidad_total
+          properties:
+            descripcion:
+              type: string
+              description: Nueva descripción del cupón
+            porcentaje_descuento:
+              type: number
+              format: float
+              description: Nuevo porcentaje de descuento
+            monto_minimo:
+              type: number
+              format: float
+              description: Nuevo monto mínimo de compra
+            fecha_inicio:
+              type: string
+              description: Nueva fecha de inicio (YYYY-MM-DD)
+            fecha_fin:
+              type: string
+              description: Nueva fecha de fin (YYYY-MM-DD)
+            cantidad_total:
+              type: integer
+              description: Nueva cantidad total disponible
+    responses:
+      200:
+        description: Cupón modificado correctamente
+      400:
+        description: Error al modificar el cupón
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         
@@ -267,7 +405,25 @@ def modificar_cupon(id_cupon):
 
 @ws_cupon.route('/cupones/eliminar/<int:id_cupon>', methods=['DELETE'])
 def eliminar_cupon(id_cupon):
-    """Eliminar un cupón (lógico)"""
+    """
+    Eliminar un cupón (lógico)
+    ---
+    tags:
+      - Cupones
+    parameters:
+      - name: id_cupon
+        in: path
+        required: true
+        type: integer
+        description: ID del cupón a eliminar
+    responses:
+      200:
+        description: Cupón eliminado correctamente
+      400:
+        description: Error al eliminar el cupón
+      500:
+        description: Error interno del servidor
+    """
     try:
         print(f"🗑️ Eliminando cupón {id_cupon}")
         
@@ -295,7 +451,17 @@ def eliminar_cupon(id_cupon):
     
 @ws_cupon.route('/cupones/mejor-descuento', methods=['GET'])
 def obtener_mejor_descuento():
-    """Obtener el cupón con mayor descuento activo de todas las sucursales"""
+    """
+    Obtener el cupón con mayor descuento activo de todas las sucursales
+    ---
+    tags:
+      - Cupones
+    responses:
+      200:
+        description: Cupón con mayor descuento obtenido o mensaje indicando que no hay cupones
+      500:
+        description: Error interno del servidor
+    """
     try:
         print("🔍 Buscando cupón con mayor descuento...")
         
@@ -368,7 +534,39 @@ def obtener_mejor_descuento():
 
 @ws_cupon.route('/cupones/usar', methods=['POST'])
 def usar_cupon():
-    """Registra el uso de un cupón por un usuario"""
+    """
+    Registra el uso de un cupón por un usuario
+    ---
+    tags:
+      - Cupones
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_cupon
+            - id_usuario
+            - id_venta
+          properties:
+            id_cupon:
+              type: integer
+              description: ID del cupón a usar
+            id_usuario:
+              type: integer
+              description: ID del usuario que usa el cupón
+            id_venta:
+              type: integer
+              description: ID de la venta asociada al uso del cupón
+    responses:
+      200:
+        description: Cupón aplicado correctamente
+      400:
+        description: Faltan datos requeridos, cupón inválido o agotado
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         
@@ -473,7 +671,30 @@ def usar_cupon():
     
 @ws_cupon.route('/cupones/verificar-uso/<int:id_cupon>/<int:id_usuario>', methods=['GET'])
 def verificar_uso_cupon(id_cupon, id_usuario):
-    """Verifica si un usuario ya usó un cupón específico"""
+    """
+    Verifica si un usuario ya usó un cupón específico
+    ---
+    tags:
+      - Cupones
+    parameters:
+      - name: id_cupon
+        in: path
+        required: true
+        type: integer
+        description: ID del cupón
+      - name: id_usuario
+        in: path
+        required: true
+        type: integer
+        description: ID del usuario
+    responses:
+      200:
+        description: Verificación de uso del cupón realizada correctamente
+      404:
+        description: Cupón no encontrado
+      500:
+        description: Error interno del servidor
+    """
     try:
         print(f"\n{'='*60}")
         print(f"🔍 VERIFICANDO USO DE CUPÓN")

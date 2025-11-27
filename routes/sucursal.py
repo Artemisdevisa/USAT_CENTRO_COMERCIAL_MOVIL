@@ -48,7 +48,54 @@ def subir_a_cloudinary(file, folder):
 
 @ws_sucursal.route('/sucursales/listar-por-empresa/<int:id_empresa>', methods=['GET'])
 def listar_por_empresa(id_empresa):
-    """Listar sucursales de una empresa"""
+    """
+    ---
+    tags:
+      - Sucursales
+    summary: Listar sucursales por empresa
+    description: Obtiene todas las sucursales asociadas a una empresa específica
+    parameters:
+      - name: id_empresa
+        in: path
+        type: integer
+        required: true
+        description: ID de la empresa
+    responses:
+      200:
+        description: Sucursales obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_sucursal:
+                    type: integer
+                  nombre:
+                    type: string
+                  direccion:
+                    type: string
+                  telefono:
+                    type: string
+                  img_logo:
+                    type: string
+                  img_banner:
+                    type: string
+                  latitud:
+                    type: number
+                  longitud:
+                    type: number
+                  distrito:
+                    type: string
+                  estado:
+                    type: string
+      500:
+        description: Error en el servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -90,7 +137,77 @@ def listar_por_empresa(id_empresa):
 
 @ws_sucursal.route('/sucursales/crear', methods=['POST'])
 def crear_sucursal():
-    """Crear nueva sucursal con imágenes en Cloudinary"""
+    """
+    ---
+    tags:
+      - Sucursales
+    summary: Crear nueva sucursal
+    description: Crea una nueva sucursal con imágenes cargadas a Cloudinary
+    parameters:
+      - name: id_empresa
+        in: formData
+        type: integer
+        required: true
+        description: ID de la empresa
+      - name: nombre
+        in: formData
+        type: string
+        required: true
+        description: Nombre de la sucursal
+      - name: id_dist
+        in: formData
+        type: integer
+        required: true
+        description: ID del distrito
+      - name: direccion
+        in: formData
+        type: string
+        required: true
+        description: Dirección completa
+      - name: telefono
+        in: formData
+        type: string
+        required: true
+        description: Número de teléfono
+      - name: latitud
+        in: formData
+        type: number
+        required: true
+        description: Latitud geográfica
+      - name: longitud
+        in: formData
+        type: number
+        required: true
+        description: Longitud geográfica
+      - name: img_logo
+        in: formData
+        type: file
+        description: Archivo de logo (PNG, JPG, GIF, WebP)
+      - name: img_banner
+        in: formData
+        type: file
+        description: Archivo de banner (PNG, JPG, GIF, WebP)
+    responses:
+      201:
+        description: Sucursal creada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            id_sucursal:
+              type: integer
+            img_logo:
+              type: string
+            img_banner:
+              type: string
+      400:
+        description: Faltan campos obligatorios
+      500:
+        description: Error en el servidor
+    """
     try:
         # Obtener datos del formulario
         id_empresa = request.form.get('id_empresa')
@@ -174,7 +291,57 @@ def crear_sucursal():
 
 @ws_sucursal.route('/sucursales/listar', methods=['GET'])
 def listar_sucursales():
-    """Listar sucursales con filtro opcional por empresa"""
+    """
+    ---
+    tags:
+      - Sucursales
+    summary: Listar sucursales activas
+    description: Obtiene lista de sucursales activas con filtro opcional por empresa
+    parameters:
+      - name: id_empresa
+        in: query
+        type: integer
+        description: ID de la empresa para filtrar (opcional)
+    responses:
+      200:
+        description: Sucursales listadas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_sucursal:
+                    type: integer
+                  nombre:
+                    type: string
+                  direccion:
+                    type: string
+                  telefono:
+                    type: string
+                  img_logo:
+                    type: string
+                  img_banner:
+                    type: string
+                  latitud:
+                    type: string
+                  longitud:
+                    type: string
+                  empresa:
+                    type: string
+                  distrito:
+                    type: string
+                  estado:
+                    type: string
+      500:
+        description: Error en el servidor
+    """
     try:
         # ✅ OBTENER id_empresa DEL QUERY PARAM
         id_empresa = request.args.get('id_empresa', type=int)
@@ -246,7 +413,33 @@ def listar_sucursales():
 
 @ws_sucursal.route('/sucursales/detalle/<int:id_sucursal>', methods=['GET'])
 def obtener_detalle_sucursal(id_sucursal):
-    """Obtener detalle completo de una sucursal con horarios"""
+    """
+    ---
+    tags:
+      - Sucursales
+    summary: Obtener detalle completo de sucursal
+    description: Obtiene información completa de una sucursal incluyendo horarios de atención
+    parameters:
+      - name: id_sucursal
+        in: path
+        type: integer
+        required: true
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Detalle obtenido correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            data:
+              type: object
+      404:
+        description: Sucursal no encontrada
+      500:
+        description: Error en el servidor
+    """
     try:
         print("=" * 60)
         print(f"📥 DETALLE SUCURSAL - ID: {id_sucursal}")
@@ -287,7 +480,33 @@ def obtener_detalle_sucursal(id_sucursal):
 
 @ws_sucursal.route('/sucursales/obtener/<int:id>', methods=['GET'])
 def obtener_sucursal(id):
-    """Obtener datos completos de sucursal incluyendo ubicación"""
+    """
+    ---
+    tags:
+      - Sucursales
+    summary: Obtener datos completos de sucursal
+    description: Obtiene información completa de una sucursal incluyendo datos de ubicación geográfica y división territorial
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Sucursal obtenida correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            data:
+              type: object
+      404:
+        description: Sucursal no encontrada
+      500:
+        description: Error en el servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -324,7 +543,76 @@ def obtener_sucursal(id):
 
 @ws_sucursal.route('/sucursales/modificar/<int:id>', methods=['PUT'])
 def modificar_sucursal(id):
-    """Modificar sucursal con nuevas imágenes en Cloudinary"""
+    """
+    ---
+    tags:
+      - Sucursales
+    summary: Modificar sucursal existente
+    description: Actualiza los datos de una sucursal incluyendo imágenes a través de Cloudinary
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: ID de la sucursal
+      - name: id_empresa
+        in: formData
+        type: integer
+        required: true
+        description: ID de la empresa
+      - name: nombre
+        in: formData
+        type: string
+        required: true
+        description: Nombre de la sucursal
+      - name: id_dist
+        in: formData
+        type: integer
+        required: true
+        description: ID del distrito
+      - name: direccion
+        in: formData
+        type: string
+        required: true
+        description: Dirección completa
+      - name: telefono
+        in: formData
+        type: string
+        required: true
+        description: Número de teléfono
+      - name: latitud
+        in: formData
+        type: number
+        required: true
+        description: Latitud geográfica
+      - name: longitud
+        in: formData
+        type: number
+        required: true
+        description: Longitud geográfica
+      - name: img_logo
+        in: formData
+        type: file
+        description: Nuevo archivo de logo (PNG, JPG, GIF, WebP)
+      - name: img_banner
+        in: formData
+        type: file
+        description: Nuevo archivo de banner (PNG, JPG, GIF, WebP)
+    responses:
+      200:
+        description: Sucursal modificada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Faltan campos obligatorios o error en los datos
+      500:
+        description: Error en el servidor
+    """
     try:
         id_empresa = request.form.get('id_empresa')
         nombre = request.form.get('nombre')
@@ -410,7 +698,31 @@ def modificar_sucursal(id):
 
 @ws_sucursal.route('/sucursales/cambiar-estado/<int:id>', methods=['PATCH'])
 def cambiar_estado(id):
-    """Cambiar estado activo/inactivo de una sucursal"""
+    """
+    ---
+    tags:
+      - Sucursales
+    summary: Cambiar estado de sucursal
+    description: Cambia el estado de una sucursal entre activo e inactivo
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Estado cambiado correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      500:
+        description: Error en el servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -425,7 +737,33 @@ def cambiar_estado(id):
 
 @ws_sucursal.route('/sucursales/eliminar/<int:id>', methods=['DELETE'])
 def eliminar_sucursal(id):
-    """Eliminar lógicamente (cambiar estado a false)"""
+    """
+    ---
+    tags:
+      - Sucursales
+    summary: Eliminar sucursal lógicamente
+    description: Marca una sucursal como eliminada (elimina lógicamente) sin borrar de la BD
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Sucursal eliminada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: No se puede eliminar la sucursal
+      500:
+        description: Error en el servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()
@@ -446,7 +784,31 @@ def eliminar_sucursal(id):
 
 @ws_sucursal.route('/sucursales/eliminar-fisico/<int:id>', methods=['DELETE'])
 def eliminar_fisico(id):
-    """Eliminación física permanente de la base de datos"""
+    """
+    ---
+    tags:
+      - Sucursales
+    summary: Eliminar sucursal permanentemente
+    description: Elimina una sucursal de forma permanente de la base de datos (DELETE FÍSICO)
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Sucursal eliminada permanentemente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      500:
+        description: Error en el servidor
+    """
     try:
         con = Conexion().open
         cursor = con.cursor()

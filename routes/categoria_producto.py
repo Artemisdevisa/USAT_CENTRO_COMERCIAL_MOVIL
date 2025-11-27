@@ -39,7 +39,17 @@ def subir_a_cloudinary(file, folder):
 
 @ws_categoria_producto.route('/categorias/listar', methods=['GET'])
 def listar_categorias():
-    """Listar categorías activas para el frontend público"""
+    """
+    Listar categorías activas para el frontend público
+    ---
+    tags:
+      - Categorías
+    responses:
+      200:
+        description: Lista de categorías activas obtenida correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         categoria_producto = CategoriaProducto()
         resultado, categorias = categoria_producto.listar_categorias()
@@ -67,7 +77,23 @@ def listar_categorias():
 
 @ws_categoria_producto.route('/productos/categoria/<int:id_categoria>', methods=['GET'])
 def listar_productos_por_categoria(id_categoria):
-    """Listar productos por categoría para el frontend público"""
+    """
+    Listar productos por categoría para el frontend público
+    ---
+    tags:
+      - Categorías
+    parameters:
+      - name: id_categoria
+        in: path
+        required: true
+        type: integer
+        description: ID de la categoría
+    responses:
+      200:
+        description: Productos obtenidos correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         categoria_producto = CategoriaProducto()
         resultado, productos = categoria_producto.listar_productos_por_categoria(id_categoria)
@@ -99,7 +125,17 @@ def listar_productos_por_categoria(id_categoria):
 
 @ws_categoria_producto.route('/categorias/listar-admin', methods=['GET'])
 def listar_categorias_admin():
-    """Listar TODAS las categorías (activas e inactivas) para el dashboard"""
+    """
+    Listar TODAS las categorías (activas e inactivas) para el dashboard
+    ---
+    tags:
+      - Categorías (Admin)
+    responses:
+      200:
+        description: Categorías obtenidas correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         categoria = CategoriaProducto()
         exito, resultado = categoria.listar()
@@ -125,7 +161,25 @@ def listar_categorias_admin():
 
 @ws_categoria_producto.route('/categorias/obtener/<int:id_categoria>', methods=['GET'])
 def obtener_categoria(id_categoria):
-    """Obtener una categoría específica por ID"""
+    """
+    Obtener una categoría específica por ID
+    ---
+    tags:
+      - Categorías (Admin)
+    parameters:
+      - name: id_categoria
+        in: path
+        required: true
+        type: integer
+        description: ID de la categoría
+    responses:
+      200:
+        description: Categoría obtenida correctamente
+      404:
+        description: Categoría no encontrada
+      500:
+        description: Error interno del servidor
+    """
     try:
         categoria = CategoriaProducto()
         exito, resultado = categoria.obtener_por_id(id_categoria)
@@ -151,7 +205,32 @@ def obtener_categoria(id_categoria):
 
 @ws_categoria_producto.route('/categorias/crear', methods=['POST'])
 def crear_categoria():
-    """Crear una nueva categoría con Cloudinary"""
+    """
+    Crear una nueva categoría con Cloudinary
+    ---
+    tags:
+      - Categorías (Admin)
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: nombre
+        in: formData
+        type: string
+        required: true
+        description: Nombre de la categoría
+      - name: imagen
+        in: formData
+        type: file
+        required: false
+        description: Imagen de la categoría a subir a Cloudinary
+    responses:
+      201:
+        description: Categoría creada correctamente
+      400:
+        description: Error de validación o datos incompletos
+      500:
+        description: Error interno del servidor
+    """
     try:
         # Obtener datos del formulario
         nombre = request.form.get('nombre', '').strip()
@@ -176,7 +255,7 @@ def crear_categoria():
         if exito:
             return jsonify({
                 'status': True,
-                'message': 'Categoría creada correctamente',
+                'message': 'Categoría creado correctamente',
                 'data': {'id_categoria': resultado, 'img': img_url}
             }), 201
         else:
@@ -194,7 +273,37 @@ def crear_categoria():
 
 @ws_categoria_producto.route('/categorias/modificar/<int:id_categoria>', methods=['PUT'])
 def modificar_categoria(id_categoria):
-    """Modificar una categoría con Cloudinary"""
+    """
+    Modificar una categoría con Cloudinary
+    ---
+    tags:
+      - Categorías (Admin)
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: id_categoria
+        in: path
+        required: true
+        type: integer
+        description: ID de la categoría a modificar
+      - name: nombre
+        in: formData
+        type: string
+        required: true
+        description: Nuevo nombre de la categoría
+      - name: imagen
+        in: formData
+        type: file
+        required: false
+        description: Nueva imagen de la categoría
+    responses:
+      200:
+        description: Categoría modificada correctamente
+      400:
+        description: Error de validación o de negocio
+      500:
+        description: Error interno del servidor
+    """
     try:
         # Obtener datos del formulario
         nombre = request.form.get('nombre', '').strip()
@@ -249,7 +358,25 @@ def modificar_categoria(id_categoria):
 
 @ws_categoria_producto.route('/categorias/cambiar-estado/<int:id_categoria>', methods=['PATCH'])
 def cambiar_estado_categoria(id_categoria):
-    """Cambiar estado de una categoría (activar/desactivar)"""
+    """
+    Cambiar estado de una categoría (activar/desactivar)
+    ---
+    tags:
+      - Categorías (Admin)
+    parameters:
+      - name: id_categoria
+        in: path
+        required: true
+        type: integer
+        description: ID de la categoría cuyo estado será cambiado
+    responses:
+      200:
+        description: Estado de la categoría actualizado correctamente
+      400:
+        description: No fue posible cambiar el estado
+      500:
+        description: Error interno del servidor
+    """
     try:
         categoria = CategoriaProducto()
         exito, mensaje = categoria.cambiar_estado(id_categoria)
@@ -274,7 +401,25 @@ def cambiar_estado_categoria(id_categoria):
 
 @ws_categoria_producto.route('/categorias/eliminar/<int:id_categoria>', methods=['DELETE'])
 def eliminar_categoria(id_categoria):
-    """Eliminar FÍSICAMENTE una categoría (DELETE permanente)"""
+    """
+    Eliminar FÍSICAMENTE una categoría (DELETE permanente)
+    ---
+    tags:
+      - Categorías (Admin)
+    parameters:
+      - name: id_categoria
+        in: path
+        required: true
+        type: integer
+        description: ID de la categoría a eliminar
+    responses:
+      200:
+        description: Categoría eliminada correctamente
+      400:
+        description: No se pudo eliminar la categoría (tiene productos asociados u otro error)
+      500:
+        description: Error interno del servidor
+    """
     try:
         categoria = CategoriaProducto()
         
@@ -310,7 +455,17 @@ def eliminar_categoria(id_categoria):
 
 @ws_categoria_producto.route('/categorias/estadisticas', methods=['GET'])
 def estadisticas_categorias():
-    """Obtener estadísticas de categorías y productos"""
+    """
+    Obtener estadísticas de categorías y productos
+    ---
+    tags:
+      - Categorías (Admin)
+    responses:
+      200:
+        description: Estadísticas obtenidas correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         categoria = CategoriaProducto()
         exito, categorias = categoria.listar()
@@ -347,7 +502,17 @@ def estadisticas_categorias():
 
 @ws_categoria_producto.route('/categorias/listar-activas', methods=['GET'])
 def listar_categorias_activas():
-    """Listar solo categorías ACTIVAS para selectores en formularios"""
+    """
+    Listar solo categorías ACTIVAS para selectores en formularios
+    ---
+    tags:
+      - Categorías (Admin)
+    responses:
+      200:
+        description: Lista de categorías activas obtenida correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         categoria = CategoriaProducto()
         exito, resultado = categoria.listar_categorias()  # Usa el método existente

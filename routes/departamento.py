@@ -15,7 +15,17 @@ def departamentos_page():
 
 @ws_departamento.route('/departamentos/listar', methods=['GET'])
 def listar():
-    """Listar departamentos"""
+    """
+    Listar departamentos
+    ---
+    tags:
+      - Departamentos
+    responses:
+      200:
+        description: Departamentos obtenidos correctamente
+      500:
+        description: Error del servidor
+    """
     try:
         resultado, data = departamento_model.listar()
         
@@ -41,7 +51,26 @@ def listar():
 
 @ws_departamento.route('/departamentos/crear', methods=['POST'])
 def crear():
-    """Crear departamento"""
+    """
+    Crear departamento
+    ---
+    tags:
+      - Departamentos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            nombre:
+              type: string
+              example: Lima
+    responses:
+      201:
+        description: Departamento creado correctamente
+      400:
+        description: Faltan datos requeridos
+    """
     try:
         data = request.get_json()
         nombre = data.get('nombre')
@@ -74,7 +103,29 @@ def crear():
 
 @ws_departamento.route('/departamentos/modificar', methods=['PUT'])
 def modificar():
-    """Modificar departamento"""
+    """
+    Modificar departamento
+    ---
+    tags:
+      - Departamentos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            id_dep:
+              type: integer
+              example: 1
+            nombre:
+              type: string
+              example: Lima Actualizada
+    responses:
+      200:
+        description: Departamento modificado correctamente
+      400:
+        description: Faltan datos requeridos
+    """
     try:
         data = request.get_json()
         id_dep = data.get('id_dep')
@@ -107,7 +158,23 @@ def modificar():
 
 @ws_departamento.route('/departamentos/eliminar/<int:id_dep>', methods=['DELETE'])
 def eliminar(id_dep):
-    """Eliminar departamento"""
+    """
+    Eliminar departamento
+    ---
+    tags:
+      - Departamentos
+    parameters:
+      - name: id_dep
+        in: path
+        type: integer
+        required: true
+        description: ID del departamento
+    responses:
+      200:
+        description: Departamento eliminado correctamente
+      400:
+        description: Error al eliminar
+    """
     try:
         resultado, mensaje = departamento_model.eliminar(id_dep)
         

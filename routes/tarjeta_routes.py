@@ -6,7 +6,48 @@ ws_tarjeta = Blueprint('ws_tarjeta', __name__)
 
 @ws_tarjeta.route('/tarjetas/listar/<int:id_usuario>', methods=['GET'])
 def listar_tarjetas(id_usuario):
-    """Listar tarjetas del usuario"""
+    """
+    ---
+    tags:
+      - Tarjetas
+    summary: Listar tarjetas del usuario
+    description: Obtiene la lista de tarjetas de crédito/débito registradas por el usuario
+    parameters:
+      - name: id_usuario
+        in: path
+        type: integer
+        required: true
+        description: ID del usuario
+    responses:
+      200:
+        description: Tarjetas listadas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_tarjeta:
+                    type: integer
+                  numero:
+                    type: string
+                  titular:
+                    type: string
+                  fecha_vencimiento:
+                    type: string
+                  tipo_tarjeta:
+                    type: string
+                  es_principal:
+                    type: boolean
+      500:
+        description: Error interno del servidor
+    """
     try:
         tarjeta = Tarjeta()
         exito, resultado = tarjeta.listar_por_usuario(id_usuario)
@@ -37,7 +78,73 @@ def listar_tarjetas(id_usuario):
 
 @ws_tarjeta.route('/tarjetas/agregar', methods=['POST'])
 def agregar_tarjeta():
-    """Agregar nueva tarjeta"""
+    """
+    ---
+    tags:
+      - Tarjetas
+    summary: Agregar nueva tarjeta
+    description: Registra una nueva tarjeta de crédito o débito para el usuario
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - numero
+            - titular
+            - fecha_vencimiento
+            - cvv
+            - tipo_tarjeta
+          properties:
+            id_usuario:
+              type: integer
+              description: ID del usuario propietario de la tarjeta
+            numero:
+              type: string
+              description: Número de la tarjeta (sin espacios)
+              example: "4532123456789010"
+            titular:
+              type: string
+              description: Nombre del titular de la tarjeta
+              example: "FERNANDO GUERRERO"
+            fecha_vencimiento:
+              type: string
+              description: Fecha de vencimiento en formato MM/YY
+              example: "12/26"
+            cvv:
+              type: string
+              description: Código de seguridad CVV de la tarjeta
+              example: "123"
+            tipo_tarjeta:
+              type: string
+              description: Tipo de tarjeta (Visa, MasterCard, Amex, etc)
+              example: "Visa"
+            es_principal:
+              type: boolean
+              description: Indica si es la tarjeta principal del usuario
+              default: false
+    responses:
+      201:
+        description: Tarjeta agregada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id_tarjeta:
+                  type: integer
+      400:
+        description: Datos incompletos o inválidos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -100,7 +207,43 @@ def agregar_tarjeta():
 
 @ws_tarjeta.route('/tarjetas/eliminar', methods=['POST'])
 def eliminar_tarjeta():
-    """Eliminar tarjeta"""
+    """
+    ---
+    tags:
+      - Tarjetas
+    summary: Eliminar tarjeta
+    description: Elimina una tarjeta del registro del usuario
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - id_tarjeta
+          properties:
+            id_usuario:
+              type: integer
+              description: ID del usuario propietario de la tarjeta
+            id_tarjeta:
+              type: integer
+              description: ID de la tarjeta a eliminar
+    responses:
+      200:
+        description: Tarjeta eliminada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Datos incompletos o tarjeta no encontrada
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -134,7 +277,43 @@ def eliminar_tarjeta():
 
 @ws_tarjeta.route('/tarjetas/establecer-principal', methods=['POST'])
 def establecer_principal():
-    """Establecer tarjeta como principal"""
+    """
+    ---
+    tags:
+      - Tarjetas
+    summary: Establecer tarjeta como principal
+    description: Marca una tarjeta como principal para transacciones del usuario
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - id_tarjeta
+          properties:
+            id_usuario:
+              type: integer
+              description: ID del usuario propietario de la tarjeta
+            id_tarjeta:
+              type: integer
+              description: ID de la tarjeta a establecer como principal
+    responses:
+      200:
+        description: Tarjeta establecida como principal correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Datos incompletos o tarjeta no encontrada
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         

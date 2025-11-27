@@ -7,7 +7,25 @@ persona_model = Persona()
 
 @ws_persona.route('/api/persona/<int:id_persona>', methods=['GET'])
 def obtener_persona(id_persona):
-    """Obtener datos de persona por ID"""
+    """
+    Obtener datos de persona por ID
+    ---
+    tags:
+      - Personas
+    parameters:
+      - name: id_persona
+        in: path
+        required: true
+        type: integer
+        description: ID de la persona
+    responses:
+      200:
+        description: Datos de la persona obtenidos correctamente
+      404:
+        description: Persona no encontrada
+      500:
+        description: Error interno del servidor
+    """
     try:
         exito, resultado = persona_model.obtener_por_id(id_persona)
         
@@ -44,7 +62,54 @@ def obtener_persona(id_persona):
 
 @ws_persona.route('/api/persona/<int:id_persona>', methods=['PUT'])
 def actualizar_persona(id_persona):
-    """Actualizar datos de persona"""
+    """
+    Actualizar datos de persona
+    ---
+    tags:
+      - Personas
+    consumes:
+      - application/json
+    parameters:
+      - name: id_persona
+        in: path
+        required: true
+        type: integer
+        description: ID de la persona a actualizar
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            nombres:
+              type: string
+              description: Nombres de la persona
+            apellidos:
+              type: string
+              description: Apellidos de la persona
+            telefono:
+              type: string
+              description: Teléfono de contacto
+            direccion:
+              type: string
+              description: Dirección de la persona
+            fecha_nacimiento:
+              type: string
+              format: date
+              description: Fecha de nacimiento (YYYY-MM-DD)
+          required:
+            - nombres
+            - apellidos
+    responses:
+      200:
+        description: Persona actualizada correctamente
+      400:
+        description: Error de validación o datos incompletos
+      404:
+        description: Persona no encontrada
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         

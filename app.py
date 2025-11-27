@@ -35,6 +35,13 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
+try:
+    from flasgger import Swagger
+    swagger = Swagger(app)
+    print("✅ Flasgger cargado correctamente")
+except Exception as e:
+    print(f"⚠  Advertencia - Flasgger: {e}")
+
 # ✅ IMPRIMIR CONFIGURACIÓN AL INICIAR
 Config.print_config()
 
@@ -296,5 +303,6 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3007))
     print(f"\n🚀 Servidor iniciado en puerto {port}")
     print(f"📡 API URL: http://localhost:{port}")
+    print(f"📚 Swagger Docs: http://localhost:{port}/apidocs")
     print(f"☁️  Cloudinary: {Config.CLOUDINARY_CLOUD_NAME}\n")
     app.run(host='0.0.0.0', port=port, debug=False)

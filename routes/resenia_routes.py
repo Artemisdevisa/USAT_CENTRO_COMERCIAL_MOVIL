@@ -9,7 +9,35 @@ ws_resenia = Blueprint('ws_resenia', __name__)
 # ============================================
 @ws_resenia.route('/resenias/producto-color/<int:id_prod_color>', methods=['GET'])
 def listar_resenias_producto(id_prod_color):
-    """Listar todas las reseñas de un producto_color específico"""
+    """
+    ---
+    tags:
+      - Reseñas
+    summary: Listar reseñas por producto color
+    description: Obtiene todas las reseñas de un producto_color específico
+    parameters:
+      - name: id_prod_color
+        in: path
+        type: integer
+        required: true
+        description: ID del producto color
+    responses:
+      200:
+        description: Reseñas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+      500:
+        description: Error interno del servidor
+    """
     try:
         resenia = Resenia()
         exito, resultado = resenia.listar_por_producto(id_prod_color)
@@ -40,7 +68,35 @@ def listar_resenias_producto(id_prod_color):
 # ============================================
 @ws_resenia.route('/resenias/usuario/<int:id_usuario>', methods=['GET'])
 def listar_resenias_usuario(id_usuario):
-    """Listar todas las reseñas de un usuario específico"""
+    """
+    ---
+    tags:
+      - Reseñas
+    summary: Listar reseñas por usuario
+    description: Obtiene todas las reseñas realizadas por un usuario específico
+    parameters:
+      - name: id_usuario
+        in: path
+        type: integer
+        required: true
+        description: ID del usuario
+    responses:
+      200:
+        description: Reseñas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+      500:
+        description: Error interno del servidor
+    """
     try:
         resenia = Resenia()
         exito, resultado = resenia.listar_por_usuario(id_usuario)
@@ -71,7 +127,35 @@ def listar_resenias_usuario(id_usuario):
 # ============================================
 @ws_resenia.route('/resenias/obtener/<int:id_resenia>', methods=['GET'])
 def obtener_resenia(id_resenia):
-    """Obtener una reseña específica por ID"""
+    """
+    ---
+    tags:
+      - Reseñas
+    summary: Obtener reseña por ID
+    description: Obtiene una reseña específica por su ID
+    parameters:
+      - name: id_resenia
+        in: path
+        type: integer
+        required: true
+        description: ID de la reseña
+    responses:
+      200:
+        description: Reseña obtenida correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+      404:
+        description: Reseña no encontrada
+      500:
+        description: Error interno del servidor
+    """
     try:
         resenia = Resenia()
         exito, resultado = resenia.obtener_por_id(id_resenia)
@@ -102,7 +186,63 @@ def obtener_resenia(id_resenia):
 # ============================================
 @ws_resenia.route('/resenias/crear', methods=['POST'])
 def crear_resenia():
-    """Crear una nueva reseña"""
+    """
+    ---
+    tags:
+      - Reseñas
+    summary: Crear una nueva reseña
+    description: Crea una nueva reseña para un producto
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_prod_color
+            - id_det_vent
+            - id_usuario
+            - titulo
+            - comentario
+            - calificacion
+          properties:
+            id_prod_color:
+              type: integer
+              description: ID del producto color
+            id_det_vent:
+              type: integer
+              description: ID del detalle de venta
+            id_usuario:
+              type: integer
+              description: ID del usuario
+            titulo:
+              type: string
+              description: Título de la reseña
+            comentario:
+              type: string
+              description: Comentario de la reseña
+            calificacion:
+              type: integer
+              minimum: 1
+              maximum: 5
+              description: Calificación de 1 a 5 estrellas
+    responses:
+      201:
+        description: Reseña creada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+      400:
+        description: Datos inválidos
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -170,7 +310,54 @@ def crear_resenia():
 # ============================================
 @ws_resenia.route('/resenias/modificar/<int:id_resenia>', methods=['PUT'])
 def modificar_resenia(id_resenia):
-    """Modificar una reseña existente"""
+    """
+    ---
+    tags:
+      - Reseñas
+    summary: Modificar una reseña existente
+    description: Actualiza los datos de una reseña existente
+    parameters:
+      - name: id_resenia
+        in: path
+        type: integer
+        required: true
+        description: ID de la reseña
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - titulo
+            - comentario
+            - calificacion
+          properties:
+            titulo:
+              type: string
+              description: Título actualizado de la reseña
+            comentario:
+              type: string
+              description: Comentario actualizado de la reseña
+            calificacion:
+              type: integer
+              minimum: 1
+              maximum: 5
+              description: Calificación actualizada de 1 a 5
+    responses:
+      200:
+        description: Reseña modificada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Datos inválidos
+      500:
+        description: Error en el servidor
+    """
     try:
         print(f"=== MODIFICAR RESEÑA ===")
         print(f"id_resenia: {id_resenia}")
@@ -248,7 +435,33 @@ def modificar_resenia(id_resenia):
 # ============================================
 @ws_resenia.route('/resenias/eliminar/<int:id_resenia>', methods=['DELETE'])
 def eliminar_resenia(id_resenia):
-    """Eliminar lógicamente una reseña"""
+    """
+    ---
+    tags:
+      - Reseñas
+    summary: Eliminar una reseña
+    description: Elimina lógicamente una reseña (marca como inactiva)
+    parameters:
+      - name: id_resenia
+        in: path
+        type: integer
+        required: true
+        description: ID de la reseña
+    responses:
+      200:
+        description: Reseña eliminada correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Error al eliminar
+      500:
+        description: Error en el servidor
+    """
     try:
         print(f"=== ELIMINAR RESEÑA ===")
         print(f"id_resenia: {id_resenia}")
@@ -285,7 +498,36 @@ def eliminar_resenia(id_resenia):
 # ============================================
 @ws_resenia.route('/resenias/promedio/<int:id_prod_color>', methods=['GET'])
 def obtener_promedio(id_prod_color):
-    """Obtener el promedio de calificación de un producto"""
+    """
+    ---
+    tags:
+      - Estadísticas
+    summary: Obtener promedio de calificación
+    description: Obtiene el promedio de calificación de un producto
+    parameters:
+      - name: id_prod_color
+        in: path
+        type: integer
+        required: true
+        description: ID del producto color
+    responses:
+      200:
+        description: Promedio obtenido correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                promedio:
+                  type: number
+      500:
+        description: Error en el servidor
+    """
     try:
         resenia = Resenia()
         exito, promedio = resenia.obtener_promedio_calificacion(id_prod_color)
@@ -314,7 +556,36 @@ def obtener_promedio(id_prod_color):
 # ============================================
 @ws_resenia.route('/resenias/contar/<int:id_prod_color>', methods=['GET'])
 def contar_resenias(id_prod_color):
-    """Contar el total de reseñas de un producto"""
+    """
+    ---
+    tags:
+      - Estadísticas
+    summary: Contar reseñas
+    description: Obtiene el total de reseñas de un producto
+    parameters:
+      - name: id_prod_color
+        in: path
+        type: integer
+        required: true
+        description: ID del producto color
+    responses:
+      200:
+        description: Total obtenido correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                total:
+                  type: integer
+      500:
+        description: Error en el servidor
+    """
     try:
         resenia = Resenia()
         total = resenia.contar_por_producto(id_prod_color)
@@ -337,7 +608,48 @@ def contar_resenias(id_prod_color):
 # ============================================
 @ws_resenia.route('/resenias/verificar-existencia', methods=['POST'])
 def verificar_existencia():
-    """Verificar si un usuario ya reseñó un producto"""
+    """
+    ---
+    tags:
+      - Validaciones
+    summary: Verificar existencia de reseña
+    description: Verifica si un usuario ya ha reseñado un producto específico
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_prod_color
+            - id_usuario
+          properties:
+            id_prod_color:
+              type: integer
+              description: ID del producto color
+            id_usuario:
+              type: integer
+              description: ID del usuario
+    responses:
+      200:
+        description: Verificación completada
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                existe:
+                  type: boolean
+      400:
+        description: Parámetros faltantes
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -371,7 +683,48 @@ def verificar_existencia():
 # ============================================
 @ws_resenia.route('/resenias/puede-reseniar', methods=['POST'])
 def puede_reseniar():
-    """Verificar si un usuario puede reseñar un producto (debe haberlo comprado)"""
+    """
+    ---
+    tags:
+      - Validaciones
+    summary: Verificar si puede reseñar
+    description: Verifica si un usuario puede reseñar un producto (debe haberlo comprado)
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_prod_color
+            - id_usuario
+          properties:
+            id_prod_color:
+              type: integer
+              description: ID del producto color
+            id_usuario:
+              type: integer
+              description: ID del usuario
+    responses:
+      200:
+        description: Verificación completada
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                puede_reseniar:
+                  type: boolean
+      400:
+        description: Parámetros faltantes
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         
@@ -405,7 +758,33 @@ def puede_reseniar():
 # ============================================
 @ws_resenia.route('/resenias/estadisticas/<int:id_prod_color>', methods=['GET'])
 def obtener_estadisticas(id_prod_color):
-    """Obtener estadísticas detalladas de calificaciones de un producto"""
+    """
+    ---
+    tags:
+      - Estadísticas
+    summary: Obtener estadísticas detalladas
+    description: Obtiene estadísticas completas de calificaciones de un producto
+    parameters:
+      - name: id_prod_color
+        in: path
+        type: integer
+        required: true
+        description: ID del producto color
+    responses:
+      200:
+        description: Estadísticas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+      500:
+        description: Error en el servidor
+    """
     try:
         resenia = Resenia()
         exito, estadisticas = resenia.obtener_estadisticas(id_prod_color)
@@ -434,7 +813,54 @@ def obtener_estadisticas(id_prod_color):
 # ============================================
 @ws_resenia.route('/resenias/producto-sucursal/<int:id_prod_sucursal>', methods=['GET'])
 def listar_resenias_por_producto_sucursal(id_prod_sucursal):
-    """Listar TODAS las reseñas de TODOS los colores de un producto_sucursal"""
+    """
+    ---
+    tags:
+      - Reseñas
+    summary: Listar reseñas por producto sucursal
+    description: Obtiene TODAS las reseñas de TODOS los colores de un producto_sucursal
+    parameters:
+      - name: id_prod_sucursal
+        in: path
+        type: integer
+        required: true
+        description: ID del producto sucursal
+    responses:
+      200:
+        description: Reseñas obtenidas correctamente
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_resenia:
+                    type: integer
+                  id_usuario:
+                    type: integer
+                  titulo:
+                    type: string
+                  comentario:
+                    type: string
+                  calificacion:
+                    type: integer
+                  fecha_resenia:
+                    type: string
+                  usuario:
+                    type: string
+                  nombre_completo:
+                    type: string
+                  avatar_usuario:
+                    type: string
+      500:
+        description: Error interno del servidor
+    """
     try:
         print(f"=== LISTAR RESEÑAS POR PRODUCTO_SUCURSAL ===")
         print(f"id_prod_sucursal recibido: {id_prod_sucursal}")
@@ -519,7 +945,48 @@ def listar_resenias_por_producto_sucursal(id_prod_sucursal):
 # ============================================
 @ws_resenia.route('/resenias/obtener-id-det-vent', methods=['POST'])
 def obtener_id_det_vent():
-    """Obtener el id_detalle_venta de la última compra del usuario con un producto_color"""
+    """
+    ---
+    tags:
+      - Auxiliares
+    summary: Obtener ID detalle venta
+    description: Obtiene el id_detalle_venta de la última compra del usuario con un producto_color
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - id_prod_color
+          properties:
+            id_usuario:
+              type: integer
+              description: ID del usuario
+            id_prod_color:
+              type: integer
+              description: ID del producto color
+    responses:
+      200:
+        description: Detalle de venta encontrado
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                id_det_vent:
+                  type: integer
+      400:
+        description: Usuario no ha comprado el producto o parámetros faltantes
+      500:
+        description: Error en el servidor
+    """
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')
@@ -592,7 +1059,51 @@ def obtener_id_det_vent():
 # ============================================
 @ws_resenia.route('/resenias/estadisticas-producto-sucursal/<int:id_prod_sucursal>', methods=['GET'])
 def obtener_estadisticas_producto_sucursal(id_prod_sucursal):
-    """Obtener promedio y total de reseñas de un producto_sucursal"""
+    """
+    ---
+    tags:
+      - Estadísticas
+    summary: Obtener estadísticas por producto sucursal
+    description: Obtiene promedio y total de reseñas de un producto_sucursal con distribución por estrellas
+    parameters:
+      - name: id_prod_sucursal
+        in: path
+        type: integer
+        required: true
+        description: ID del producto sucursal
+    responses:
+      200:
+        description: Estadísticas obtenidas
+        schema:
+          type: object
+          properties:
+            status:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              properties:
+                promedio:
+                  type: number
+                total:
+                  type: integer
+                distribucion:
+                  type: object
+                  properties:
+                    '5':
+                      type: integer
+                    '4':
+                      type: integer
+                    '3':
+                      type: integer
+                    '2':
+                      type: integer
+                    '1':
+                      type: integer
+      500:
+        description: Error en el servidor
+    """
     try:
         print(f"=== ESTADÍSTICAS PRODUCTO_SUCURSAL ===")
         print(f"id_prod_sucursal: {id_prod_sucursal}")

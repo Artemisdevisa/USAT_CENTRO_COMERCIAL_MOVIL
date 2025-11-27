@@ -43,10 +43,6 @@ class Tarjeta:
         con = None
         cursor = None
         try:
-            print("════════════════════════════════════════")
-            print("🔧 MODEL TARJETA - agregar()")
-            print("════════════════════════════════════════")
-            print(f"📋 Parámetros:")
             print(f"   id_usuario: {id_usuario}")
             print(f"   numero: {numero}")
             print(f"   titular: {titular}")
@@ -55,13 +51,11 @@ class Tarjeta:
             print(f"   tipo_tarjeta: {tipo_tarjeta}")
             print(f"   es_principal: {es_principal}")
             
-            print("🔌 Abriendo conexión...")
+            print("Abriendo conexión...")
             con = Conexion().open
             cursor = con.cursor()
-            print("✅ Conexión abierta")
+            print("Conexión abierta")
             
-            # ✅ CORRECCIÓN: Agregar ::DATE al casting
-            print("📡 Ejecutando fn_agregar_tarjeta...")
             sql = "SELECT fn_agregar_tarjeta(%s, %s, %s, %s::DATE, %s, %s, %s) as id_tarjeta"
             params = [id_usuario, numero, titular, fecha_vencimiento, cvv, tipo_tarjeta, es_principal]
             
@@ -71,41 +65,41 @@ class Tarjeta:
             cursor.execute(sql, params)
             
             resultado = cursor.fetchone()
-            print(f"📊 Resultado: {resultado}")
+            print(f"Resultado: {resultado}")
             
             if resultado:
                 id_tarjeta_result = resultado['id_tarjeta']
-                print(f"🔢 ID Tarjeta: {id_tarjeta_result}")
+                print(f"ID Tarjeta: {id_tarjeta_result}")
                 
                 if id_tarjeta_result and id_tarjeta_result > 0:
-                    print(f"✅ Tarjeta creada con ID: {id_tarjeta_result}")
+                    print(f"Tarjeta creada con ID: {id_tarjeta_result}")
                     con.commit()
                     cursor.close()
                     con.close()
                     return True, id_tarjeta_result
                     
                 elif id_tarjeta_result == -2:
-                    print("⚠️ La tarjeta ya está registrada")
+                    print("La tarjeta ya está registrada")
                     con.rollback()
                     cursor.close()
                     con.close()
                     return False, 'La tarjeta ya está registrada'
                     
                 elif id_tarjeta_result == -1:
-                    print("❌ Error en validación")
+                    print("Error en validación")
                     con.rollback()
                     cursor.close()
                     con.close()
                     return False, 'Datos inválidos o error en la base de datos'
                     
                 else:
-                    print(f"❌ Código desconocido: {id_tarjeta_result}")
+                    print(f"Código desconocido: {id_tarjeta_result}")
                     con.rollback()
                     cursor.close()
                     con.close()
                     return False, f'Error desconocido: código {id_tarjeta_result}'
             else:
-                print("❌ resultado es None")
+                print("resultado es None")
                 if cursor:
                     cursor.close()
                 if con:
@@ -113,7 +107,7 @@ class Tarjeta:
                 return False, 'No se obtuvo respuesta de la base de datos'
                 
         except Exception as e:
-            print(f"💥 EXCEPCIÓN: {str(e)}")
+            print(f"EXCEPCIÓN: {str(e)}")
             import traceback
             traceback.print_exc()
             

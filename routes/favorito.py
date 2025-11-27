@@ -6,23 +6,35 @@ ws_favorito = Blueprint('ws_favorito', __name__)
 
 @ws_favorito.route('/favoritos/listar/<int:id_usuario>', methods=['GET'])
 def listar_favoritos(id_usuario):
-    """Endpoint para listar favoritos del usuario"""
+    """
+    Listar favoritos del usuario
+    ---
+    tags:
+      - Favoritos
+    parameters:
+      - name: id_usuario
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Favoritos listados correctamente
+      500:
+        description: Error del servidor
+    """
     try:
         favorito = Favorito()
         exito, resultado = favorito.listar_favoritos(id_usuario)
         
         if exito:
-            # ✅ DETECTAR ENTORNO Y CLIENTE
             user_agent = request.headers.get('User-Agent', '').lower()
             is_android = 'okhttp' in user_agent or 'android' in user_agent
             
-            # ✅ DETERMINAR BASE_URL SEGÚN ENTORNO
             if os.environ.get('RENDER'):
                 base_url = "https://usat-comercial-api.onrender.com" if is_android else ""
             else:
                 base_url = "http://10.0.2.2:3007" if is_android else ""
             
-            # ✅ PROCESAR URLs DE IMÁGENES
             for fav in resultado:
                 url_img = fav.get('url_img', '')
                 if url_img and is_android:
@@ -53,7 +65,27 @@ def listar_favoritos(id_usuario):
 
 @ws_favorito.route('/favoritos/agregar', methods=['POST'])
 def agregar_favorito():
-    """Endpoint para agregar un producto a favoritos"""
+    """
+    Agregar producto a favoritos
+    ---
+    tags:
+      - Favoritos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            id_usuario:
+              type: integer
+            id_prod_color:
+              type: integer
+    responses:
+      200:
+        description: Producto agregado a favoritos
+      400:
+        description: Faltan datos requeridos
+    """
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')
@@ -91,7 +123,27 @@ def agregar_favorito():
 
 @ws_favorito.route('/favoritos/eliminar', methods=['POST'])
 def eliminar_favorito():
-    """Endpoint para eliminar un favorito"""
+    """
+    Eliminar un favorito
+    ---
+    tags:
+      - Favoritos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            id_usuario:
+              type: integer
+            id_favorito:
+              type: integer
+    responses:
+      200:
+        description: Favorito eliminado correctamente
+      404:
+        description: Favorito no encontrado
+    """
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')
@@ -129,7 +181,27 @@ def eliminar_favorito():
 
 @ws_favorito.route('/favoritos/eliminar-producto', methods=['POST'])
 def eliminar_favorito_por_producto():
-    """Endpoint para eliminar un favorito por producto"""
+    """
+    Eliminar favorito por producto
+    ---
+    tags:
+      - Favoritos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            id_usuario:
+              type: integer
+            id_prod_color:
+              type: integer
+    responses:
+      200:
+        description: Favorito eliminado correctamente
+      404:
+        description: Favorito no encontrado
+    """
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')
@@ -167,7 +239,27 @@ def eliminar_favorito_por_producto():
 
 @ws_favorito.route('/favoritos/verificar', methods=['POST'])
 def verificar_favorito():
-    """Endpoint para verificar si un producto está en favoritos"""
+    """
+    Verificar si un producto está en favoritos
+    ---
+    tags:
+      - Favoritos
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            id_usuario:
+              type: integer
+            id_prod_color:
+              type: integer
+    responses:
+      200:
+        description: Verificación exitosa
+      500:
+        description: Error del servidor
+    """
     try:
         data = request.get_json()
         id_usuario = data.get('id_usuario')

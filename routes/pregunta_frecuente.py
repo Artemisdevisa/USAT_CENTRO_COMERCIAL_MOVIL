@@ -5,7 +5,17 @@ ws_pregunta_frecuente = Blueprint('ws_pregunta_frecuente', __name__)
 
 @ws_pregunta_frecuente.route('/preguntas-frecuentes/listar', methods=['GET'])
 def listar_preguntas():
-    """Endpoint para listar todas las preguntas frecuentes"""
+    """
+    Endpoint para listar todas las preguntas frecuentes
+    ---
+    tags:
+      - Preguntas Frecuentes
+    responses:
+      200:
+        description: Preguntas frecuentes listadas correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         pregunta = PreguntaFrecuente()
         exito, resultado = pregunta.listar_preguntas_frecuentes()
@@ -32,7 +42,25 @@ def listar_preguntas():
 
 @ws_pregunta_frecuente.route('/preguntas-frecuentes/obtener/<int:id_pregunta>', methods=['GET'])
 def obtener_pregunta(id_pregunta):
-    """Endpoint para obtener el detalle de una pregunta frecuente"""
+    """
+    Endpoint para obtener el detalle de una pregunta frecuente
+    ---
+    tags:
+      - Preguntas Frecuentes
+    parameters:
+      - name: id_pregunta
+        in: path
+        required: true
+        type: integer
+        description: ID de la pregunta frecuente
+    responses:
+      200:
+        description: Pregunta obtenida correctamente
+      404:
+        description: Pregunta no encontrada
+      500:
+        description: Error interno del servidor
+    """
     try:
         pregunta = PreguntaFrecuente()
         exito, resultado = pregunta.obtener_pregunta(id_pregunta)
@@ -59,7 +87,41 @@ def obtener_pregunta(id_pregunta):
 
 @ws_pregunta_frecuente.route('/preguntas-frecuentes/crear', methods=['POST'])
 def crear_pregunta():
-    """Endpoint para crear una nueva pregunta frecuente"""
+    """
+    Endpoint para crear una nueva pregunta frecuente
+    ---
+    tags:
+      - Preguntas Frecuentes
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            nombre:
+              type: string
+              description: Título de la pregunta frecuente
+            descripcion:
+              type: string
+              description: Descripción o detalle de la pregunta
+            respuesta:
+              type: string
+              description: Respuesta a la pregunta frecuente
+          required:
+            - nombre
+            - descripcion
+            - respuesta
+    responses:
+      201:
+        description: Pregunta creada correctamente
+      400:
+        description: Datos inválidos o incompletos
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         nombre = data.get('nombre')
@@ -98,7 +160,46 @@ def crear_pregunta():
 
 @ws_pregunta_frecuente.route('/preguntas-frecuentes/modificar/<int:id_pregunta>', methods=['PUT'])
 def modificar_pregunta(id_pregunta):
-    """Endpoint para modificar una pregunta frecuente"""
+    """
+    Endpoint para modificar una pregunta frecuente
+    ---
+    tags:
+      - Preguntas Frecuentes
+    consumes:
+      - application/json
+    parameters:
+      - name: id_pregunta
+        in: path
+        required: true
+        type: integer
+        description: ID de la pregunta frecuente a modificar
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            nombre:
+              type: string
+              description: Título de la pregunta frecuente
+            descripcion:
+              type: string
+              description: Descripción o detalle de la pregunta
+            respuesta:
+              type: string
+              description: Respuesta a la pregunta frecuente
+          required:
+            - nombre
+            - descripcion
+            - respuesta
+    responses:
+      200:
+        description: Pregunta modificada correctamente
+      400:
+        description: Datos inválidos o incompletos
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         nombre = data.get('nombre')
@@ -137,7 +238,23 @@ def modificar_pregunta(id_pregunta):
 
 @ws_pregunta_frecuente.route('/preguntas-frecuentes/cambiar-estado/<int:id_pregunta>', methods=['PATCH'])
 def cambiar_estado(id_pregunta):
-    """Endpoint para cambiar el estado de una pregunta frecuente"""
+    """
+    Endpoint para cambiar el estado de una pregunta frecuente
+    ---
+    tags:
+      - Preguntas Frecuentes
+    parameters:
+      - name: id_pregunta
+        in: path
+        required: true
+        type: integer
+        description: ID de la pregunta frecuente
+    responses:
+      200:
+        description: Estado de la pregunta cambiado correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         pregunta = PreguntaFrecuente()
         exito, resultado = pregunta.cambiar_estado(id_pregunta)
@@ -164,7 +281,23 @@ def cambiar_estado(id_pregunta):
 
 @ws_pregunta_frecuente.route('/preguntas-frecuentes/eliminar/<int:id_pregunta>', methods=['DELETE'])
 def eliminar_pregunta(id_pregunta):
-    """Endpoint para eliminar permanentemente una pregunta frecuente"""
+    """
+    Endpoint para eliminar permanentemente una pregunta frecuente
+    ---
+    tags:
+      - Preguntas Frecuentes
+    parameters:
+      - name: id_pregunta
+        in: path
+        required: true
+        type: integer
+        description: ID de la pregunta frecuente a eliminar
+    responses:
+      200:
+        description: Pregunta eliminada correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         pregunta = PreguntaFrecuente()
         exito, resultado = pregunta.eliminar_pregunta(id_pregunta)

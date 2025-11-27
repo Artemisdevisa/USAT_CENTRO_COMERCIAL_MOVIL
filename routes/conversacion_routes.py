@@ -13,6 +13,32 @@ ws_conversacion = Blueprint('conversacion', __name__)
 def iniciar_conversacion():
     """
     Iniciar o recuperar conversación entre usuario y sucursal
+    ---
+    tags:
+      - Conversaciones
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_usuario
+            - id_sucursal
+          properties:
+            id_usuario:
+              type: integer
+              description: ID del usuario
+            id_sucursal:
+              type: integer
+              description: ID de la sucursal
+    responses:
+      200:
+        description: Conversación iniciada o recuperada correctamente
+      400:
+        description: Faltan datos requeridos o error de negocio
+      500:
+        description: Error interno del servidor
     """
     try:
         data = request.json
@@ -66,6 +92,22 @@ def iniciar_conversacion():
 def listar_conversaciones(id_usuario):
     """
     Lista todas las conversaciones de un usuario
+    ---
+    tags:
+      - Conversaciones
+    parameters:
+      - name: id_usuario
+        in: path
+        required: true
+        type: integer
+        description: ID del usuario
+    responses:
+      200:
+        description: Conversaciones listadas correctamente
+      400:
+        description: Error al listar conversaciones
+      500:
+        description: Error interno del servidor
     """
     try:
         print(f"📋 Listando conversaciones del usuario: {id_usuario}")
@@ -101,6 +143,22 @@ def listar_conversaciones(id_usuario):
 def obtener_conversacion(id_conversacion):
     """
     Obtiene detalles de una conversación específica
+    ---
+    tags:
+      - Conversaciones
+    parameters:
+      - name: id_conversacion
+        in: path
+        required: true
+        type: integer
+        description: ID de la conversación
+    responses:
+      200:
+        description: Conversación encontrada
+      404:
+        description: Conversación no encontrada
+      500:
+        description: Error interno del servidor
     """
     try:
         print(f"🔍 Obteniendo conversación: {id_conversacion}")
@@ -133,10 +191,32 @@ def obtener_conversacion(id_conversacion):
 def archivar_conversacion():
     """
     Archiva una conversación
-    Body: {
-        "id_conversacion": 1,
-        "id_usuario": 5
-    }
+    ---
+    tags:
+      - Conversaciones
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - id_conversacion
+            - id_usuario
+          properties:
+            id_conversacion:
+              type: integer
+              description: ID de la conversación a archivar
+            id_usuario:
+              type: integer
+              description: ID del usuario que archiva la conversación
+    responses:
+      200:
+        description: Conversación archivada correctamente
+      400:
+        description: Error al archivar la conversación
+      500:
+        description: Error interno del servidor
     """
     try:
         data = request.json
@@ -173,6 +253,20 @@ def archivar_conversacion():
 def contar_no_leidos(id_usuario):
     """
     Cuenta total de mensajes no leídos de un usuario
+    ---
+    tags:
+      - Conversaciones
+    parameters:
+      - name: id_usuario
+        in: path
+        required: true
+        type: integer
+        description: ID del usuario
+    responses:
+      200:
+        description: Conteo de mensajes no leídos obtenido correctamente
+      500:
+        description: Error interno del servidor
     """
     try:
         count = Mensaje.contar_no_leidos(id_usuario)
@@ -198,8 +292,21 @@ def contar_no_leidos(id_usuario):
 @ws_conversacion.route('/conversacion/listar-por-sucursal/<int:id_sucursal>', methods=['GET'])
 def listar_conversaciones_por_sucursal(id_sucursal):
     """
-    Lista todas las conversaciones de una sucursal específica
-    Para uso en dashboard web
+    Lista todas las conversaciones de una sucursal específica (dashboard web)
+    ---
+    tags:
+      - Conversaciones (Sucursal)
+    parameters:
+      - name: id_sucursal
+        in: path
+        required: true
+        type: integer
+        description: ID de la sucursal
+    responses:
+      200:
+        description: Conversaciones listadas correctamente
+      500:
+        description: Error interno del servidor
     """
     try:
         print(f"📋 Listando conversaciones de sucursal: {id_sucursal}")

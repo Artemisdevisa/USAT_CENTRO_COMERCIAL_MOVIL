@@ -6,7 +6,23 @@ ws_entrega = Blueprint('ws_entrega', __name__)
 
 @ws_entrega.route('/entregas/sucursales/<int:id_empresa>', methods=['GET'])
 def listar_sucursales_empresa(id_empresa):
-    """Listar sucursales de una empresa con estadísticas de ventas"""
+    """
+    Listar sucursales de una empresa con estadísticas de ventas
+    ---
+    tags:
+      - Entregas
+    parameters:
+      - name: id_empresa
+        in: path
+        required: true
+        type: integer
+        description: ID de la empresa
+    responses:
+      200:
+        description: Sucursales listadas correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         print(f"\n{'='*60}")
         print(f"📊 LISTAR SUCURSALES DE EMPRESA {id_empresa}")
@@ -42,7 +58,29 @@ def listar_sucursales_empresa(id_empresa):
 
 @ws_entrega.route('/entregas/ventas/<int:id_sucursal>', methods=['GET'])
 def listar_ventas_sucursal(id_sucursal):
-    """Listar ventas de una sucursal con filtro de entrega"""
+    """
+    Listar ventas de una sucursal con filtro de entrega
+    ---
+    tags:
+      - Entregas
+    parameters:
+      - name: id_sucursal
+        in: path
+        required: true
+        type: integer
+        description: ID de la sucursal
+      - name: entregado
+        in: query
+        required: false
+        type: string
+        enum: [true, false]
+        description: Filtrar por ventas entregadas (true) o no entregadas (false)
+    responses:
+      200:
+        description: Ventas listadas correctamente
+      500:
+        description: Error interno del servidor
+    """
     try:
         # Obtener parámetro opcional de filtro
         entregado_param = request.args.get('entregado')
@@ -107,7 +145,34 @@ def listar_ventas_sucursal(id_sucursal):
 
 @ws_entrega.route('/entregas/marcar-entregada', methods=['POST'])
 def marcar_venta_entregada():
-    """Marcar venta como entregada mediante código QR"""
+    """
+    Marcar venta como entregada mediante código QR
+    ---
+    tags:
+      - Entregas
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        description: Datos para marcar la venta como entregada
+        schema:
+          type: object
+          properties:
+            codigo_venta:
+              type: string
+              description: Código QR de la venta
+          required:
+            - codigo_venta
+    responses:
+      200:
+        description: Venta marcada como entregada correctamente
+      400:
+        description: Error de validación o código inválido
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         codigo_venta = data.get('codigo_venta')
@@ -214,7 +279,36 @@ def marcar_venta_entregada():
 
 @ws_entrega.route('/entregas/verificar-codigo', methods=['POST'])
 def verificar_codigo_venta():
-    """Verificar si un código QR es válido"""
+    """
+    Verificar si un código QR de venta es válido
+    ---
+    tags:
+      - Entregas
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        description: Datos para verificar el código de venta
+        schema:
+          type: object
+          properties:
+            codigo_venta:
+              type: string
+              description: Código QR de la venta
+          required:
+            - codigo_venta
+    responses:
+      200:
+        description: Código válido y venta encontrada
+      400:
+        description: Código de venta requerido
+      404:
+        description: Código de venta no encontrado
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         codigo_venta = data.get('codigo_venta')
