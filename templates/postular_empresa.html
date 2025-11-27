@@ -24,9 +24,10 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">RUC *</label>
-                            <input type="text" id="ruc" name="ruc" required maxlength="11" pattern="[0-9]{11}"
+                            <input type="text" id="ruc" name="ruc" required maxlength="11" minlength="11" pattern="[0-9]{11}"
                                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
-                                placeholder="Ej: 20123456789">
+                                placeholder="Ingrese 11 dígitos">
+                            <small id="ruc-error" class="text-red-600 text-sm hidden mt-1 block">El RUC debe tener exactamente 11 dígitos</small>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Razón Social *</label>
@@ -42,9 +43,16 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono *</label>
-                            <input type="text" id="telefono" name="telefono" required maxlength="9" pattern="[0-9]{9}"
+                            <input type="text" id="telefono" name="telefono" required maxlength="9" minlength="9" pattern="[0-9]{9}"
                                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
-                                placeholder="Ej: 987654321">
+                                placeholder="Ingrese 9 dígitos">
+                            <small id="telefono-error" class="text-red-600 text-sm hidden mt-1 block">El teléfono debe tener exactamente 9 dígitos</small>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email de Contacto *</label>
+                            <input type="email" id="email" name="email" required
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
+                                placeholder="email@empresa.com">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción *</label>
@@ -188,7 +196,45 @@ document.getElementById('provincia').addEventListener('change', async (e) => {
     }
 });
 
-// Enviar formulario
+// Validación en tiempo real para RUC (solo números, 11 dígitos)
+document.getElementById('ruc').addEventListener('input', function(e) {
+    const errorMsg = document.getElementById('ruc-error');
+    
+    // Permitir solo números
+    this.value = this.value.replace(/[^0-9]/g, '');
+    
+    // Mostrar/ocultar error según la longitud
+    if (this.value.length > 0 && this.value.length !== 11) {
+        errorMsg.classList.remove('hidden');
+        this.classList.add('border-red-600');
+        this.classList.remove('border-gray-300');
+    } else {
+        errorMsg.classList.add('hidden');
+        this.classList.remove('border-red-600');
+        this.classList.add('border-gray-300');
+    }
+});
+
+// Validación en tiempo real para teléfono (solo números, 9 dígitos)
+document.getElementById('telefono').addEventListener('input', function(e) {
+    const errorMsg = document.getElementById('telefono-error');
+    
+    // Permitir solo números
+    this.value = this.value.replace(/[^0-9]/g, '');
+    
+    // Mostrar/ocultar error según la longitud
+    if (this.value.length > 0 && this.value.length !== 9) {
+        errorMsg.classList.remove('hidden');
+        this.classList.add('border-red-600');
+        this.classList.remove('border-gray-300');
+    } else {
+        errorMsg.classList.add('hidden');
+        this.classList.remove('border-red-600');
+        this.classList.add('border-gray-300');
+    }
+});
+
+// Enviar formulario con validaciones completas
 document.getElementById('formPostulacion').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -199,33 +245,57 @@ document.getElementById('formPostulacion').addEventListener('submit', async (e) 
         return;
     }
     
+    const ruc = document.getElementById('ruc').value.trim();
+    const razonSocial = document.getElementById('razon_social').value.trim();
+    const nombreComercial = document.getElementById('nombre_comercial').value.trim();
+    const descripcion = document.getElementById('descripcion').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const idDist = parseInt(document.getElementById('id_dist').value);
+    const direccion = document.getElementById('direccion').value.trim();
+    
+    // Validaciones estrictas
+    if (!idDist || idDist === 0) {
+        alert('⚠️ Debes seleccionar un distrito válido');
+        document.getElementById('id_dist').focus();
+        return;
+    }
+    
+    if (ruc.length !== 11) {
+        alert('❌ El RUC debe tener exactamente 11 dígitos');
+        document.getElementById('ruc').focus();
+        return;
+    }
+    
+    if (!/^[0-9]{11}$/.test(ruc)) {
+        alert('❌ El RUC debe contener solo números');
+        document.getElementById('ruc').focus();
+        return;
+    }
+    
+    if (telefono.length !== 9) {
+        alert('❌ El teléfono debe tener exactamente 9 dígitos');
+        document.getElementById('telefono').focus();
+        return;
+    }
+    
+    if (!/^[0-9]{9}$/.test(telefono)) {
+        alert('❌ El teléfono debe contener solo números');
+        document.getElementById('telefono').focus();
+        return;
+    }
+    
     const data = {
         id_usuario: user.id_usuario,
-        ruc: document.getElementById('ruc').value.trim(),
-        razon_social: document.getElementById('razon_social').value.trim(),
-        nombre_comercial: document.getElementById('nombre_comercial').value.trim(),
-        descripcion: document.getElementById('descripcion').value.trim(),
-        telefono: document.getElementById('telefono').value.trim(),
-        email: user.email,
-        id_dist: parseInt(document.getElementById('id_dist').value),
-        direccion: document.getElementById('direccion').value.trim()
+        ruc: ruc,
+        razon_social: razonSocial,
+        nombre_comercial: nombreComercial,
+        descripcion: descripcion,
+        telefono: telefono,
+        email: email,
+        id_dist: idDist,
+        direccion: direccion
     };
-    
-    // Validaciones adicionales
-    if (!data.id_dist) {
-        alert('⚠️ Debes seleccionar un distrito');
-        return;
-    }
-    
-    if (data.ruc.length !== 11) {
-        alert('⚠️ El RUC debe tener 11 dígitos');
-        return;
-    }
-    
-    if (data.telefono.length !== 9) {
-        alert('⚠️ El teléfono debe tener 9 dígitos');
-        return;
-    }
     
     try {
         const response = await fetch(`${API_URL}/api/postular-empresa`, {
